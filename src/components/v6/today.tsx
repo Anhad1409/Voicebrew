@@ -110,7 +110,7 @@ export function V6Today() {
             </p>
             <div className="mt-5 flex flex-wrap gap-2.5">
               <Link href="/campaigns/quick" className="inline-flex items-center gap-1.5 rounded-full bg-[#f7efe2] px-4 py-2 text-sm font-semibold text-[#2a1a0f] transition-transform hover:scale-[1.03]"><Coffee className="size-4" /> Brew a campaign</Link>
-              <Link href="/dashboard-v6" className="inline-flex items-center gap-1.5 rounded-full border border-white/25 px-4 py-2 text-sm font-medium text-[#f7efe2] hover:bg-white/10">Back to dashboard <ArrowUpRight className="size-4" /></Link>
+              <Link href="/dashboard" className="inline-flex items-center gap-1.5 rounded-full border border-white/25 px-4 py-2 text-sm font-medium text-[#f7efe2] hover:bg-white/10">Back to dashboard <ArrowUpRight className="size-4" /></Link>
             </div>
           </div>
           <div className="flex items-center gap-5">

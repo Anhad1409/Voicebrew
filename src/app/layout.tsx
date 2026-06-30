@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display, JetBrains_Mono, Calistoga } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/sidebar";
-import { Topbar } from "@/components/layout/topbar";
+import { V6Sidebar } from "@/components/v6/sidebar";
+import { V6Topbar } from "@/components/v6/topbar";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { Toaster } from "@/components/notifications/toaster";
 import { BackgroundMotifs } from "@/components/coffee/background-motifs";
@@ -15,8 +15,8 @@ const jetmono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-data" });
 const calistoga = Calistoga({ subsets: ["latin"], weight: ["400"], variable: "--font-brew" });
 
 export const metadata: Metadata = {
-  title: "Blostem Voice Agent",
-  description: "AI Voice Agent Dashboard (local clone)",
+  title: "VoiceBrew",
+  description: "VoiceBrew — AI voice-calling operations",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -29,9 +29,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <BackgroundMotifs />
         <TooltipProvider>
           <div className="flex h-screen overflow-hidden">
-            <Sidebar />
+            <V6Sidebar />
             <div className="flex flex-1 flex-col overflow-hidden">
-              <Topbar />
+              <V6Topbar />
               <main className="flex-1 overflow-y-auto px-6 py-7 lg:px-8">{children}</main>
             </div>
           </div>

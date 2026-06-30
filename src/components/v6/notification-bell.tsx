@@ -96,7 +96,7 @@ export function V6NotificationBell() {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button onClick={() => { setBs("paused"); setPopup(false); }} className="inline-flex items-center gap-1.5 rounded-full bg-coffee px-3.5 py-1.5 text-xs font-semibold text-cream hover:bg-espresso"><PauseCircle className="size-3.5" /> Pause campaign</button>
                 <button onClick={() => { setBs("ignored"); setPopup(false); }} className="rounded-full border border-foam bg-card px-3.5 py-1.5 text-xs font-medium text-mocha hover:bg-oat">Ignore</button>
-                <Link href="/dashboard-v6/insights" onClick={() => setPopup(false)} className="inline-flex items-center gap-1 text-xs font-semibold text-caramel hover:underline">View full report <ArrowRight className="size-3.5" /></Link>
+                <Link href="/insights" onClick={() => setPopup(false)} className="inline-flex items-center gap-1 text-xs font-semibold text-caramel hover:underline">View full report <ArrowRight className="size-3.5" /></Link>
               </div>
             </div>
           </motion.div>
@@ -126,7 +126,7 @@ function BlockerRow({ bs, setBs, onAct }: { bs: BState; setBs: (s: BState) => vo
                   <button onClick={() => setBs("paused")} className="inline-flex items-center gap-1 rounded-full bg-coffee px-3 py-1 text-[11px] font-semibold text-cream"><PauseCircle className="size-3" /> Pause</button>
                   <button onClick={() => setBs("ignored")} className="rounded-full border border-foam bg-card px-3 py-1 text-[11px] font-medium text-mocha">Ignore</button>
                 </>}
-            <Link href="/dashboard-v6/insights" onClick={onAct} className="inline-flex items-center gap-1 text-[11px] font-semibold text-caramel hover:underline">View full report <ArrowRight className="size-3" /></Link>
+            <Link href="/insights" onClick={onAct} className="inline-flex items-center gap-1 text-[11px] font-semibold text-caramel hover:underline">View full report <ArrowRight className="size-3" /></Link>
           </div>
         </div>
       </div>

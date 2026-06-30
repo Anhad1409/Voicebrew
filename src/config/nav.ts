@@ -16,7 +16,7 @@ export const navGroups: { key: string; label: string }[] = [
 
 export const nav: NavItem[] = [
   { label: "Today", href: "/today", icon: Sun, group: "operate" },
-  { label: "Dashboard", href: "/dashboard-v2", icon: LayoutDashboard, group: "operate" },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, group: "operate" },
   { label: "Campaigns", href: "/campaigns", icon: Megaphone, group: "operate" },
   { label: "Leads", href: "/leads", icon: Users, group: "operate" },
   { label: "Calls", href: "/calls", icon: Phone, group: "operate" },

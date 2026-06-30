@@ -121,7 +121,7 @@ export function V6AdvancedWizard() {
   })();
   const goNext = () => { if (!canNext) { setTried(true); return; } setTried(false); setStep((s) => Math.min(STEPS.length - 1, s + 1)); };
   const draft = () => toast({ title: "Saved as draft", body: "Resume anytime — drafts live for 5 days.", severity: "info" });
-  const create = () => { toast({ title: "Campaign scheduled", body: `“${name || "Untitled"}” will run ${schedLine.toLowerCase()}.`, severity: "success" }); router.push("/dashboard-v6/campaigns"); };
+  const create = () => { toast({ title: "Campaign scheduled", body: `“${name || "Untitled"}” will run ${schedLine.toLowerCase()}.`, severity: "success" }); router.push("/campaigns"); };
 
   // live summary rows
   const summary = [
@@ -145,7 +145,7 @@ export function V6AdvancedWizard() {
             <button data-tour="adv-help" onClick={() => window.dispatchEvent(new CustomEvent("start-tour"))} className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-foam bg-oat/70 px-3 py-1.5 text-xs font-medium text-mocha transition-colors hover:bg-foam">
               <Sparkles className="size-3.5 text-caramel" /> Show me how
             </button>
-            <Button variant="outline" size="sm" onClick={() => router.push("/dashboard-v6/campaigns/quick")} className="text-mocha">Switch to Quick</Button>
+            <Button variant="outline" size="sm" onClick={() => router.push("/campaigns/quick")} className="text-mocha">Switch to Quick</Button>
           </div>
         } />
 

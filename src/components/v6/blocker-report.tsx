@@ -27,7 +27,7 @@ export function V6BlockerReport() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href="/dashboard-v6" className="inline-flex items-center gap-1.5 text-sm font-medium text-mocha hover:text-coffee"><ArrowLeft className="size-4" /> Back to dashboard</Link>
+      <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm font-medium text-mocha hover:text-coffee"><ArrowLeft className="size-4" /> Back to dashboard</Link>
 
       {/* header */}
       <div className={card}>
@@ -92,7 +92,7 @@ export function V6BlockerReport() {
             <button onClick={() => { setResolved("fixed"); toast({ title: "Fix applied", body: "New opening is live on a 10% test batch.", severity: "success" }); }} className="inline-flex items-center gap-1.5 rounded-full bg-coffee px-4 py-2 text-sm font-semibold text-cream hover:bg-espresso"><Wand2 className="size-4" /> Apply suggested fix</button>
             <button onClick={() => { setResolved("paused"); toast({ title: "Campaign paused", body: `${blocker.campaign} won't dial until you resume.`, severity: "info" }); }} className="inline-flex items-center gap-1.5 rounded-full border border-foam bg-card px-4 py-2 text-sm font-medium text-coffee hover:bg-oat"><PauseCircle className="size-4" /> Pause campaign</button>
             <button onClick={() => { setResolved("ignored"); }} className="rounded-full px-4 py-2 text-sm font-medium text-mocha hover:bg-oat">Ignore</button>
-            <button onClick={() => router.push("/dashboard-v6")} className="ml-auto text-sm font-medium text-muted-foreground hover:text-coffee">Close</button>
+            <button onClick={() => router.push("/dashboard")} className="ml-auto text-sm font-medium text-muted-foreground hover:text-coffee">Close</button>
           </>
         )}
       </div>

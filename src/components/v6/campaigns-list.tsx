@@ -30,12 +30,12 @@ export function V6CampaignsList() {
         actions={
           <>
             <span data-tour="camp-quick">
-              <Button size="sm" onClick={() => router.push("/dashboard-v6/campaigns/quick")} className="gap-1.5 bg-brand text-brand-foreground hover:bg-brand-dark">
+              <Button size="sm" onClick={() => router.push("/campaigns/quick")} className="gap-1.5 bg-brand text-brand-foreground hover:bg-brand-dark">
                 <Plus className="size-4" /> Quick Campaign
               </Button>
             </span>
             <span data-tour="camp-advanced">
-              <Button variant="outline" size="sm" onClick={() => router.push("/dashboard-v6/campaigns/new")} className="gap-1.5">
+              <Button variant="outline" size="sm" onClick={() => router.push("/campaigns/new")} className="gap-1.5">
                 <SlidersHorizontal className="size-4" /> Advanced
               </Button>
             </span>
@@ -77,7 +77,7 @@ export function V6CampaignsList() {
             {rows.map((c) => {
               const pct = c.leads_called > 0 ? ((c.leads_converted / c.leads_called) * 100).toFixed(1) : "0.0";
               return (
-                <TableRow key={c.id} onClick={() => router.push(`/dashboard-v6/campaigns/${c.id}`)} className="cursor-pointer">
+                <TableRow key={c.id} onClick={() => router.push(`/campaigns/${c.id}`)} className="cursor-pointer">
                   <TableCell className="font-medium text-brand-dark">{c.name}</TableCell>
                   <TableCell><StatusBadge value={c.status} /></TableCell>
                   <TableCell className="text-right tabular-nums">{c.total_leads}</TableCell>
@@ -93,8 +93,8 @@ export function V6CampaignsList() {
                           <div className="fixed inset-0 z-40" onClick={() => setMenuId(null)} />
                           <div className="absolute right-0 z-50 mt-1 w-40 rounded-xl border border-foam bg-porcelain p-1 text-left text-sm shadow-card-lg">
                             {[
-                              { l: "Open", fn: () => router.push(`/dashboard-v6/campaigns/${c.id}`) },
-                              { l: "Edit", fn: () => router.push("/dashboard-v6/campaigns/new") },
+                              { l: "Open", fn: () => router.push(`/campaigns/${c.id}`) },
+                              { l: "Edit", fn: () => router.push("/campaigns/new") },
                               { l: c.status === "active" ? "Pause" : "Activate", fn: () => toast({ title: c.status === "active" ? "Paused" : "Activated", body: `“${c.name}”`, severity: "info" }) },
                               { l: "Duplicate", fn: () => toast({ title: "Campaign duplicated", body: `“${c.name} (Copy)” created as draft.`, severity: "success" }) },
                               { l: "Delete", fn: () => toast({ title: "Delete campaign?", body: "This would remove the campaign.", severity: "warning" }), danger: true },

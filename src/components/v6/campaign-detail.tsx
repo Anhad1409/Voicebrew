@@ -65,7 +65,7 @@ export function V6CampaignDetail() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <button onClick={() => router.push("/dashboard-v6/campaigns")} className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-coffee"><ChevronLeft className="size-4" /> Campaigns</button>
+      <button onClick={() => router.push("/campaigns")} className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-coffee"><ChevronLeft className="size-4" /> Campaigns</button>
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">

@@ -158,8 +158,8 @@ export function V6Quick() {
             )}
 
             <div className="mt-7 flex items-center justify-end gap-2">
-              {leadState !== "done" && <Button variant="ghost" onClick={() => router.push("/dashboard-v6/campaigns")} className="text-mocha">Skip for now</Button>}
-              <Button onClick={() => router.push("/dashboard-v6/campaigns")} className="gap-1.5 bg-coffee text-cream hover:bg-espresso">Go to Campaign <ArrowRight className="size-4" /></Button>
+              {leadState !== "done" && <Button variant="ghost" onClick={() => router.push("/campaigns")} className="text-mocha">Skip for now</Button>}
+              <Button onClick={() => router.push("/campaigns")} className="gap-1.5 bg-coffee text-cream hover:bg-espresso">Go to Campaign <ArrowRight className="size-4" /></Button>
             </div>
           </div>
         )}
