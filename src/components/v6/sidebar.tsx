@@ -40,7 +40,7 @@ export function V6Sidebar() {
   };
 
   const isActive = (href: string) =>
-    pathname === href || (href !== "/dashboard-v2" && href !== "/dashboard" && pathname.startsWith(href));
+    pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
   return (
     <aside
@@ -95,7 +95,7 @@ export function V6Sidebar() {
             )}
             {collapsed && <div className="mx-auto mb-1 h-px w-6 bg-sidebar-border" />}
             {groupOpen && nav.filter((n) => n.group === group.key).map((item) => {
-              const href = item.href === "/dashboard-v2" ? "/dashboard" : item.href === "/today" ? "/today" : item.href === "/campaigns" ? "/campaigns" : item.href;
+              const href = item.href;
               const active = isActive(href);
               const Icon = item.icon;
               const link = (
