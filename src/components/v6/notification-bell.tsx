@@ -1,16 +1,14 @@
 "use client";
 
-/* v6 · Notification bell + high-priority pop-up alert.
-   The AI blocker is delivered as an ALERT (not a dashboard section):
-   - auto pop-up when it "hits"
-   - pinned high-priority item in the bell, which escalates (red, pulsing). */
+/* v6 · Notification bell.
+   The AI blocker is delivered via the bell: it escalates (red badge + pulsing
+   ring) for high-priority, and is pinned at the top of the dropdown. */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell, AlertTriangle, PhoneForwarded, Ban, Users, CheckCircle2, Coffee, Info,
-  Sparkles, PauseCircle, PlayCircle, ArrowRight, X,
+  PauseCircle, PlayCircle, ArrowRight,
 } from "lucide-react";
 import { notifications as seed, type Notif } from "@/lib/notifications-mock";
 import { blocker } from "@/lib/v6-mock";
@@ -27,16 +25,12 @@ export function V6NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notif[]>(seed);
   const [bs, setBs] = useState<BState>("unread");
-  const [popup, setPopup] = useState(false);
-
-  // the blocker "hits" shortly after load
-  useEffect(() => { const t = setTimeout(() => setPopup(true), 1300); return () => clearTimeout(t); }, []);
 
   const live = bs !== "ignored";
   const highUnread = bs === "unread";
   const unread = items.filter((n) => n.unread).length + (highUnread ? 1 : 0);
 
-  const openBell = () => { setOpen((o) => !o); setPopup(false); if (bs === "unread") setBs("read"); };
+  const openBell = () => { setOpen((o) => !o); if (bs === "unread") setBs("read"); };
   const markAll = () => { setItems((xs) => xs.map((n) => ({ ...n, unread: false }))); if (bs === "unread") setBs("read"); };
 
   return (
@@ -78,30 +72,6 @@ export function V6NotificationBell() {
           </div>
         </>
       )}
-
-      {/* high-priority pop-up alert */}
-      <AnimatePresence>
-        {popup && live && bs !== "paused" && (
-          <motion.div initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12 }} transition={{ type: "spring", stiffness: 240, damping: 24 }}
-            className="fixed bottom-6 right-6 z-[80] w-[372px] max-w-[92vw] overflow-hidden rounded-2xl border border-danger/30 bg-porcelain shadow-card-lg">
-            <div className="h-1 w-full bg-danger" style={{ animation: "vbbadge 1.4s ease-in-out infinite" }} />
-            <div className="p-4">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-caramel"><Sparkles className="size-3.5" /> VoiceBrew AI</span>
-                <span className="rounded-full bg-danger/12 px-2 py-0.5 text-[10px] font-bold uppercase text-danger">High priority</span>
-                <button onClick={() => setPopup(false)} aria-label="Dismiss" className="ml-auto text-muted-foreground hover:text-coffee"><X className="size-4" /></button>
-              </div>
-              <p className="mt-1.5 flex items-center gap-1.5 text-sm font-semibold text-coffee"><AlertTriangle className="size-4 text-danger" /> Blocker detected on {blocker.campaign}</p>
-              <p className="mt-1 text-[13px] leading-relaxed text-mocha">{blocker.brief}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button onClick={() => { setBs("paused"); setPopup(false); }} className="inline-flex items-center gap-1.5 rounded-full bg-coffee px-3.5 py-1.5 text-xs font-semibold text-cream hover:bg-espresso"><PauseCircle className="size-3.5" /> Pause campaign</button>
-                <button onClick={() => { setBs("ignored"); setPopup(false); }} className="rounded-full border border-foam bg-card px-3.5 py-1.5 text-xs font-medium text-mocha hover:bg-oat">Ignore</button>
-                <Link href="/insights" onClick={() => setPopup(false)} className="inline-flex items-center gap-1 text-xs font-semibold text-caramel hover:underline">View full report <ArrowRight className="size-3.5" /></Link>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
