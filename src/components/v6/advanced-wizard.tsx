@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Check, ChevronLeft, ChevronRight, Info, Save, Plus, Trash2, Lock, AlertTriangle,
@@ -20,14 +20,6 @@ import {
   inCallSignals, dispositions, phoneNumbers, backgroundSounds, agentSkills,
 } from "@/lib/campaign-config-mock";
 import { WEEKDAYS, TIMEZONES, defaultQuietHours, type QuietWindow } from "@/lib/v6-mock";
-
-const ADV_TOUR: TourStep[] = [
-  { sel: '[data-tour="adv-steps"]', title: "Six guided steps", body: "Work top to bottom: Basics, Lead Schema, Customer Data, Scoring, Conversation, then Phone & Outcomes. Green = done — jump back anytime." },
-  { sel: '[data-tour="adv-name"]', title: "Name & agent", body: "Campaign name and agent name are the only required fields to advance. Calling rules, language and limits live under “Calling rules & limits”." },
-  { sel: '[data-tour="adv-help"]', title: "Hover for help", body: "Every field with a ⓘ explains itself — and the ? on each section header gives you the full context. Hover any of them." },
-  { sel: '[data-tour="adv-next"]', title: "Save or continue", body: "Save as Draft on any step — campaigns land in Draft until you activate them. Next is gated on Lead Schema until you add at least one field." },
-  { sel: '[data-tour="adv-summary"]', title: "Live summary", body: "This panel updates as you build, and shows your progress. Create the campaign from here anytime." },
-];
 
 const inputCls = "w-full rounded-lg border border-foam bg-card px-3 py-2 text-sm text-coffee outline-none focus:border-caramel focus:ring-1 focus:ring-caramel/30";
 const STEPS = [
@@ -76,6 +68,16 @@ export function V6AdvancedWizard() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [tried, setTried] = useState(false);
+  // remember the step the user was on when they launched the tour, so finishing
+  // or skipping it returns them exactly there instead of stranding them mid-flow.
+  const stepRef = useRef(step);
+  stepRef.current = step;
+  const preTourStep = useRef(0);
+  useEffect(() => {
+    const capture = () => { preTourStep.current = stepRef.current; };
+    window.addEventListener("start-tour", capture);
+    return () => window.removeEventListener("start-tour", capture);
+  }, []);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [agent, setAgent] = useState("");
@@ -137,6 +139,24 @@ export function V6AdvancedWizard() {
     { k: "Auto-pause", v: issueOn ? `≥${threshold} reports` : "off", done: issueOn },
   ];
 
+  // Guided walkthrough of the FULL campaign journey — each step drives the
+  // wizard to the matching page (via `before`) so the tour shows real content,
+  // not just an overview. Triggered by the "Show me how" button (start-tour).
+  const advTour: TourStep[] = [
+    { sel: '[data-tour="adv-steps"]', title: "Nine steps, one campaign", body: `${STEPS.map((s) => s.label).join(" · ")}. Green = done — jump to any step from this rail anytime, and hover any ⓘ for help as you go.`, before: () => setStep(0) },
+    { sel: '[data-tour="adv-form"]', title: "1 · Basics", body: "Name the campaign and its agent — the only required fields to advance. Language, greeting, calling rules and limits live here too.", before: () => setStep(0) },
+    { sel: '[data-tour="adv-form"]', title: "2 · Lead Schema", body: "The columns each lead carries. Phone, Full Name and Email are automatic — add extras like monthly_income. One extra field unlocks Next.", before: () => setStep(1) },
+    { sel: '[data-tour="adv-form"]', title: "3 · Customer Data", body: "Extra details the agent collects live on the call. Auto-prefixed ld_enrich_ and stored per call — needs the Customer Data skill on.", before: () => setStep(2) },
+    { sel: '[data-tour="adv-form"]', title: "4 · Scoring", body: "Set where Cold becomes Warm becomes Hot, weight your scoring fields, and review the locked in-call adjustments.", before: () => setStep(3) },
+    { sel: '[data-tour="adv-form"]', title: "5 · Conversation", body: "What the agent says — system prompt, greeting, the {variables} it can use, and your objection handlers.", before: () => setStep(4) },
+    { sel: '[data-tour="adv-form"]', title: "6 · Phone & Outcomes", body: "Pick the outbound number, switch on human transfer, and review the call dispositions the agent records.", before: () => setStep(5) },
+    { sel: '[data-tour="adv-form"]', title: "7 · Agent Skills", body: "Real-time tools the agent can invoke mid-call. Core skills stay on; toggle the optional ones per campaign.", before: () => setStep(6) },
+    { sel: '[data-tour="adv-form"]', title: "8 · Schedule", body: "Start now or pick a date, then choose the days and calling window — calls only ever dial inside it.", before: () => setStep(7) },
+    { sel: '[data-tour="adv-form"]', title: "9 · Smart pauses", body: "Auto-pause during quiet hours, and let VoiceBrew step in if many customers report the same blocker.", before: () => setStep(8) },
+    { sel: '[data-tour="adv-next"]', title: "Save or create", body: "Save as Draft on any step — drafts live for 5 days. When every step looks good, Create Campaign here or from the summary panel.", before: () => setStep(8) },
+    { sel: '[data-tour="adv-summary"]', title: "Live summary", body: "This panel updates as you build and tracks your progress. Create the campaign from here anytime.", before: () => setStep(8) },
+  ];
+
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeader title="Create Campaign" subtitle="Advanced — full control, step by step."
@@ -164,7 +184,7 @@ export function V6AdvancedWizard() {
         </nav>
 
         {/* FORM */}
-        <div className="rounded-2xl border border-foam bg-porcelain p-6 shadow-glass">
+        <div data-tour="adv-form" className="rounded-2xl border border-foam bg-porcelain p-6 shadow-glass">
           <div className="mb-1 flex items-center gap-2"><cur.icon className="size-5 text-caramel" /><h2 className="font-serif text-xl font-semibold text-coffee">{cur.label}</h2></div>
           <p className="mb-6 text-sm text-muted-foreground">{cur.sub}.</p>
 
@@ -172,7 +192,7 @@ export function V6AdvancedWizard() {
           {cur.key === "basic" && (
             <div className="space-y-6">
               <Group title="Identity" help="The campaign's name, who the AI says it is, and the language it speaks. Name and Agent are required; everything else inherits org defaults.">
-                <div data-tour="adv-name" className="space-y-1.5"><Lbl req tip="Naming convention: Product - Segment - Quarter. Appears in reports and the calls list.">Campaign Name</Lbl><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Home Loan — Salaried — Q1" className={inputCls} />{tried && !name.trim() && <p className="text-xs text-danger">Campaign name is required</p>}</div>
+                <div className="space-y-1.5"><Lbl req tip="Naming convention: Product - Segment - Quarter. Appears in reports and the calls list.">Campaign Name</Lbl><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Home Loan — Salaried — Q1" className={inputCls} />{tried && !name.trim() && <p className="text-xs text-danger">Campaign name is required</p>}</div>
                 <div className="space-y-1.5"><Lbl tip="Internal note — never spoken on the call. Helps your team know what this campaign is for.">Description</Lbl><textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Brief description of the campaign" className={inputCls + " h-16 resize-none"} /></div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5"><Lbl req tip="The name the AI introduces itself with.">Agent Name</Lbl><Input value={agent} onChange={(e) => setAgent(e.target.value)} placeholder="e.g. Anjali" className={inputCls} />{tried && !agent.trim() && <p className="text-xs text-danger">Agent name is required</p>}</div>
@@ -480,7 +500,7 @@ export function V6AdvancedWizard() {
         </aside>
       </div>
 
-      <Tour steps={ADV_TOUR} storageKey="vox-tour-adv" />
+      <Tour steps={advTour} onFinish={() => setStep(preTourStep.current)} />
     </div>
   );
 }

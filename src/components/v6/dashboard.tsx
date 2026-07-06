@@ -290,7 +290,7 @@ export function V6Dashboard() {
         />
       </section>
 
-      <Tour steps={TOUR} storageKey="vox-tour-dashboard" />
+      <Tour steps={TOUR} />
     </div>
   );
 }

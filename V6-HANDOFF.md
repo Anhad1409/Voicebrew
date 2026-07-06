@@ -17,7 +17,7 @@ npm run dev                 # http://localhost:3000  (or: PORT=3434 npm run dev)
 npm run build && npx next start -p 3434
 ```
 - **Node 20+** (built on 24). No env vars/secrets needed.
-- `/` redirects to **`/dashboard`**.
+- `/` redirects to **`/login`** — the sign-in journey (mock auth: any credentials work; `error@…` demos the error state). Sign-in pours into **`/dashboard`**.
 - ⚠️ Read [`AGENTS.md`](./AGENTS.md): this Next.js version has breaking changes vs older docs.
 - **Deploy:** see [`DEPLOY.md`](./DEPLOY.md) (`vercel --prod`, or GitHub → Vercel dashboard).
 
@@ -32,6 +32,7 @@ npm run build && npx next start -p 3434
 
 ```
 Root layout (V6Sidebar + V6Topbar + <main>)
+ ├─ /login            → "The Morning Edition" sign-in journey (fixed overlay, no shell; LOGIN-DESIGN-SPEC.md)
  ├─ /dashboard        → V6Dashboard        (flip-card KPIs, capacity cup, live campaigns…)
  ├─ /today            → V6Today            (brew worklist; cup fills as you tick tasks)
  ├─ /campaigns        → V6CampaignsList    (tabs, table, row→detail, "…" menu, Quick/Advanced)
@@ -55,7 +56,7 @@ Same file. Two toggles:
 - **Auto-pause on reported issues** — "Pause when **≥ N** customers report the same blocker within an hour," with a severity filter and **Notify-me-first (recommended)** vs **Pause-automatically**. This is the config side of the AI blocker.
 
 ### 2.3 **AI blocker analysis** — bell alert + pop-up + report
-- [`components/v6/notification-bell.tsx`](src/components/v6/notification-bell.tsx) — the top-bar bell. When a high-priority blocker "hits" it **escalates** (red pulsing badge + ring) and fires a **high-priority pop-up alert** (bottom-right) with a brief + **Pause / Ignore / View full report**. The blocker is also pinned at the top of the bell dropdown.
+- [`components/v6/notification-bell.tsx`](src/components/v6/notification-bell.tsx) — the top-bar bell. When a high-priority blocker "hits" it **escalates** (red pulsing badge + pulsing ring) and pins the blocker at the top of the dropdown with a brief + **Pause / Ignore / View full report** (no auto pop-up — delivery is bell-only by design).
 - [`components/v6/blocker-report.tsx`](src/components/v6/blocker-report.tsx), route `/insights` — the full, uncluttered report: severity, stat cards (customers reported, % of calls, connect impact, detected), "what's happening", real customer quotes, AI root cause, and a **before/after suggested fix** with Apply/Pause/Ignore.
 - Data for all of this: [`src/lib/v6-mock.ts`](src/lib/v6-mock.ts) (the example blocker, quiet-hour defaults, timezones, weekdays).
 
