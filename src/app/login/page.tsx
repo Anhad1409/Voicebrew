@@ -644,6 +644,19 @@ export default function LoginPage() {
                         or get a magic bean <span style={{ color: "#4fb0a5" }}>✳</span> link
                       </button>
                     </motion.div>
+
+                    {/* open a tab (signup) */}
+                    <motion.div variants={rows} className="border-t pt-4 text-center" style={{ borderColor: "#eadbc8" }}>
+                      <span className="text-[13px]" style={{ color: "#6b4423" }}>New here? </span>
+                      <button
+                        type="button"
+                        onClick={() => { try { sessionStorage.setItem("vb-card-flip", "1"); } catch {} router.push("/signup"); }}
+                        className="text-[13px] font-medium underline-offset-4 hover:underline"
+                        style={{ color: "#b8763d" }}
+                      >
+                        Open a tab →
+                      </button>
+                    </motion.div>
                   </motion.div>
                 </motion.form>
               </motion.div>

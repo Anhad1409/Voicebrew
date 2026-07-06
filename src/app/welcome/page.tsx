@@ -1,0 +1,468 @@
+"use client";
+
+/* /welcome — "YOUR TAB, PRINTING". 4-step chip wizard where every answer
+   prints as a receipt line item; ends in THE OPENING BALANCE (50 sips on
+   the house, wax-stamped with your TABLE No.) → THE POUR wipe → /dashboard.
+   Spec: ONBOARDING-DESIGN-SPEC.md §3–4. */
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import NumberFlow from "@number-flow/react";
+import { Check, Phone } from "lucide-react";
+import { VoiceBrewMark } from "@/components/layout/voicebrew-logo";
+import {
+  ROLES, TEAM, USE_CASES, VERTICALS, LANGS, VOLUMES, PATH_OF, GREETINGS,
+  STEP_LABELS, GRANT, readback, type RLine,
+} from "./wizard";
+import { getProfile, setProfile, ensureTableNo, grantOpeningBalance } from "@/lib/tab-mock";
+
+const EASE = [0.22, 1, 0.36, 1] as const;
+const mono = "font-[family-name:var(--font-data)]";
+const ZIGZAG = "polygon(0 0,100% 0,100% calc(100% - 8px),97.5% 100%,95% calc(100% - 8px),92.5% 100%,90% calc(100% - 8px),87.5% 100%,85% calc(100% - 8px),82.5% 100%,80% calc(100% - 8px),77.5% 100%,75% calc(100% - 8px),72.5% 100%,70% calc(100% - 8px),67.5% 100%,65% calc(100% - 8px),62.5% 100%,60% calc(100% - 8px),57.5% 100%,55% calc(100% - 8px),52.5% 100%,50% calc(100% - 8px),47.5% 100%,45% calc(100% - 8px),42.5% 100%,40% calc(100% - 8px),37.5% 100%,35% calc(100% - 8px),32.5% 100%,30% calc(100% - 8px),27.5% 100%,25% calc(100% - 8px),22.5% 100%,20% calc(100% - 8px),17.5% 100%,15% calc(100% - 8px),12.5% 100%,10% calc(100% - 8px),7.5% 100%,5% calc(100% - 8px),2.5% 100%,0 calc(100% - 8px))";
+
+/* ---------- rubber-stamp chip ---------- */
+function Chip({ label, on, onTap }: { label: string; on: boolean; onTap: () => void }) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.button
+      type="button"
+      aria-pressed={on}
+      onClick={onTap}
+      whileTap={reduce ? undefined : { scale: 0.94 }}
+      animate={on && !reduce ? { scale: [1.12, 1] } : {}}
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      className="rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors"
+      style={on
+        ? { background: "#b8763d", borderColor: "#b8763d", color: "#fffdf9", boxShadow: "0 1px 0 rgba(42,26,15,0.15)" }
+        : { background: "#fffdf9", borderColor: "#eadbc8", color: "#3d2817" }}
+    >
+      {label}
+    </motion.button>
+  );
+}
+
+/* ---------- mini cup progress token ---------- */
+function CupToken({ quarter }: { quarter: number }) {
+  const fill = Math.min(1, quarter / 4);
+  return (
+    <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden>
+      <path d="M8 12 h24 l-3.4 22 a4 4 0 0 1 -4 3.4 h-9.2 a4 4 0 0 1 -4 -3.4 Z" fill="#fffdf9" stroke="#eadbc8" strokeWidth="1.5" />
+      <clipPath id="ctk"><path d="M8 12 h24 l-3.4 22 a4 4 0 0 1 -4 3.4 h-9.2 a4 4 0 0 1 -4 -3.4 Z" /></clipPath>
+      <motion.rect x="6" width="28" height="30" fill="#c9a87c" clipPath="url(#ctk)"
+        initial={false} animate={{ y: 38 - fill * 24 }} transition={{ type: "spring", stiffness: 140, damping: 20 }} />
+      <path d="M32 16 a6 6 0 0 1 0 12" fill="none" stroke="#eadbc8" strokeWidth="2.4" />
+    </svg>
+  );
+}
+
+/* ---------- the receipt ---------- */
+function Receipt({ name, brand, lines, tableNo, stamped }: { name: string; brand: string; lines: RLine[]; tableNo: string | null; stamped: boolean }) {
+  const reduce = useReducedMotion();
+  const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  return (
+    <div className={`${mono} relative w-full max-w-[360px] px-5 pb-6 pt-5 text-[11px] leading-relaxed`}
+      style={{ background: "#fffdf9", border: "1px solid #eadbc8", clipPath: ZIGZAG, color: "#3d2817", boxShadow: "0 8px 30px -18px rgba(42,26,15,0.25)" }}>
+      <div className="text-center uppercase tracking-[0.18em]" style={{ color: "#6b4423" }}>
+        Voicebrew estd. MMXXVI
+        <div className="mt-0.5 text-[9px] tracking-[0.12em]" style={{ color: "#c9a87c" }}>{today.toUpperCase()} · MUMBAI</div>
+      </div>
+      <div className="my-2 border-b border-dashed" style={{ borderColor: "#eadbc8" }} />
+      <div className="uppercase">TAB — {name || "…"}</div>
+      {brand && <div className="uppercase tracking-[0.06em]" style={{ color: "#2a1a0f" }}>{brand}</div>}
+      <div className="my-2 border-b border-dashed" style={{ borderColor: "#eadbc8" }} />
+      <ul aria-live="polite" className="space-y-1.5">
+        <AnimatePresence initial={false}>
+          {lines.map((l, i) => (
+            <motion.li key={l.label + i}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22, delay: reduce ? 0 : 0.04 }}
+              className="flex items-baseline gap-1.5 uppercase">
+              <span className="shrink-0">{l.label}</span>
+              <span className="mx-1 flex-1 border-b border-dotted" style={{ borderColor: "#c9a87c", transform: "translateY(-3px)" }} />
+              <span className="shrink-0 text-right"
+                style={l.tone === "milk" ? { fontFamily: "var(--font-brew)", fontStyle: "italic", textTransform: "none", color: "#c9a87c" }
+                  : l.tone === "free" ? { color: "#4fb0a5", fontWeight: 600 }
+                  : l.tone === "verified" ? { color: "#4fb0a5", fontWeight: 600 }
+                  : { color: "#2a1a0f" }}>
+                {l.value}
+              </span>
+            </motion.li>
+          ))}
+        </AnimatePresence>
+      </ul>
+      {stamped && tableNo && (
+        <motion.div
+          initial={reduce ? { opacity: 1 } : { opacity: 0, rotate: -12, scale: 1.3 }}
+          animate={{ opacity: 1, rotate: -6, scale: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 18 }}
+          className="mt-4 border-2 px-3 py-2 text-center text-[10px] font-bold uppercase tracking-[0.14em]"
+          style={{ borderColor: "#b8763d", color: "#b8763d", borderRadius: 6, transformOrigin: "center" }}>
+          Tab opened — {today} — Table No. {tableNo}
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- ORDER READBACK call sheet ---------- */
+function ReadbackSheet({ onDone }: { onDone: () => void }) {
+  const reduce = useReducedMotion();
+  const lines = readback(getProfile());
+  const [li, setLi] = useState(0);
+  const [chars, setChars] = useState(0);
+  useEffect(() => {
+    if (reduce) { setLi(lines.length - 1); setChars(lines[lines.length - 1].length); return; }
+    const id = setInterval(() => {
+      setChars((c) => {
+        if (c < lines[li].length) return c + 1;
+        if (li < lines.length - 1) { setLi((v) => v + 1); return 0; }
+        clearInterval(id);
+        return c;
+      });
+    }, 34);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [li, reduce]);
+  const finished = li === lines.length - 1 && chars >= lines[lines.length - 1].length;
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[120] grid place-items-center p-5" style={{ background: "rgba(42,26,15,0.45)", backdropFilter: "blur(6px)" }}>
+      <motion.div initial={reduce ? {} : { y: 24, scale: 0.98 }} animate={{ y: 0, scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 22 }}
+        className="w-full max-w-[420px] rounded-3xl p-6" style={{ background: "#fffdf9", border: "1px solid #eadbc8" }}>
+        <div className="flex items-center gap-2">
+          <span className="grid size-9 place-items-center rounded-full" style={{ background: "#4fb0a5" }}><Phone className="size-4 text-white" /></span>
+          <div>
+            <div className="text-sm font-semibold" style={{ color: "#2a1a0f" }}>VoiceBrew · tasting call</div>
+            <div className={`${mono} text-[10px] uppercase tracking-[0.12em]`} style={{ color: "#4fb0a5" }}>On the house — 0 sips</div>
+          </div>
+        </div>
+        {/* waveform speaking */}
+        <div className="mt-4 flex h-10 items-center justify-center gap-[3px] rounded-xl px-4" style={{ background: "#f4e9d8" }}>
+          {Array.from({ length: 28 }).map((_, i) => (
+            <span key={i} className="w-[3px] flex-1 rounded-full" style={{ background: i % 3 ? "#b8763d" : "#4fb0a5", height: "30%", transformOrigin: "center", animation: reduce || finished ? undefined : `vbEq ${640 + (i % 5) * 110}ms ease-in-out ${(i % 7) * 80}ms infinite` }} />
+          ))}
+          <style>{`@keyframes vbEq{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}`}</style>
+        </div>
+        {/* transcript */}
+        <div className="mt-4 min-h-[110px] space-y-2">
+          {lines.slice(0, li + 1).map((l, i) => (
+            <p key={i} className={`${mono} rounded-xl px-3 py-2 text-[12.5px] leading-snug`} style={{ background: "#fdf8f0", color: "#3d2817" }}>
+              {i === li ? l.slice(0, chars) : l}
+              {i === li && !finished && <span className="ml-0.5 inline-block w-[2px]" style={{ height: 12, background: "#b8763d" }} />}
+            </p>
+          ))}
+        </div>
+        <button onClick={onDone} className="mt-4 h-11 w-full rounded-xl font-serif text-[15px] font-semibold" style={{ background: finished ? "#b8763d" : "#f4e9d8", color: finished ? "#fffdf9" : "#6b4423" }}>
+          {finished ? "That's my order — hang up" : "Skip the tasting"}
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/* ========================================================================= */
+export default function WelcomePage() {
+  const router = useRouter();
+  const reduce = useReducedMotion();
+  const [step, setStep] = useState(0);
+  const [phase, setPhase] = useState<"wizard" | "grant">("wizard");
+  const [name, setName] = useState("");
+  const [brand, setBrand] = useState("");
+  const [role, setRole] = useState("");
+  const [team, setTeam] = useState("");
+  const [useCase, setUseCase] = useState("");
+  const [vertical, setVertical] = useState("");
+  const [langs, setLangs] = useState<string[]>([]);
+  const [volume, setVolume] = useState("");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
+  const [verified, setVerified] = useState(false);
+  const [calling, setCalling] = useState(false);
+  const [tasted, setTasted] = useState(false);
+  const [lines, setLines] = useState<RLine[]>([]);
+  const [tableNo, setTableNo] = useState<string | null>(null);
+  const [stamped, setStamped] = useState(false);
+  const [granted, setGranted] = useState(false);
+  const [pourOnly, setPourOnly] = useState(false); // onboarded-but-unverified: step 4 only
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const grantStart = useRef(0);
+  const wiped = useRef(false);
+  const t = (ms: number, fn: () => void) => timeouts.current.push(setTimeout(fn, ms));
+
+  // guards + resume
+  useEffect(() => {
+    try {
+      const p = getProfile();
+      if (localStorage.getItem("vb-onboarded")) {
+        // already granted: allow "pour later" users back in for step 4 only
+        if (p.phoneVerified) { router.replace("/dashboard"); return; }
+        setName(p.name || ""); setPourOnly(true); setStep(3);
+        return;
+      }
+      if (!p.name) { router.replace("/signup"); return; }
+      setName(p.name);
+      const saved = Number(sessionStorage.getItem("vb-wizard-step") || "0");
+      if (saved > 0 && saved < 4) setStep(saved);
+    } catch {}
+    return () => timeouts.current.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => { try { sessionStorage.setItem("vb-wizard-step", String(step)); } catch {} }, [step]);
+
+  const print = useCallback((label: string, value: string, tone?: RLine["tone"]) =>
+    setLines((ls) => [...ls.filter((x) => x.label !== label), { label, value, tone }]), []);
+
+  /* ---- THE OPENING BALANCE ---- */
+  const runWipe = useCallback(() => {
+    if (wiped.current) return;
+    wiped.current = true;
+    timeouts.current.forEach(clearTimeout);
+    const el = document.createElement("div");
+    el.style.cssText = `position:fixed;left:50%;top:50%;width:120px;height:120px;margin:-60px;border-radius:50%;background:#fffdf9;transform:scale(0);z-index:2147483000;pointer-events:none;transition:transform ${reduce ? 200 : 450}ms ease-in-out;`;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => { el.style.transform = "scale(40)"; }));
+    setTimeout(() => {
+      grantOpeningBalance();
+      try { sessionStorage.setItem("vb-just-granted", "1"); sessionStorage.removeItem("vb-wizard-step"); } catch {}
+      router.push("/dashboard");
+    }, reduce ? 180 : 400);
+    setTimeout(() => { el.style.transition = "opacity 250ms"; el.style.opacity = "0"; }, reduce ? 420 : 700);
+    setTimeout(() => el.remove(), 1000);
+  }, [reduce, router]);
+
+  const startGrant = useCallback(() => {
+    setPhase("grant");
+    grantStart.current = performance.now();
+    const no = ensureTableNo();
+    setTableNo(no);
+    if (reduce) { setStamped(true); setGranted(true); t(600, runWipe); return; }
+    t(GRANT.STAMP, () => setStamped(true));
+    t(GRANT.POUR, () => setGranted(true));
+    t(GRANT.WIPE, runWipe);
+  }, [reduce, runWipe, t]);
+
+  // skip-to-wipe on any key/click during grant
+  useEffect(() => {
+    if (phase !== "grant") return;
+    const skip = () => { if (performance.now() - grantStart.current > GRANT.SKIP_AFTER) runWipe(); };
+    window.addEventListener("keydown", skip); window.addEventListener("pointerdown", skip);
+    return () => { window.removeEventListener("keydown", skip); window.removeEventListener("pointerdown", skip); };
+  }, [phase, runWipe]);
+
+  /* ---- step advance ---- */
+  const advance = (skip: boolean) => {
+    if (step === 0) {
+      if (skip || (!brand && !role && !team)) print("HOUSE BLEND", "LEFT ROOM FOR MILK", "milk");
+      else {
+        if (role) print("ROLE", role.toUpperCase());
+        if (team) print("PARTY OF", team.toUpperCase());
+      }
+      setProfile({ brand, role, teamSize: team, skipped: skip ? ["table"] : [] });
+      setStep(1);
+    } else if (step === 1) {
+      if (skip || !useCase) print("BLEND", "LEFT ROOM FOR MILK", "milk");
+      else print("BLEND", `${useCase.toUpperCase()} (${PATH_OF[useCase] === "service" ? "SERVICE" : "PROMO"})`);
+      if (vertical) print("HOUSE", vertical.toUpperCase());
+      setProfile({ useCase, vertical, compliancePath: useCase ? PATH_OF[useCase] : undefined });
+      setStep(2);
+    } else if (step === 2) {
+      if (skip || langs.length === 0) print("ROAST", "LEFT ROOM FOR MILK", "milk");
+      else print("ROAST", langs.map((l) => l.toUpperCase()).join(" · "));
+      if (volume) print("PARTY SIZE", volume.toUpperCase());
+      setProfile({ languages: langs, volume });
+      setStep(3);
+    } else {
+      // step 4 done (verified+tasted, or pour later)
+      if (pourOnly) { router.push("/dashboard"); return; } // already granted
+      if (!verified) print("FIRST POUR", "POUR LATER", "milk");
+      startGrant();
+    }
+  };
+
+  const otpDone = otp.every((d) => d !== "");
+  const verify = () => {
+    if (!otpDone) return;
+    setVerified(true);
+    setProfile({ phone: `+91 ${phone}`, phoneVerified: true });
+    print("CUP VERIFIED", `+91 ${phone.replace(/(\d{5})(\d{5})/, "$1 $2")}`, "verified");
+  };
+  const finishTasting = () => {
+    setCalling(false);
+    setTasted(true);
+    print(`1 × TASTING CALL (${(langs[0] || "HINGLISH").toUpperCase()})`, "ON THE HOUSE — 0 SIPS", "free");
+  };
+
+  const stepBody = [
+    /* 1 — NAME ON THE TAB */
+    <div key="s1" className="space-y-5">
+      <div>
+        <label className={`${mono} mb-1.5 block text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Company / brand</label>
+        <input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="e.g. Blostem Finance"
+          className="h-11 w-full rounded-xl border bg-[#fdf8f0] px-3.5 text-[15px] outline-none focus:border-[#b8763d]"
+          style={{ borderColor: "#eadbc8", color: "#2a1a0f", caretColor: "#b8763d" }} />
+      </div>
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Your role</div>
+        <div className="flex flex-wrap gap-2">{ROLES.map((r) => <Chip key={r} label={r} on={role === r} onTap={() => setRole(role === r ? "" : r)} />)}</div>
+      </div>
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Team size <span style={{ color: "#c9a87c" }}>· optional</span></div>
+        <div className="flex flex-wrap gap-2">{TEAM.map((s) => <Chip key={s} label={s} on={team === s} onTap={() => setTeam(team === s ? "" : s)} />)}</div>
+      </div>
+    </div>,
+    /* 2 — PICK YOUR BLEND (chalkboard) */
+    <div key="s2" className="space-y-5 rounded-2xl p-5" style={{ background: "#2a1a0f" }}>
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#c9a87c" }}>What are we brewing for your guests?</div>
+        <div className="flex flex-wrap gap-2">{USE_CASES.map((u) => (
+          <button key={u} onClick={() => setUseCase(useCase === u ? "" : u)} aria-pressed={useCase === u}
+            className="rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors"
+            style={useCase === u ? { background: "#c9a87c", borderColor: "#c9a87c", color: "#2a1a0f" } : { background: "transparent", borderColor: "#6b4423", color: "#eadbc8" }}>{u}</button>
+        ))}</div>
+      </div>
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#c9a87c" }}>Your house</div>
+        <div className="flex flex-wrap gap-2">{VERTICALS.map((v) => (
+          <button key={v} onClick={() => setVertical(vertical === v ? "" : v)} aria-pressed={vertical === v}
+            className="rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors"
+            style={vertical === v ? { background: "#c9a87c", borderColor: "#c9a87c", color: "#2a1a0f" } : { background: "transparent", borderColor: "#6b4423", color: "#eadbc8" }}>{v}</button>
+        ))}</div>
+      </div>
+    </div>,
+    /* 3 — CHOOSE THE ROAST */
+    <div key="s3" className="space-y-5">
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Calling languages</div>
+        <div className="flex flex-wrap gap-2">{LANGS.map((l) => <Chip key={l} label={l} on={langs.includes(l)} onTap={() => setLangs((xs) => xs.includes(l) ? xs.filter((x) => x !== l) : [...xs, l])} />)}</div>
+        <AnimatePresence mode="wait">
+          {langs.length > 0 && (
+            <motion.p key={langs[langs.length - 1]} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className={`${mono} mt-3 rounded-xl px-3 py-2 text-[12px]`} style={{ background: "#f4e9d8", color: "#3d2817" }}>
+              ☕ “{GREETINGS[langs[langs.length - 1]]}”
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Monthly call volume <span style={{ color: "#c9a87c" }}>· optional</span></div>
+        <div className="flex flex-wrap gap-2">{VOLUMES.map((v) => <Chip key={v} label={v} on={volume === v} onTap={() => setVolume(volume === v ? "" : v)} />)}</div>
+      </div>
+    </div>,
+    /* 4 — THE FIRST POUR */
+    <div key="s4" className="space-y-5">
+      <p className="font-serif text-lg italic" style={{ color: "#2a1a0f" }}>Where should we pour the first call?</p>
+      <p className={`${mono} -mt-3 text-[11px]`} style={{ color: "#6b4423" }}>Free sips pour only into your own verified cup — no paperwork, no waiting.</p>
+      <div className="flex items-center gap-2">
+        <span className={`${mono} rounded-xl border px-3 py-2.5 text-[14px]`} style={{ borderColor: "#eadbc8", background: "#f4e9d8", color: "#6b4423" }}>+91</span>
+        <input value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} inputMode="numeric" placeholder="98••• •••10" disabled={verified}
+          className={`${mono} h-11 flex-1 rounded-xl border bg-[#fdf8f0] px-3.5 text-[15px] tracking-[0.08em] outline-none focus:border-[#b8763d]`}
+          style={{ borderColor: "#eadbc8", color: "#2a1a0f", caretColor: "#b8763d" }} />
+      </div>
+      {phone.length === 10 && !verified && (
+        <div>
+          <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>6-digit OTP <span style={{ color: "#c9a87c" }}>· any digits work in the demo</span></div>
+          <div className="flex gap-2">
+            {otp.map((d, i) => (
+              <input key={i} ref={(el) => { otpRefs.current[i] = el; }} value={d} inputMode="numeric" maxLength={1}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, "").slice(-1);
+                  setOtp((o) => o.map((x, j) => (j === i ? v : x)));
+                  if (v && i < 5) otpRefs.current[i + 1]?.focus();
+                }}
+                onKeyDown={(e) => { if (e.key === "Backspace" && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus(); }}
+                className={`${mono} h-12 w-10 rounded-xl border bg-[#fdf8f0] text-center text-[18px] outline-none focus:border-[#b8763d]`}
+                style={{ borderColor: "#eadbc8", color: "#2a1a0f", caretColor: "#b8763d" }} />
+            ))}
+          </div>
+          <button onClick={verify} disabled={!otpDone} className="mt-3 h-11 rounded-xl px-5 font-serif text-[15px] font-semibold transition-colors"
+            style={{ background: otpDone ? "#b8763d" : "#eadbc8", color: otpDone ? "#fffdf9" : "#c9a87c" }}>Verify my cup</button>
+        </div>
+      )}
+      {verified && !tasted && (
+        <motion.button initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} onClick={() => setCalling(true)}
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl font-serif text-[17px] font-semibold" style={{ background: "#2a1a0f", color: "#fffdf9" }}>
+          <Phone className="size-4" /> Call me now
+        </motion.button>
+      )}
+      {verified && tasted && (
+        <p className={`${mono} flex items-center gap-1.5 text-[12px]`} style={{ color: "#4fb0a5" }}><Check className="size-4" /> Tasting poured — on the house.</p>
+      )}
+    </div>,
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: "#fdf8f0" }}>
+      {/* header */}
+      <div className="mx-auto flex max-w-[980px] items-center justify-between px-6 pt-8">
+        <span className="flex items-center gap-2">
+          <VoiceBrewMark className="size-7 text-coffee" />
+          <span className={`${mono} text-[11px] uppercase tracking-[0.2em]`} style={{ color: "#6b4423" }}>Your tab, printing</span>
+        </span>
+        <div className="flex items-center gap-2.5">
+          <CupToken quarter={phase === "grant" ? 4 : step + (verified ? 1 : 0)} />
+          <span className={`${mono} text-[10px] uppercase tracking-[0.12em]`} style={{ color: "#c9a87c" }}>
+            {phase === "grant" ? "TAB OPENED" : `${step + 1} of 4 — ${STEP_LABELS[step]}`}
+          </span>
+        </div>
+      </div>
+
+      <div className="mx-auto grid max-w-[980px] gap-8 px-6 py-8 lg:grid-cols-[1fr_360px]">
+        {/* STEP PANEL */}
+        <div>
+          <AnimatePresence mode="wait">
+            {phase === "wizard" ? (
+              <motion.div key={step}
+                initial={reduce ? { opacity: 0 } : { opacity: 0, y: 22 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduce ? { opacity: 0 } : { opacity: 0, y: -26 }}
+                transition={{ duration: 0.32, ease: EASE }}>
+                <h1 className="mb-5 font-serif text-[26px] leading-tight" style={{ color: "#2a1a0f" }}>
+                  {["Whose café is this?", "Pick your blend — what are we brewing for your guests?", "Choose the roast — what language should the cup speak?", "The first pour"][step]}
+                </h1>
+                {stepBody[step]}
+                <div className="mt-7 flex items-center justify-between">
+                  <button onClick={() => advance(false)} className="h-11 rounded-xl px-6 font-serif text-[15px] font-semibold" style={{ background: "#b8763d", color: "#fffdf9" }}>
+                    {step === 3 ? (verified ? "Open the tab" : "Continue") : "Continue"}
+                  </button>
+                  <button onClick={() => advance(true)} className={`${mono} text-[11px] uppercase tracking-[0.1em] underline-offset-4 hover:underline`} style={{ color: "#c9a87c" }}>
+                    {step === 3 ? "Pour later" : "I'll decide at the counter"}
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              /* THE OPENING BALANCE */
+              <motion.div key="grant" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4">
+                <h1 className="font-serif text-[30px] leading-tight" style={{ color: "#2a1a0f" }}>Your first fifty sips are on the house.</h1>
+                <div className="mt-6 flex items-end gap-3">
+                  <span className={`${mono} text-[72px] font-semibold leading-none`} style={{ color: "#b8763d" }}>
+                    <NumberFlow value={granted ? 50 : 0} transformTiming={{ duration: reduce ? 0 : 1600, easing: "cubic-bezier(0.22,1,0.36,1)" }} />
+                  </span>
+                  <span className={`${mono} pb-2 text-[14px] uppercase tracking-[0.14em]`} style={{ color: "#4fb0a5" }}>sips</span>
+                </div>
+                <AnimatePresence>
+                  {granted && (
+                    <motion.p initial={reduce ? { opacity: 1 } : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: reduce ? 0 : 1.7 }}
+                      className="mt-4 max-w-sm text-[14px] leading-relaxed" style={{ color: "#3d2817" }}>
+                      Opening balance: 50 sips on the house — ≈ 6 minutes of calling at ₹8/min. No card, no clock. Your cup stays warm.
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+                <p className={`${mono} mt-6 text-[10px] uppercase tracking-[0.12em]`} style={{ color: "#c9a87c" }}>Pouring you in…</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* THE RECEIPT */}
+        <div className="lg:sticky lg:top-8 lg:self-start">
+          <Receipt name={name} brand={brand} lines={lines} tableNo={tableNo} stamped={stamped} />
+        </div>
+      </div>
+
+      <AnimatePresence>{calling && <ReadbackSheet onDone={finishTasting} />}</AnimatePresence>
+    </div>
+  );
+}

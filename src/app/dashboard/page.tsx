@@ -1,2 +1,11 @@
 import { V6Dashboard } from "@/components/v6/dashboard";
-export default function DashboardPage() { return <V6Dashboard />; }
+import { FirstPourCard } from "@/components/v6/first-pour-card";
+
+export default function DashboardPage() {
+  return (
+    <>
+      <div className="mx-auto max-w-7xl"><FirstPourCard /></div>
+      <V6Dashboard />
+    </>
+  );
+}

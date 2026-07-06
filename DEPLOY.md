@@ -14,7 +14,7 @@ npm i -g vercel && vercel login && vercel --prod
 
 ## Notes
 - Framework Next.js · Build `next build` · Install `npm install` · Node 20+ · no env vars.
-- Routes: `/` → `/login` (the sign-in journey; any credentials work, `error@…` demos the error state) → `/dashboard`; `/today`, `/campaigns` (+ `/campaigns/new`, `/campaigns/quick`, `/campaigns/[id]`), `/insights`, and all operational screens (`/leads`, `/calls`, `/analytics`, `/settings`, …) — all in the v6 shell.
+- Routes: `/` → `/login` → `/dashboard`; freemium onboarding at `/signup` + `/welcome` (50 free credits) with pricing at `/plans`; `/today`, `/campaigns` (+ `/campaigns/new`, `/campaigns/quick`, `/campaigns/[id]`), `/insights`, and all operational screens (`/leads`, `/calls`, `/analytics`, `/settings`, …) — all in the v6 shell.
 - Type/lint checks are skipped in the prod build on purpose (mock-data cosmetics, not runtime bugs) — see `next.config.ts`.
 
 ## Run the production build locally

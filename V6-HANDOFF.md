@@ -17,7 +17,7 @@ npm run dev                 # http://localhost:3000  (or: PORT=3434 npm run dev)
 npm run build && npx next start -p 3434
 ```
 - **Node 20+** (built on 24). No env vars/secrets needed.
-- `/` redirects to **`/login`** — the sign-in journey (mock auth: any credentials work; `error@…` demos the error state). Sign-in pours into **`/dashboard`**.
+- `/` redirects to **`/login`**. Sign-in (any credentials; `error@…` demos errors) pours into **`/dashboard`**. **New users:** "Open a tab →" → `/signup` → `/welcome` wizard → **50 free sips** granted (freemium; sidebar wallet shows "n sips · on the house") → upgrade via `/plans`.
 - ⚠️ Read [`AGENTS.md`](./AGENTS.md): this Next.js version has breaking changes vs older docs.
 - **Deploy:** see [`DEPLOY.md`](./DEPLOY.md) (`vercel --prod`, or GitHub → Vercel dashboard).
 
@@ -32,7 +32,10 @@ npm run build && npx next start -p 3434
 
 ```
 Root layout (V6Sidebar + V6Topbar + <main>)
- ├─ /login            → "The Morning Edition" sign-in journey (fixed overlay, no shell; LOGIN-DESIGN-SPEC.md)
+ ├─ /login            → "The Morning Edition" sign-in journey (fixed overlay; LOGIN-DESIGN-SPEC.md)
+ ├─ /signup /welcome  → "OPEN A TAB" freemium onboarding: 3-field signup → receipt wizard →
+ │                      50 free sips granted (ONBOARDING-DESIGN-SPEC.md; state in lib/tab-mock.ts)
+ ├─ /plans            → "Settle Your Tab" pricing (free / ₹8-per-min Regulars' Card / House Account)
  ├─ /dashboard        → V6Dashboard        (flip-card KPIs, capacity cup, live campaigns…)
  ├─ /today            → V6Today            (brew worklist; cup fills as you tick tasks)
  ├─ /campaigns        → V6CampaignsList    (tabs, table, row→detail, "…" menu, Quick/Advanced)

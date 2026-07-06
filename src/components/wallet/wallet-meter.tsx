@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Clock, Plus, X, ArrowUpRight, ArrowDownRight, Gift, Zap, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MiniSpark } from "@/components/ui-bits/mini-spark";
 import { toast } from "@/components/notifications/toaster";
 import { wallet, walletHistory, walletUsage, topupPacks, walletState } from "@/lib/wallet-mock";
+import { TabMeter } from "@/components/wallet/tab-meter";
+import { getPlan } from "@/lib/tab-mock";
 
 function tone(min: number) {
   const s = walletState(min);
@@ -23,6 +25,15 @@ export function WalletMeter({ collapsed = false }: { collapsed?: boolean }) {
   const [open, setOpen] = useState(false);
   const [topup, setTopup] = useState(false);
   const [hist, setHist] = useState(walletHistory);
+  // freemium TAB branch: vb-plan="free" → sips meter (spec §6); paid model untouched
+  const [freePlan, setFreePlan] = useState(false);
+  useEffect(() => {
+    const sync = () => setFreePlan(getPlan() === "free");
+    sync();
+    window.addEventListener("vb-credits-change", sync);
+    window.addEventListener("storage", sync);
+    return () => { window.removeEventListener("vb-credits-change", sync); window.removeEventListener("storage", sync); };
+  }, []);
   const t = tone(balance);
   const pct = Math.min(100, Math.round((balance / wallet.planMinutes) * 100));
 
@@ -32,6 +43,8 @@ export function WalletMeter({ collapsed = false }: { collapsed?: boolean }) {
     setTopup(false);
     toast({ title: "Balance topped up", body: `+${mins.toLocaleString("en-IN")} minutes added.`, severity: "success" });
   };
+
+  if (freePlan) return <TabMeter collapsed={collapsed} />;
 
   return (
     <>

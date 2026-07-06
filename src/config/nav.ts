@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard, Megaphone, Users, Phone, PhoneCall, BarChart3, Activity,
   FileText, ListOrdered, Workflow, Headset, Plug, ShieldCheck, Brain,
-  FlaskConical, Bot, Mic, ScrollText, Settings, Wallet, Crown, Sun,
+  FlaskConical, Bot, Mic, ScrollText, Settings, Wallet, Crown, Sun, Coffee,
 } from "lucide-react";
 
 export type NavItem = { label: string; href: string; icon: LucideIcon; group: string };
@@ -37,6 +37,7 @@ export const nav: NavItem[] = [
 
   { label: "Integrations", href: "/integrations", icon: Plug, group: "admin" },
   { label: "Settings", href: "/settings", icon: Settings, group: "admin" },
+  { label: "Plans", href: "/plans", icon: Coffee, group: "admin" },
   { label: "Billing", href: "/settings/billing", icon: Wallet, group: "admin" },
   { label: "System Logs", href: "/system-logs", icon: ScrollText, group: "admin" },
   { label: "Admin", href: "/admin", icon: Crown, group: "admin" },
