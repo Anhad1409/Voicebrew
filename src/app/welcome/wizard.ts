@@ -7,6 +7,11 @@ export const VERTICALS = ["NBFC", "Bank", "Fintech", "Insurance", "Edtech", "Hea
 export const LANGS = ["Hinglish", "Hindi", "English", "Tamil", "Telugu", "Marathi", "Bengali"];
 export const VOLUMES = ["Just exploring", "<1k", "1k–10k", "10k–100k", "100k+"];
 
+// THE ORDER — what they'll use the tool for + campaigns they'll run (multi-select)
+export const GOALS = ["Collect payments on time", "Verify customers (KYC)", "Win new customers", "Remind & notify", "Support callbacks", "Run surveys"];
+export const CAMPAIGN_KINDS = ["Payment reminders", "Collections follow-ups", "KYC / verification", "Lead qualification", "Promotional offers", "Surveys & feedback", "Missed-call callbacks"];
+export const PROMO_KINDS = new Set(["Lead qualification", "Promotional offers"]);
+
 // promotional → 140-series · service/transactional → 160-series (silent routing)
 export const PATH_OF: Record<string, "promo" | "service"> = {
   "EMI reminders": "service", Collections: "service", "KYC verification": "service",
@@ -23,7 +28,7 @@ export const GREETINGS: Record<string, string> = {
   Bengali: "Nomoshkar! Apnar EMI kal due ache.",
 };
 
-export const STEP_LABELS = ["NAME ON THE TAB", "PICK YOUR BLEND", "CHOOSE THE ROAST", "THE FIRST POUR"];
+export const STEP_LABELS = ["NAME ON THE TAB", "PICK YOUR BLEND", "THE ORDER", "CHOOSE THE ROAST", "THE FIRST POUR"];
 
 export const GRANT = { SCROLL: 0, STAMP: 400, POUR: 900, SUB: 2600, WIPE: 3400, SKIP_AFTER: 300 } as const;
 

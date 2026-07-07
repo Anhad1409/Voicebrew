@@ -129,15 +129,15 @@ export const ListeningCup = forwardRef<CupHandle, Props>(function ListeningCup(
         <motion.g animate={{ rotate: tilt }} transition={{ type: "spring", stiffness: 200, damping: 20 }} style={{ originX: "170px", originY: "262px" }}>
           {/* saucer shadow + saucer */}
           <ellipse cx="170" cy="266" rx="88" ry="10" fill="#eadbc8" opacity="0.4" style={{ filter: "blur(6px)" }} />
-          <ellipse cx="170" cy="262" rx="95" ry="14" fill="#f4e9d8" stroke="#eadbc8" strokeWidth="1.5" />
+          <ellipse cx="170" cy="262" rx="95" ry="14" fill="#f4e9d8" stroke="#d3b78f" strokeWidth="1.5" />
           {/* error stain — persists until success */}
           {stained && <ellipse cx="212" cy="259" rx="9" ry="3" fill="#3d2817" opacity="0.35" />}
 
           {/* handle */}
-          <path d="M254 150 Q 298 158 292 184 Q 286 208 246 210" fill="none" stroke="#eadbc8" strokeWidth="5" strokeLinecap="round" />
+          <path d="M254 150 Q 298 158 292 184 Q 286 208 246 210" fill="none" stroke="#d3b78f" strokeWidth="5" strokeLinecap="round" />
 
           {/* cup body */}
-          <path d="M86 118 L254 118 L230 240 Q225 252 212 252 L128 252 Q115 252 110 240 Z" fill="#fffdf9" stroke="#eadbc8" strokeWidth="1.5" />
+          <path d="M86 118 L254 118 L230 240 Q225 252 212 252 L128 252 Q115 252 110 240 Z" fill="#fffdf9" stroke="#d3b78f" strokeWidth="1.5" />
           <path d="M86 118 L254 118" stroke="#b8763d" strokeWidth="2" strokeLinecap="round" />
 
           {/* liquid: tint level + 24-bar waveform, clipped to the cup interior */}

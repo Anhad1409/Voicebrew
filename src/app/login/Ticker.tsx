@@ -36,7 +36,7 @@ export function Ticker({ dimmed, stamp }: { dimmed: boolean; stamp: Stamp }) {
     <div
       aria-live="off"
       className="border-t pt-4 transition-opacity duration-300"
-      style={{ borderColor: "#eadbc8", opacity: dimmed ? 0.6 : 1 }}
+      style={{ borderColor: "#d8bf9a", opacity: dimmed ? 0.6 : 1 }}
     >
       <div className="flex items-center gap-2.5 font-[family-name:var(--font-data)] text-[12px]">
         <span className="flex items-center gap-1.5 font-semibold tracking-[0.14em]" style={{ color: "#4fb0a5" }}>

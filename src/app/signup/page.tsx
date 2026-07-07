@@ -14,6 +14,7 @@ import { Ticker } from "../login/Ticker";
 import { RotatingWord } from "../login/RotatingWord";
 import { EMAIL_RE } from "../login/pour";
 import { setProfile } from "@/lib/tab-mock";
+import { Beans } from "../login/Beans";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const inputCls =
@@ -27,6 +28,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [magic, setMagic] = useState(false);          // magic-bean path (password collapsed)
+  const [agreed, setAgreed] = useState(false);        // House Rules consent — required
   const [focus, setFocus] = useState<"name" | "email" | "password" | null>(null);
   const [err, setErr] = useState<null | "email" | "taken">(null);
   const [opening, setOpening] = useState(false);
@@ -39,7 +41,7 @@ export default function SignupPage() {
     try { if (sessionStorage.getItem("vb-card-flip")) { setFlipIn(true); sessionStorage.removeItem("vb-card-flip"); } } catch {}
   }, []);
 
-  const done = name.trim() && email.trim() && (magic || password.length > 0);
+  const done = name.trim() && email.trim() && (magic || password.length > 0) && agreed;
   const fill = 0.22 + (name.trim() ? 0.21 : 0) + (EMAIL_RE.test(email) ? 0.21 : 0) + ((magic || password) ? 0.21 : 0);
 
   const submit = (e: React.FormEvent) => {
@@ -49,7 +51,7 @@ export default function SignupPage() {
     if (email.trim().toLowerCase().startsWith("taken@")) { setErr("taken"); return; }
     setErr(null);
     setOpening(true);
-    setProfile({ name: name.trim(), email: email.trim() });
+    setProfile({ name: name.trim(), email: email.trim(), agreedTerms: true });
     try { sessionStorage.setItem("vb-tab-open", "1"); } catch {}
     setTimeout(() => router.push("/welcome"), reduce ? 150 : 550);
   };
@@ -63,7 +65,8 @@ export default function SignupPage() {
     <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: "#fdf8f0" }}>
       <div className="grid min-h-full lg:grid-cols-[1.15fr_1fr]">
         {/* LEFT — masthead, flip side */}
-        <aside className="relative hidden flex-col justify-between lg:flex" style={{ padding: "clamp(2.5rem,5vw,5rem)", background: "radial-gradient(120% 120% at 0% 100%, #f4e9d8 0%, #fdf8f0 55%)" }}>
+        <aside className="relative hidden flex-col justify-between lg:flex" style={{ padding: "clamp(2.5rem,5vw,5rem)", background: "radial-gradient(120% 120% at 0% 100%, #eddcbe 0%, #f9f1e2 60%)" }}>
+          <Beans />
           <div aria-hidden className="relative">
             <div className="flex items-end justify-between gap-4">
               <span className="flex items-center gap-2">
@@ -72,18 +75,18 @@ export default function SignupPage() {
               </span>
               <span className="font-[family-name:var(--font-data)] text-[10px] tracking-[0.14em]" style={{ color: "#6b4423" }}>{dateline}</span>
             </div>
-            <div className="mt-3 h-px w-full" style={{ background: "#eadbc8" }} />
+            <div className="mt-3 h-px w-full" style={{ background: "#d8bf9a" }} />
             <div className="mt-8 font-[family-name:var(--font-data)] text-[11px] uppercase tracking-[0.14em]" style={{ color: "#6b4423" }}>New patrons — tabs opened daily</div>
-            <h1 className="mt-3 font-serif" style={{ fontSize: "clamp(3rem,5.8vw,5.6rem)", lineHeight: 0.98, color: "#2a1a0f" }}>
+            <motion.h1 className="mt-3 font-serif" style={{ fontSize: "clamp(3rem,5.8vw,5.6rem)", lineHeight: 0.98, color: "#2a1a0f" }} initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, ease: EASE }}>
               Every account,
               <br />freshly <RotatingWord paused={focus !== null} />
-            </h1>
+            </motion.h1>
             <div className="relative mt-8 w-[340px] max-w-full">
               {/* blank receipt tucked under the saucer — grows as fields complete */}
               <motion.div
                 aria-hidden
                 className="absolute -bottom-2 left-1/2 h-16 w-40 -translate-x-1/2 rounded-sm"
-                style={{ background: "#fffdf9", border: "1px solid #eadbc8", zIndex: 0, clipPath: "polygon(0 0,100% 0,100% 92%,95% 100%,90% 92%,85% 100%,80% 92%,75% 100%,70% 92%,65% 100%,60% 92%,55% 100%,50% 92%,45% 100%,40% 92%,35% 100%,30% 92%,25% 100%,20% 92%,15% 100%,10% 92%,5% 100%,0 92%)" }}
+                style={{ background: "#fffdf9", border: "1px solid #d8bf9a", zIndex: 0, clipPath: "polygon(0 0,100% 0,100% 92%,95% 100%,90% 92%,85% 100%,80% 92%,75% 100%,70% 92%,65% 100%,60% 92%,55% 100%,50% 92%,45% 100%,40% 92%,35% 100%,30% 92%,25% 100%,20% 92%,15% 100%,10% 92%,5% 100%,0 92%)" }}
                 animate={{ y: 8 + (fill - 0.22) * 56 }}
                 transition={{ type: "spring", stiffness: 160, damping: 22 }}
               />
@@ -96,8 +99,8 @@ export default function SignupPage() {
         </aside>
 
         {/* RIGHT — THE TAB CARD */}
-        <section className="relative grid min-h-svh place-items-center border-l" style={{ background: "#fffdf9", borderColor: "#eadbc8" }}>
-          <div className="absolute inset-x-0 top-0 flex h-[72px] items-center justify-between border-b px-5 lg:hidden" style={{ borderColor: "#eadbc8" }}>
+        <section className="relative grid min-h-svh place-items-center border-l shadow-[-12px_0_32px_-24px_rgba(42,26,15,0.35)]" style={{ background: "#fffdf9", borderColor: "#d8bf9a" }}>
+          <div className="absolute inset-x-0 top-0 flex h-[72px] items-center justify-between border-b px-5 lg:hidden" style={{ borderColor: "#d8bf9a" }}>
             <span className="flex items-center gap-2">
               <VoiceBrewMark className="size-8 text-coffee" />
               <span className="font-[family-name:var(--font-data)] text-[11px] uppercase tracking-[0.2em]" style={{ color: "#6b4423" }}>VoiceBrew · by Blostem</span>
@@ -135,7 +138,7 @@ export default function SignupPage() {
                   onKeyDown={() => cupRef.current?.spike(email.length % 24)}
                   className={inputCls}
                   style={{ borderColor: err ? "#a5432c" : focus === "email" ? "#b8763d" : "#eadbc8", boxShadow: focus === "email" ? "0 0 0 3px rgba(184,118,61,0.35)" : undefined, caretColor: "#b8763d" }} />
-                {focus === "email" && !err && <p className="mt-1.5 font-[family-name:var(--font-data)] text-[10px]" style={{ color: "#c9a87c" }}>we&apos;ll save your seat here</p>}
+                {focus === "email" && !err && <p className="mt-1.5 font-[family-name:var(--font-data)] text-[10px]" style={{ color: "#a3906e" }}>we&apos;ll save your seat here</p>}
                 {err && (
                   <p role="alert" className="mt-1.5 font-[family-name:var(--font-data)] text-[11px]" style={{ color: "#a5432c" }}>
                     {err === "email" ? "✗ EMAIL ......... VOID — CHECK THE SPELLING" : "✗ THAT SEAT'S TAKEN ...... BACK TO THE COUNTER?"}
@@ -168,9 +171,27 @@ export default function SignupPage() {
                 {opening ? "Opening…" : magic ? "Plant the bean ✳" : "Open my tab"}
               </motion.button>
 
-              <p className="text-[12px] leading-relaxed" style={{ color: "#6b4423" }}>
-                By opening a tab you agree to the <a className="underline underline-offset-2" href="#">house rules</a> — we scrub DND and pour by TRAI&apos;s book.
-              </p>
+              <label className="flex cursor-pointer items-start gap-2.5">
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={agreed}
+                  onClick={() => setAgreed((v) => !v)}
+                  className="mt-0.5 grid size-[18px] shrink-0 place-items-center rounded-[5px] border-2 transition-colors"
+                  style={{ borderColor: agreed ? "#b8763d" : "#c9a87c", background: agreed ? "#b8763d" : "#fffdf9" }}
+                >
+                  {agreed && (
+                    <svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 6.5 L4.8 9 L10 3" fill="none" stroke="#fffdf9" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  )}
+                </button>
+                <span onClick={() => setAgreed((v) => !v)} className="text-[12px] leading-relaxed" style={{ color: "#6b4423" }}>
+                  I agree to the{" "}
+                  <a className="font-medium underline underline-offset-2" style={{ color: "#b8763d" }} href="/terms" target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
+                    House Rules — Terms &amp; Acceptable Use
+                  </a>
+                  : business calling only, no prank or nuisance calls, no spoofing, and I&apos;m responsible for consent &amp; DND compliance on every number I dial.
+                </span>
+              </label>
             </form>
 
             <p className="mt-8 text-center text-[13px]" style={{ color: "#6b4423" }}>

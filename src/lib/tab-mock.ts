@@ -5,8 +5,9 @@
 export type TabProfile = {
   name?: string; email?: string; brand?: string; role?: string; teamSize?: string;
   useCase?: string; vertical?: string; languages?: string[]; volume?: string;
+  goals?: string[]; campaignKinds?: string[];
   compliancePath?: "promo" | "service"; phoneVerified?: boolean; phone?: string;
-  skipped?: string[];
+  skipped?: string[]; agreedTerms?: boolean;
 };
 export type LedgerLine = { label: string; delta: number | null; at: string }; // delta null = "on the house"
 

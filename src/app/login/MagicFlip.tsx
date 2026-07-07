@@ -41,7 +41,7 @@ export function MagicFace({ initialEmail, onBack }: { initialEmail: string; onBa
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={inputCls}
-                style={{ borderColor: "#eadbc8", caretColor: "#b8763d" }}
+                style={{ borderColor: "#d8bf9a", caretColor: "#b8763d" }}
               />
             </div>
             <div className="relative">

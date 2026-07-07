@@ -56,14 +56,14 @@ export function TabMeter({ collapsed = false }: { collapsed?: boolean }) {
     <>
       {collapsed ? (
         <button onClick={() => setOpen(true)} title={`${sips} sips · on the house`}
-          className="relative mx-auto mb-1 flex size-10 items-center justify-center rounded-xl border border-foam bg-cream">
+          className="relative mx-auto mb-1 flex size-10 items-center justify-center rounded-xl border border-[#d8bf9a] bg-cream">
           <CupGlyphMini warm={warm} />
           <span className="absolute right-0.5 top-0.5 size-2 rounded-full" style={{ background: "#4fb0a5" }} />
         </button>
       ) : (
         <div className="mx-3 mb-1">
           <button onClick={() => setOpen(true)} data-tour="wallet"
-            className="flex w-full items-center gap-2.5 rounded-xl border border-foam bg-cream px-2.5 py-2 text-left transition-colors hover:bg-oat/70">
+            className="flex w-full items-center gap-2.5 rounded-xl border border-[#d8bf9a] bg-cream px-2.5 py-2 text-left transition-colors hover:bg-oat/70">
             <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-oat"><CupGlyphMini warm={warm} /></span>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline gap-1">
@@ -97,7 +97,7 @@ export function TabMeter({ collapsed = false }: { collapsed?: boolean }) {
               <button onClick={() => setOpen(false)} aria-label="Close" className="text-muted-foreground hover:text-coffee"><X className="size-4" /></button>
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-4">
-              <div className="rounded-2xl border border-foam bg-cream p-4">
+              <div className="rounded-2xl border border-[#d8bf9a] bg-cream p-4">
                 <div className="flex items-baseline gap-1.5">
                   <span className="font-serif text-4xl font-semibold text-coffee">{sips}</span>
                   <span className="text-sm text-muted-foreground">sips</span>

@@ -13,9 +13,10 @@ import { Check, Phone } from "lucide-react";
 import { VoiceBrewMark } from "@/components/layout/voicebrew-logo";
 import {
   ROLES, TEAM, USE_CASES, VERTICALS, LANGS, VOLUMES, PATH_OF, GREETINGS,
-  STEP_LABELS, GRANT, readback, type RLine,
+  STEP_LABELS, GRANT, readback, GOALS, CAMPAIGN_KINDS, PROMO_KINDS, type RLine,
 } from "./wizard";
 import { getProfile, setProfile, ensureTableNo, grantOpeningBalance } from "@/lib/tab-mock";
+import { Beans } from "../login/Beans";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const mono = "font-[family-name:var(--font-data)]";
@@ -30,12 +31,13 @@ function Chip({ label, on, onTap }: { label: string; on: boolean; onTap: () => v
       aria-pressed={on}
       onClick={onTap}
       whileTap={reduce ? undefined : { scale: 0.94 }}
+      whileHover={reduce ? undefined : { scale: 1.05, y: -1 }}
       animate={on && !reduce ? { scale: [1.12, 1] } : {}}
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
       className="rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors"
       style={on
         ? { background: "#b8763d", borderColor: "#b8763d", color: "#fffdf9", boxShadow: "0 1px 0 rgba(42,26,15,0.15)" }
-        : { background: "#fffdf9", borderColor: "#eadbc8", color: "#3d2817" }}
+        : { background: "#fffdf9", borderColor: "#d8bf9a", color: "#3d2817" }}
     >
       {label}
     </motion.button>
@@ -44,14 +46,14 @@ function Chip({ label, on, onTap }: { label: string; on: boolean; onTap: () => v
 
 /* ---------- mini cup progress token ---------- */
 function CupToken({ quarter }: { quarter: number }) {
-  const fill = Math.min(1, quarter / 4);
+  const fill = Math.min(1, quarter / 5);
   return (
     <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden>
-      <path d="M8 12 h24 l-3.4 22 a4 4 0 0 1 -4 3.4 h-9.2 a4 4 0 0 1 -4 -3.4 Z" fill="#fffdf9" stroke="#eadbc8" strokeWidth="1.5" />
+      <path d="M8 12 h24 l-3.4 22 a4 4 0 0 1 -4 3.4 h-9.2 a4 4 0 0 1 -4 -3.4 Z" fill="#fffdf9" stroke="#d3b78f" strokeWidth="1.5" />
       <clipPath id="ctk"><path d="M8 12 h24 l-3.4 22 a4 4 0 0 1 -4 3.4 h-9.2 a4 4 0 0 1 -4 -3.4 Z" /></clipPath>
       <motion.rect x="6" width="28" height="30" fill="#c9a87c" clipPath="url(#ctk)"
         initial={false} animate={{ y: 38 - fill * 24 }} transition={{ type: "spring", stiffness: 140, damping: 20 }} />
-      <path d="M32 16 a6 6 0 0 1 0 12" fill="none" stroke="#eadbc8" strokeWidth="2.4" />
+      <path d="M32 16 a6 6 0 0 1 0 12" fill="none" stroke="#d3b78f" strokeWidth="2.4" />
     </svg>
   );
 }
@@ -62,15 +64,15 @@ function Receipt({ name, brand, lines, tableNo, stamped }: { name: string; brand
   const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   return (
     <div className={`${mono} relative w-full max-w-[360px] px-5 pb-6 pt-5 text-[11px] leading-relaxed`}
-      style={{ background: "#fffdf9", border: "1px solid #eadbc8", clipPath: ZIGZAG, color: "#3d2817", boxShadow: "0 8px 30px -18px rgba(42,26,15,0.25)" }}>
+      style={{ background: "#fffdf9", border: "1.5px solid #cbb086", clipPath: ZIGZAG, color: "#3d2817", boxShadow: "0 8px 30px -18px rgba(42,26,15,0.25)" }}>
       <div className="text-center uppercase tracking-[0.18em]" style={{ color: "#6b4423" }}>
         Voicebrew estd. MMXXVI
         <div className="mt-0.5 text-[9px] tracking-[0.12em]" style={{ color: "#c9a87c" }}>{today.toUpperCase()} · MUMBAI</div>
       </div>
-      <div className="my-2 border-b border-dashed" style={{ borderColor: "#eadbc8" }} />
+      <div className="my-2 border-b border-dashed" style={{ borderColor: "#d8bf9a" }} />
       <div className="uppercase">TAB — {name || "…"}</div>
       {brand && <div className="uppercase tracking-[0.06em]" style={{ color: "#2a1a0f" }}>{brand}</div>}
-      <div className="my-2 border-b border-dashed" style={{ borderColor: "#eadbc8" }} />
+      <div className="my-2 border-b border-dashed" style={{ borderColor: "#d8bf9a" }} />
       <ul aria-live="polite" className="space-y-1.5">
         <AnimatePresence initial={false}>
           {lines.map((l, i) => (
@@ -130,7 +132,7 @@ function ReadbackSheet({ onDone }: { onDone: () => void }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-[120] grid place-items-center p-5" style={{ background: "rgba(42,26,15,0.45)", backdropFilter: "blur(6px)" }}>
       <motion.div initial={reduce ? {} : { y: 24, scale: 0.98 }} animate={{ y: 0, scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 22 }}
-        className="w-full max-w-[420px] rounded-3xl p-6" style={{ background: "#fffdf9", border: "1px solid #eadbc8" }}>
+        className="w-full max-w-[420px] rounded-3xl p-6" style={{ background: "#fffdf9", border: "1px solid #d8bf9a" }}>
         <div className="flex items-center gap-2">
           <span className="grid size-9 place-items-center rounded-full" style={{ background: "#4fb0a5" }}><Phone className="size-4 text-white" /></span>
           <div>
@@ -174,6 +176,8 @@ export default function WelcomePage() {
   const [team, setTeam] = useState("");
   const [useCase, setUseCase] = useState("");
   const [vertical, setVertical] = useState("");
+  const [goals, setGoals] = useState<string[]>([]);
+  const [kinds, setKinds] = useState<string[]>([]);
   const [langs, setLangs] = useState<string[]>([]);
   const [volume, setVolume] = useState("");
   const [phone, setPhone] = useState("");
@@ -199,13 +203,13 @@ export default function WelcomePage() {
       if (localStorage.getItem("vb-onboarded")) {
         // already granted: allow "pour later" users back in for step 4 only
         if (p.phoneVerified) { router.replace("/dashboard"); return; }
-        setName(p.name || ""); setPourOnly(true); setStep(3);
+        setName(p.name || ""); setPourOnly(true); setStep(4);
         return;
       }
       if (!p.name) { router.replace("/signup"); return; }
       setName(p.name);
       const saved = Number(sessionStorage.getItem("vb-wizard-step") || "0");
-      if (saved > 0 && saved < 4) setStep(saved);
+      if (saved > 0 && saved < 5) setStep(saved);
     } catch {}
     return () => timeouts.current.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -269,11 +273,21 @@ export default function WelcomePage() {
       setProfile({ useCase, vertical, compliancePath: useCase ? PATH_OF[useCase] : undefined });
       setStep(2);
     } else if (step === 2) {
+      // THE ORDER — goals + campaign kinds (promo kinds sharpen the compliance path)
+      if (skip || (goals.length === 0 && kinds.length === 0)) print("THE ORDER", "LEFT ROOM FOR MILK", "milk");
+      else {
+        if (goals.length) print("FOR", goals.map((g) => g.toUpperCase()).join(" · "));
+        if (kinds.length) print("CAMPAIGNS", kinds.map((k) => k.toUpperCase()).join(" · "));
+      }
+      const promo = kinds.some((k) => PROMO_KINDS.has(k));
+      setProfile({ goals, campaignKinds: kinds, compliancePath: promo ? "promo" : (useCase ? PATH_OF[useCase] : undefined) });
+      setStep(3);
+    } else if (step === 3) {
       if (skip || langs.length === 0) print("ROAST", "LEFT ROOM FOR MILK", "milk");
       else print("ROAST", langs.map((l) => l.toUpperCase()).join(" · "));
       if (volume) print("PARTY SIZE", volume.toUpperCase());
       setProfile({ languages: langs, volume });
-      setStep(3);
+      setStep(4);
     } else {
       // step 4 done (verified+tasted, or pour later)
       if (pourOnly) { router.push("/dashboard"); return; } // already granted
@@ -302,7 +316,7 @@ export default function WelcomePage() {
         <label className={`${mono} mb-1.5 block text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Company / brand</label>
         <input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="e.g. Blostem Finance"
           className="h-11 w-full rounded-xl border bg-[#fdf8f0] px-3.5 text-[15px] outline-none focus:border-[#b8763d]"
-          style={{ borderColor: "#eadbc8", color: "#2a1a0f", caretColor: "#b8763d" }} />
+          style={{ borderColor: "#d8bf9a", color: "#2a1a0f", caretColor: "#b8763d" }} />
       </div>
       <div>
         <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Your role</div>
@@ -332,7 +346,21 @@ export default function WelcomePage() {
         ))}</div>
       </div>
     </div>,
-    /* 3 — CHOOSE THE ROAST */
+    /* 3 — THE ORDER (goals + campaign kinds) */
+    <div key="s-order" className="space-y-5">
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>What will you use VoiceBrew for? <span style={{ color: "#a3906e" }}>· pick any</span></div>
+        <div className="flex flex-wrap gap-2">{GOALS.map((g) => <Chip key={g} label={g} on={goals.includes(g)} onTap={() => setGoals((xs) => xs.includes(g) ? xs.filter((x) => x !== g) : [...xs, g])} />)}</div>
+      </div>
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>What kind of campaigns will you run?</div>
+        <div className="flex flex-wrap gap-2">{CAMPAIGN_KINDS.map((k) => <Chip key={k} label={k} on={kinds.includes(k)} onTap={() => setKinds((xs) => xs.includes(k) ? xs.filter((x) => x !== k) : [...xs, k])} />)}</div>
+        {kinds.some((k) => PROMO_KINDS.has(k)) && (
+          <p className={`${mono} mt-2 text-[10px] uppercase tracking-[0.1em]`} style={{ color: "#b8763d" }}>Promotional campaigns pour 10:00–19:00 IST — the house keeps TRAI&apos;s hours.</p>
+        )}
+      </div>
+    </div>,
+    /* 4 — CHOOSE THE ROAST */
     <div key="s3" className="space-y-5">
       <div>
         <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Calling languages</div>
@@ -356,10 +384,10 @@ export default function WelcomePage() {
       <p className="font-serif text-lg italic" style={{ color: "#2a1a0f" }}>Where should we pour the first call?</p>
       <p className={`${mono} -mt-3 text-[11px]`} style={{ color: "#6b4423" }}>Free sips pour only into your own verified cup — no paperwork, no waiting.</p>
       <div className="flex items-center gap-2">
-        <span className={`${mono} rounded-xl border px-3 py-2.5 text-[14px]`} style={{ borderColor: "#eadbc8", background: "#f4e9d8", color: "#6b4423" }}>+91</span>
+        <span className={`${mono} rounded-xl border px-3 py-2.5 text-[14px]`} style={{ borderColor: "#d8bf9a", background: "#f4e9d8", color: "#6b4423" }}>+91</span>
         <input value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} inputMode="numeric" placeholder="98••• •••10" disabled={verified}
           className={`${mono} h-11 flex-1 rounded-xl border bg-[#fdf8f0] px-3.5 text-[15px] tracking-[0.08em] outline-none focus:border-[#b8763d]`}
-          style={{ borderColor: "#eadbc8", color: "#2a1a0f", caretColor: "#b8763d" }} />
+          style={{ borderColor: "#d8bf9a", color: "#2a1a0f", caretColor: "#b8763d" }} />
       </div>
       {phone.length === 10 && !verified && (
         <div>
@@ -374,7 +402,7 @@ export default function WelcomePage() {
                 }}
                 onKeyDown={(e) => { if (e.key === "Backspace" && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus(); }}
                 className={`${mono} h-12 w-10 rounded-xl border bg-[#fdf8f0] text-center text-[18px] outline-none focus:border-[#b8763d]`}
-                style={{ borderColor: "#eadbc8", color: "#2a1a0f", caretColor: "#b8763d" }} />
+                style={{ borderColor: "#d8bf9a", color: "#2a1a0f", caretColor: "#b8763d" }} />
             ))}
           </div>
           <button onClick={verify} disabled={!otpDone} className="mt-3 h-11 rounded-xl px-5 font-serif text-[15px] font-semibold transition-colors"
@@ -395,6 +423,7 @@ export default function WelcomePage() {
 
   return (
     <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: "#fdf8f0" }}>
+      <Beans />
       {/* header */}
       <div className="mx-auto flex max-w-[980px] items-center justify-between px-6 pt-8">
         <span className="flex items-center gap-2">
@@ -402,9 +431,9 @@ export default function WelcomePage() {
           <span className={`${mono} text-[11px] uppercase tracking-[0.2em]`} style={{ color: "#6b4423" }}>Your tab, printing</span>
         </span>
         <div className="flex items-center gap-2.5">
-          <CupToken quarter={phase === "grant" ? 4 : step + (verified ? 1 : 0)} />
+          <CupToken quarter={phase === "grant" ? 5 : step + (verified ? 1 : 0)} />
           <span className={`${mono} text-[10px] uppercase tracking-[0.12em]`} style={{ color: "#c9a87c" }}>
-            {phase === "grant" ? "TAB OPENED" : `${step + 1} of 4 — ${STEP_LABELS[step]}`}
+            {phase === "grant" ? "TAB OPENED" : `${step + 1} of 5 — ${STEP_LABELS[step]}`}
           </span>
         </div>
       </div>
@@ -420,15 +449,15 @@ export default function WelcomePage() {
                 exit={reduce ? { opacity: 0 } : { opacity: 0, y: -26 }}
                 transition={{ duration: 0.32, ease: EASE }}>
                 <h1 className="mb-5 font-serif text-[26px] leading-tight" style={{ color: "#2a1a0f" }}>
-                  {["Whose café is this?", "Pick your blend — what are we brewing for your guests?", "Choose the roast — what language should the cup speak?", "The first pour"][step]}
+                  {["Whose café is this?", "Pick your blend — what are we brewing for your guests?", "The order — what's this tab really for?", "Choose the roast — what language should the cup speak?", "The first pour"][step]}
                 </h1>
                 {stepBody[step]}
                 <div className="mt-7 flex items-center justify-between">
                   <button onClick={() => advance(false)} className="h-11 rounded-xl px-6 font-serif text-[15px] font-semibold" style={{ background: "#b8763d", color: "#fffdf9" }}>
-                    {step === 3 ? (verified ? "Open the tab" : "Continue") : "Continue"}
+                    {step === 4 ? (pourOnly ? "Done" : verified ? "Open the tab" : "Continue") : "Continue"}
                   </button>
                   <button onClick={() => advance(true)} className={`${mono} text-[11px] uppercase tracking-[0.1em] underline-offset-4 hover:underline`} style={{ color: "#c9a87c" }}>
-                    {step === 3 ? "Pour later" : "I'll decide at the counter"}
+                    {step === 4 ? "Pour later" : "I'll decide at the counter"}
                   </button>
                 </div>
               </motion.div>
@@ -436,7 +465,19 @@ export default function WelcomePage() {
               /* THE OPENING BALANCE */
               <motion.div key="grant" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4">
                 <h1 className="font-serif text-[30px] leading-tight" style={{ color: "#2a1a0f" }}>Your first fifty sips are on the house.</h1>
-                <div className="mt-6 flex items-end gap-3">
+                <div className="relative mt-6 flex items-end gap-3">
+                  {granted && !reduce && (
+                    <motion.span aria-hidden className="absolute -top-14 left-10 w-[6px] rounded-full" style={{ background: "#b8763d", transformOrigin: "top" }}
+                      initial={{ height: 0, opacity: 0 }} animate={{ height: 64, opacity: [0, 1, 1, 0] }} transition={{ duration: 1.4, times: [0, 0.15, 0.8, 1] }} />
+                  )}
+                  {granted && (
+                    <motion.svg aria-hidden width="40" height="30" viewBox="0 0 40 30" className="absolute -top-9 left-16" initial={{ opacity: 0 }} animate={{ opacity: reduce ? 0 : 1 }} transition={{ delay: 1.5 }}>
+                      {[6, 18, 30].map((x, i) => (
+                        <path key={x} d={`M 28 C  20  16  8`} fill="none" stroke="#c9a87c" strokeWidth="2" strokeLinecap="round" style={{ animation: `vbSteamW s ease-in-out -es infinite` }} />
+                      ))}
+                      <style>{`@keyframes vbSteamW{0%{opacity:0;transform:translateY(3px)}40%{opacity:.8}100%{opacity:0;transform:translateY(-6px)}}`}</style>
+                    </motion.svg>
+                  )}
                   <span className={`${mono} text-[72px] font-semibold leading-none`} style={{ color: "#b8763d" }}>
                     <NumberFlow value={granted ? 50 : 0} transformTiming={{ duration: reduce ? 0 : 1600, easing: "cubic-bezier(0.22,1,0.36,1)" }} />
                   </span>

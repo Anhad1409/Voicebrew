@@ -14,6 +14,7 @@ import { Ticker, type Stamp } from "./Ticker";
 import { RotatingWord } from "./RotatingWord";
 import { MagicFace } from "./MagicFlip";
 import { POUR, EMAIL_RE } from "./pour";
+import { Beans } from "./Beans";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const inputBase =
@@ -219,7 +220,7 @@ export default function LoginPage() {
           className="relative hidden flex-col justify-between lg:flex"
           style={{
             padding: "clamp(2.5rem,5vw,5rem)",
-            background: "radial-gradient(120% 120% at 0% 100%, #f4e9d8 0%, #fdf8f0 55%)",
+            background: "radial-gradient(120% 120% at 0% 100%, #eddcbe 0%, #f9f1e2 60%)",
           }}
           animate={{ opacity: phase === "pouring" ? 0.25 : 1 }}
           transition={{ duration: 0.4 }}
@@ -234,6 +235,7 @@ export default function LoginPage() {
               backgroundSize: "480px",
             }}
           />
+          <Beans />
           <div aria-hidden className="relative">
             {/* masthead row */}
             <div className="flex items-end justify-between gap-4">
@@ -247,17 +249,18 @@ export default function LoginPage() {
                 {dateline}
               </span>
             </div>
-            <div className="mt-3 h-px w-full" style={{ background: "#eadbc8" }} />
+            <div className="mt-3 h-px w-full" style={{ background: "#d8bf9a" }} />
 
             {/* headline */}
-            <h1
+            <motion.h1
               className="mt-10 font-serif"
               style={{ fontSize: "clamp(3.25rem,6.5vw,6.5rem)", lineHeight: 0.98, color: "#2a1a0f" }}
+              initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, ease: EASE }}
             >
               Voice, freshly
               <br />
               <RotatingWord paused={focus !== null || cinematic} />
-            </h1>
+            </motion.h1>
 
             {/* THE LISTENING CUP + glide/pour overlays */}
             <motion.div
@@ -325,13 +328,13 @@ export default function LoginPage() {
 
         {/* ============ RIGHT — THE JEWEL PANEL ============ */}
         <motion.section
-          className="relative grid min-h-svh place-items-center border-l"
-          style={{ background: "#fffdf9", borderColor: "#eadbc8" }}
+          className="relative grid min-h-svh place-items-center border-l shadow-[-12px_0_32px_-24px_rgba(42,26,15,0.35)]"
+          style={{ background: "#fffdf9", borderColor: "#d8bf9a" }}
           animate={phase === "pouring" ? { x: "40%", opacity: 0 } : { x: 0, opacity: 1 }}
           transition={{ duration: 0.5, ease: EASE }}
         >
           {/* compact masthead (mobile) */}
-          <div className="absolute inset-x-0 top-0 flex h-[72px] items-center justify-between border-b px-5 lg:hidden" style={{ borderColor: "#eadbc8" }}>
+          <div className="absolute inset-x-0 top-0 flex h-[72px] items-center justify-between border-b px-5 lg:hidden" style={{ borderColor: "#d8bf9a" }}>
             <span className="flex items-center gap-2">
               <VoiceBrewMark className="size-8 text-coffee" />
               <span className="font-[family-name:var(--font-data)] text-[11px] uppercase tracking-[0.2em]" style={{ color: "#6b4423" }}>
@@ -456,7 +459,7 @@ export default function LoginPage() {
                               initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                               transition={{ duration: 0.15 }}
                               className="rounded-full border px-2 py-0.5 font-[family-name:var(--font-data)] text-[10px]"
-                              style={{ color: "#b8763d", background: "#f4e9d8", borderColor: "#eadbc8" }}
+                              style={{ color: "#b8763d", background: "#f4e9d8", borderColor: "#d8bf9a" }}
                             >
                               CAPS ON
                             </motion.span>
@@ -529,7 +532,7 @@ export default function LoginPage() {
                       >
                         <span
                           className="relative h-[22px] w-10 rounded-full transition-colors duration-200"
-                          style={{ background: remember ? "#b8763d" : "#f4e9d8", border: "1px solid #eadbc8" }}
+                          style={{ background: remember ? "#b8763d" : "#f4e9d8", border: "1px solid #d8bf9a" }}
                         >
                           <motion.span
                             className="absolute top-[1px] grid size-[18px] place-items-center rounded-full"
@@ -614,9 +617,9 @@ export default function LoginPage() {
 
                     {/* divider */}
                     <motion.div variants={rows} className="flex items-center gap-3" style={{ margin: "20px 0" }}>
-                      <span className="h-px flex-1" style={{ background: "#eadbc8" }} />
+                      <span className="h-px flex-1" style={{ background: "#d8bf9a" }} />
                       <span className="font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.2em]" style={{ color: "#6b4423" }}>or</span>
-                      <span className="h-px flex-1" style={{ background: "#eadbc8" }} />
+                      <span className="h-px flex-1" style={{ background: "#d8bf9a" }} />
                     </motion.div>
 
                     {/* Google */}
@@ -625,7 +628,7 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => { if (phase === "form" || phase === "error") { setEmail(email || "you@company.com"); setPassword(password || "·"); setTimeout(() => startPour(), 0); } }}
                         className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border text-[14px] transition-colors"
-                        style={{ background: "#fffdf9", borderColor: "#eadbc8", color: "#2a1a0f" }}
+                        style={{ background: "#fffdf9", borderColor: "#d8bf9a", color: "#2a1a0f" }}
                         whileHover={reduce ? undefined : { y: -1, boxShadow: "0 2px 8px rgba(42,26,15,0.06)", backgroundColor: "#fdf8f0" }}
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24">
@@ -646,7 +649,7 @@ export default function LoginPage() {
                     </motion.div>
 
                     {/* open a tab (signup) */}
-                    <motion.div variants={rows} className="border-t pt-4 text-center" style={{ borderColor: "#eadbc8" }}>
+                    <motion.div variants={rows} className="border-t pt-4 text-center" style={{ borderColor: "#d8bf9a" }}>
                       <span className="text-[13px]" style={{ color: "#6b4423" }}>New here? </span>
                       <button
                         type="button"

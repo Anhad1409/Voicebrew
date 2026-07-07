@@ -32,20 +32,20 @@ function CheckoutSheet({ inr, onClose }: { inr: number; onClose: () => void }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[90] grid place-items-center p-5" style={{ background: "rgba(42,26,15,0.4)", backdropFilter: "blur(4px)" }}>
       <motion.div initial={{ y: 20, scale: 0.98 }} animate={{ y: 0, scale: 1 }} transition={{ type: "spring", stiffness: 220, damping: 22 }}
-        className="w-full max-w-[420px] rounded-3xl border border-foam bg-porcelain p-6 shadow-card-lg">
+        className="w-full max-w-[420px] rounded-3xl border border-[#d8bf9a] bg-porcelain p-6 shadow-card-lg">
         <div className="flex items-center justify-between">
           <h2 className="font-serif text-xl text-coffee">Load the card</h2>
           <button onClick={onClose} aria-label="Close" className="text-muted-foreground hover:text-coffee"><X className="size-4" /></button>
         </div>
         <p className={`${mono} mt-1 text-[11px] uppercase tracking-[0.12em] text-caramel`}>₹{inr.toLocaleString("en-IN")} · {RUNGS.find((r) => r.inr === inr)?.min}</p>
         <div className="mt-4 space-y-3">
-          <input placeholder="Card number" className="h-11 w-full rounded-xl border border-foam bg-cream px-3.5 text-sm text-coffee outline-none focus:border-caramel" />
+          <input placeholder="Card number" className="h-11 w-full rounded-xl border border-[#d8bf9a] bg-cream px-3.5 text-sm text-coffee outline-none focus:border-caramel" />
           <div className="flex gap-3">
-            <input placeholder="MM / YY" className="h-11 w-1/2 rounded-xl border border-foam bg-cream px-3.5 text-sm text-coffee outline-none focus:border-caramel" />
-            <input placeholder="CVC" className="h-11 w-1/2 rounded-xl border border-foam bg-cream px-3.5 text-sm text-coffee outline-none focus:border-caramel" />
+            <input placeholder="MM / YY" className="h-11 w-1/2 rounded-xl border border-[#d8bf9a] bg-cream px-3.5 text-sm text-coffee outline-none focus:border-caramel" />
+            <input placeholder="CVC" className="h-11 w-1/2 rounded-xl border border-[#d8bf9a] bg-cream px-3.5 text-sm text-coffee outline-none focus:border-caramel" />
           </div>
-          <input placeholder="GSTIN (optional)" className="h-11 w-full rounded-xl border border-foam bg-cream px-3.5 text-sm text-coffee outline-none focus:border-caramel" />
-          <input placeholder="Billing address" className="h-11 w-full rounded-xl border border-foam bg-cream px-3.5 text-sm text-coffee outline-none focus:border-caramel" />
+          <input placeholder="GSTIN (optional)" className="h-11 w-full rounded-xl border border-[#d8bf9a] bg-cream px-3.5 text-sm text-coffee outline-none focus:border-caramel" />
+          <input placeholder="Billing address" className="h-11 w-full rounded-xl border border-[#d8bf9a] bg-cream px-3.5 text-sm text-coffee outline-none focus:border-caramel" />
           <p className={`${mono} text-[10px] text-latte`}>GST details live here, where the bill does.</p>
         </div>
         <button onClick={pay} className="mt-4 h-12 w-full rounded-xl bg-coffee font-serif text-[16px] font-semibold text-cream hover:bg-espresso">
@@ -72,7 +72,7 @@ export default function PlansPage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* THE OPEN TAB */}
-        <section className="relative overflow-hidden rounded-2xl border border-foam bg-porcelain p-6 shadow-glass">
+        <motion.section whileHover={{ y: -4 }} transition={{ type: "spring", stiffness: 300, damping: 24 }} className="relative overflow-hidden rounded-2xl border border-[#d8bf9a] bg-porcelain p-6 shadow-glass">
           <div className={`${mono} text-[11px] uppercase tracking-[0.14em] text-mocha`}>The Open Tab {plan === "free" && <span className="text-steam">· you are here</span>}</div>
           <div className="mt-2 flex items-baseline gap-2"><span className="font-serif text-4xl font-semibold text-coffee">₹0</span><span className="text-sm text-muted-foreground">forever</span></div>
           <ul className="mt-5 space-y-2.5">
@@ -87,10 +87,10 @@ export default function PlansPage() {
               Table No. {tableNo} — seated
             </div>
           )}
-        </section>
+        </motion.section>
 
         {/* REGULARS' CARD */}
-        <section className="rounded-2xl border-2 border-caramel/50 bg-porcelain p-6 shadow-card-lg">
+        <motion.section whileHover={{ y: -4 }} transition={{ type: "spring", stiffness: 300, damping: 24 }} className="rounded-2xl border-2 border-caramel/50 bg-porcelain p-6 shadow-card-lg">
           <div className={`${mono} text-[11px] uppercase tracking-[0.14em] text-caramel`}>Regulars&apos; Card · recommended</div>
           <div className="mt-2 flex items-baseline gap-2"><span className="font-serif text-4xl font-semibold text-coffee">₹8</span><span className="text-sm text-muted-foreground">per minute · pay as you pour</span></div>
           <p className="mt-2 text-[13px] font-medium text-coffee">Pour for your customers, not just your table.</p>
@@ -109,7 +109,7 @@ export default function PlansPage() {
           </div>
           <div className="mt-4 flex gap-2">
             {RUNGS.map((r) => (
-              <button key={r.inr} onClick={() => setCheckout(r.inr)} className="flex-1 rounded-xl border border-foam bg-cream px-2 py-2 text-[13px] font-semibold text-coffee transition-colors hover:border-caramel hover:bg-oat">
+              <button key={r.inr} onClick={() => setCheckout(r.inr)} className="flex-1 rounded-xl border border-[#d8bf9a] bg-cream px-2 py-2 text-[13px] font-semibold text-coffee transition-colors hover:border-caramel hover:bg-oat">
                 {r.label}
               </button>
             ))}
@@ -117,10 +117,10 @@ export default function PlansPage() {
           <button onClick={() => setCheckout(2000)} className="mt-3 h-12 w-full rounded-xl bg-brand font-serif text-[16px] font-semibold text-brand-foreground hover:bg-brand-dark">
             Load the card
           </button>
-        </section>
+        </motion.section>
 
         {/* HOUSE ACCOUNT */}
-        <section className="rounded-2xl border border-foam bg-porcelain p-6 shadow-glass">
+        <motion.section whileHover={{ y: -4 }} transition={{ type: "spring", stiffness: 300, damping: 24 }} className="rounded-2xl border border-[#d8bf9a] bg-porcelain p-6 shadow-glass">
           <div className={`${mono} text-[11px] uppercase tracking-[0.14em] text-mocha`}>House Account · for the big rooms</div>
           <div className="mt-2 flex items-baseline gap-2"><span className="font-serif text-4xl font-semibold text-coffee">Custom</span><span className="text-sm text-muted-foreground">monthly invoice</span></div>
           <ul className="mt-5 space-y-2.5">
@@ -130,10 +130,10 @@ export default function PlansPage() {
             <Row>Named support — ask for the manager anytime</Row>
           </ul>
           <button onClick={() => toast({ title: "The manager will call you", body: "Mock: sales contact flow.", severity: "info" })}
-            className="mt-6 h-12 w-full rounded-xl border border-foam bg-card font-serif text-[16px] font-semibold text-coffee transition-colors hover:bg-oat">
+            className="mt-6 h-12 w-full rounded-xl border border-[#d8bf9a] bg-card font-serif text-[16px] font-semibold text-coffee transition-colors hover:bg-oat">
             Talk to the manager
           </button>
-        </section>
+        </motion.section>
       </div>
 
       <p className={`${mono} mt-6 flex items-center justify-center gap-2 text-center text-[11px] text-latte`}>
