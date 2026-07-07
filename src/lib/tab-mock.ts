@@ -69,5 +69,14 @@ export const debitSips = (n: number, label: string) =>
 export const setPlan = (p: "free" | "regular" | "house") =>
   safe(() => { localStorage.setItem("vb-plan", p); emit(); }, undefined);
 
+/** Fresh tab for a new registration — clears all onboarding/credit state
+    so the wizard always runs and captures everything again. */
+export const resetTab = () =>
+  safe(() => {
+    ["vb-onboarded", "vb-credits", "vb-plan", "vb-ledger", "vb-table-no", "vb-profile", "vb-nudge-seen"].forEach((k) => localStorage.removeItem(k));
+    ["vb-wizard-step", "vb-just-granted", "vb-tab-open"].forEach((k) => sessionStorage.removeItem(k));
+    emit();
+  }, undefined);
+
 export const SIP_RATE = 8; // ₹8/min → 1 sip = ₹1 → 8 sips per minute
 export const sipsToMin = (s: number) => (s / SIP_RATE).toFixed(1);

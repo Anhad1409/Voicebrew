@@ -13,7 +13,7 @@ import { ListeningCup, type CupHandle } from "../login/ListeningCup";
 import { Ticker } from "../login/Ticker";
 import { RotatingWord } from "../login/RotatingWord";
 import { EMAIL_RE } from "../login/pour";
-import { setProfile } from "@/lib/tab-mock";
+import { setProfile, resetTab } from "@/lib/tab-mock";
 import { Beans } from "../login/Beans";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -51,6 +51,7 @@ export default function SignupPage() {
     if (email.trim().toLowerCase().startsWith("taken@")) { setErr("taken"); return; }
     setErr(null);
     setOpening(true);
+    resetTab(); // fresh tab per registration — the wizard always runs
     setProfile({ name: name.trim(), email: email.trim(), agreedTerms: true });
     try { sessionStorage.setItem("vb-tab-open", "1"); } catch {}
     setTimeout(() => router.push("/welcome"), reduce ? 150 : 550);
@@ -62,7 +63,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: "#fdf8f0" }}>
+    <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: "#faf3e4" }}>
       <div className="grid min-h-full lg:grid-cols-[1.15fr_1fr]">
         {/* LEFT — masthead, flip side */}
         <aside className="relative hidden flex-col justify-between lg:flex" style={{ padding: "clamp(2.5rem,5vw,5rem)", background: "radial-gradient(120% 120% at 0% 100%, #eddcbe 0%, #f9f1e2 60%)" }}>
@@ -165,7 +166,7 @@ export default function SignupPage() {
                 type="submit"
                 aria-disabled={!done}
                 className="h-12 w-full rounded-xl font-serif text-[17px] font-semibold transition-colors"
-                style={{ background: done ? "#b8763d" : "#eadbc8", color: done ? "#fffdf9" : "#c9a87c", cursor: done ? "pointer" : "not-allowed" }}
+                style={{ background: done ? "#2a1a0f" : "#e6d5b8", color: done ? "#fdf8f0" : "#a3906e", cursor: done ? "pointer" : "not-allowed", boxShadow: done ? "0 6px 18px -6px rgba(42,26,15,0.5)" : undefined }}
                 whileTap={done ? { scale: 0.98 } : undefined}
               >
                 {opening ? "Opening…" : magic ? "Plant the bean ✳" : "Open my tab"}

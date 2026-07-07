@@ -17,6 +17,7 @@ import {
 } from "./wizard";
 import { getProfile, setProfile, ensureTableNo, grantOpeningBalance } from "@/lib/tab-mock";
 import { Beans } from "../login/Beans";
+import { Ticker } from "../login/Ticker";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const mono = "font-[family-name:var(--font-data)]";
@@ -34,13 +35,53 @@ function Chip({ label, on, onTap }: { label: string; on: boolean; onTap: () => v
       whileHover={reduce ? undefined : { scale: 1.05, y: -1 }}
       animate={on && !reduce ? { scale: [1.12, 1] } : {}}
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      className="rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors"
+      className="rounded-full border-[1.5px] px-3.5 py-1.5 text-[13px] font-semibold transition-colors"
       style={on
-        ? { background: "#b8763d", borderColor: "#b8763d", color: "#fffdf9", boxShadow: "0 1px 0 rgba(42,26,15,0.15)" }
-        : { background: "#fffdf9", borderColor: "#d8bf9a", color: "#3d2817" }}
+        ? { background: "#2a1a0f", borderColor: "#2a1a0f", color: "#fdf8f0", boxShadow: "0 2px 6px rgba(42,26,15,0.28)" }
+        : { background: "#fffdf9", borderColor: "#b8935e", color: "#2a1a0f" }}
     >
       {label}
     </motion.button>
+  );
+}
+
+/* ---------- animated waveform strip (product motif) ---------- */
+function WaveStrip() {
+  return (
+    <div aria-hidden className="flex h-6 items-center gap-[3px] overflow-hidden">
+      <style>{`@keyframes vbWStrip{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}`}</style>
+      {Array.from({ length: 40 }).map((_, i) => (
+        <span key={i} className="w-[3px] flex-1 rounded-full"
+          style={{ background: i % 4 === 0 ? "#4fb0a5" : "#b8763d", height: "100%", transformOrigin: "center", opacity: 0.75, animation: `vbWStrip ${700 + (i % 5) * 130}ms ease-in-out ${(i % 8) * 90}ms infinite` }} />
+      ))}
+    </div>
+  );
+}
+
+/* ---------- espresso brew-bar line-art (pours above the receipt) ---------- */
+function BrewBar() {
+  return (
+    <svg viewBox="0 0 260 150" className="w-full max-w-[300px]" aria-hidden fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <style>{`
+        @keyframes vbDrip{0%{transform:translateY(-4px);opacity:0}30%{opacity:1}100%{transform:translateY(26px);opacity:0}}
+        @keyframes vbSteamB{0%{opacity:0;transform:translateY(4px)}40%{opacity:.8}100%{opacity:0;transform:translateY(-10px)}}
+      `}</style>
+      <line x1="16" y1="132" x2="244" y2="132" stroke="#b8935e" strokeWidth="2.5" />
+      <g stroke="#b8763d" strokeWidth="2.2">
+        <path d="M150 34 c-5 -6 5 -10 0 -16 c-4 -5 4 -9 1 -14" style={{ animation: "vbSteamB 3s ease-in-out infinite" }} />
+        <path d="M166 37 c-5 -6 5 -10 0 -16 c-4 -5 4 -9 1 -14" style={{ animation: "vbSteamB 3.6s ease-in-out .5s infinite" }} />
+      </g>
+      <rect x="42" y="40" width="96" height="72" rx="8" stroke="#2a1a0f" strokeWidth="2.6" />
+      <rect x="56" y="52" width="30" height="14" rx="3" stroke="#2a1a0f" strokeWidth="2" />
+      <circle cx="118" cy="59" r="7" stroke="#2a1a0f" strokeWidth="2" />
+      <path d="M74 112 v8 h32 v-8" stroke="#2a1a0f" strokeWidth="2.4" />
+      <rect x="82" y="98" width="16" height="8" rx="2" fill="#2a1a0f" />
+      <rect x="88.5" y="108" width="3" height="7" rx="1.5" fill="#b8763d" style={{ animation: "vbDrip 1.4s ease-in infinite" }} />
+      <path d="M76 126 h28 l-2.6 -14 h-22.8 Z" stroke="#2a1a0f" strokeWidth="2.4" fill="#fdf8f0" />
+      <rect x="168" y="58" width="44" height="54" rx="6" stroke="#2a1a0f" strokeWidth="2.6" />
+      <path d="M176 58 v-10 h28 v10" stroke="#2a1a0f" strokeWidth="2.2" />
+      <circle cx="190" cy="86" r="9" stroke="#b8763d" strokeWidth="2.2" />
+    </svg>
   );
 }
 
@@ -422,85 +463,118 @@ export default function WelcomePage() {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: "#fdf8f0" }}>
-      <Beans />
-      {/* header */}
-      <div className="mx-auto flex max-w-[980px] items-center justify-between px-6 pt-8">
-        <span className="flex items-center gap-2">
-          <VoiceBrewMark className="size-7 text-coffee" />
-          <span className={`${mono} text-[11px] uppercase tracking-[0.2em]`} style={{ color: "#6b4423" }}>Your tab, printing</span>
-        </span>
-        <div className="flex items-center gap-2.5">
-          <CupToken quarter={phase === "grant" ? 5 : step + (verified ? 1 : 0)} />
-          <span className={`${mono} text-[10px] uppercase tracking-[0.12em]`} style={{ color: "#c9a87c" }}>
-            {phase === "grant" ? "TAB OPENED" : `${step + 1} of 5 — ${STEP_LABELS[step]}`}
+    <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto" style={{ background: "#f8efdd" }}>
+      {/* ===== espresso masthead band ===== */}
+      <div className="shrink-0" style={{ background: "#2a1a0f" }}>
+        <div className="mx-auto flex max-w-[1080px] items-center justify-between px-6 py-4">
+          <span className="flex items-center gap-2.5">
+            <VoiceBrewMark className="size-8 text-[#e8d5b5]" />
+            <span className="leading-tight">
+              <span className={`${mono} block text-[11px] uppercase tracking-[0.2em]`} style={{ color: "#e8d5b5" }}>VoiceBrew · by Blostem</span>
+              <span className={`${mono} block text-[9px] uppercase tracking-[0.16em]`} style={{ color: "#b8763d" }}>Your tab, printing…</span>
+            </span>
           </span>
+          <div className="hidden w-56 md:block"><WaveStrip /></div>
+          <div className="flex items-center gap-3">
+            <CupToken quarter={phase === "grant" ? 5 : step + (verified ? 1 : 0)} />
+            <span className={`${mono} text-[10px] uppercase tracking-[0.12em]`} style={{ color: "#c9a87c" }}>
+              {phase === "grant" ? "TAB OPENED" : `${step + 1} of 5 — ${STEP_LABELS[step]}`}
+            </span>
+          </div>
+        </div>
+        {/* progress rule */}
+        <div className="h-[3px] w-full" style={{ background: "#3d2817" }}>
+          <motion.div className="h-full" style={{ background: "linear-gradient(90deg,#b8763d,#4fb0a5)" }}
+            initial={false} animate={{ width: `${phase === "grant" ? 100 : ((step + 1) / 5) * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 24 }} />
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-[980px] gap-8 px-6 py-8 lg:grid-cols-[1fr_360px]">
-        {/* STEP PANEL */}
-        <div>
-          <AnimatePresence mode="wait">
-            {phase === "wizard" ? (
-              <motion.div key={step}
-                initial={reduce ? { opacity: 0 } : { opacity: 0, y: 22 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reduce ? { opacity: 0 } : { opacity: 0, y: -26 }}
-                transition={{ duration: 0.32, ease: EASE }}>
-                <h1 className="mb-5 font-serif text-[26px] leading-tight" style={{ color: "#2a1a0f" }}>
-                  {["Whose café is this?", "Pick your blend — what are we brewing for your guests?", "The order — what's this tab really for?", "Choose the roast — what language should the cup speak?", "The first pour"][step]}
-                </h1>
-                {stepBody[step]}
-                <div className="mt-7 flex items-center justify-between">
-                  <button onClick={() => advance(false)} className="h-11 rounded-xl px-6 font-serif text-[15px] font-semibold" style={{ background: "#b8763d", color: "#fffdf9" }}>
-                    {step === 4 ? (pourOnly ? "Done" : verified ? "Open the tab" : "Continue") : "Continue"}
-                  </button>
-                  <button onClick={() => advance(true)} className={`${mono} text-[11px] uppercase tracking-[0.1em] underline-offset-4 hover:underline`} style={{ color: "#c9a87c" }}>
-                    {step === 4 ? "Pour later" : "I'll decide at the counter"}
-                  </button>
-                </div>
-              </motion.div>
-            ) : (
-              /* THE OPENING BALANCE */
-              <motion.div key="grant" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4">
-                <h1 className="font-serif text-[30px] leading-tight" style={{ color: "#2a1a0f" }}>Your first fifty sips are on the house.</h1>
-                <div className="relative mt-6 flex items-end gap-3">
-                  {granted && !reduce && (
-                    <motion.span aria-hidden className="absolute -top-14 left-10 w-[6px] rounded-full" style={{ background: "#b8763d", transformOrigin: "top" }}
-                      initial={{ height: 0, opacity: 0 }} animate={{ height: 64, opacity: [0, 1, 1, 0] }} transition={{ duration: 1.4, times: [0, 0.15, 0.8, 1] }} />
-                  )}
-                  {granted && (
-                    <motion.svg aria-hidden width="40" height="30" viewBox="0 0 40 30" className="absolute -top-9 left-16" initial={{ opacity: 0 }} animate={{ opacity: reduce ? 0 : 1 }} transition={{ delay: 1.5 }}>
-                      {[6, 18, 30].map((x, i) => (
-                        <path key={x} d={`M 28 C  20  16  8`} fill="none" stroke="#c9a87c" strokeWidth="2" strokeLinecap="round" style={{ animation: `vbSteamW s ease-in-out -es infinite` }} />
-                      ))}
-                      <style>{`@keyframes vbSteamW{0%{opacity:0;transform:translateY(3px)}40%{opacity:.8}100%{opacity:0;transform:translateY(-6px)}}`}</style>
-                    </motion.svg>
-                  )}
-                  <span className={`${mono} text-[72px] font-semibold leading-none`} style={{ color: "#b8763d" }}>
-                    <NumberFlow value={granted ? 50 : 0} transformTiming={{ duration: reduce ? 0 : 1600, easing: "cubic-bezier(0.22,1,0.36,1)" }} />
-                  </span>
-                  <span className={`${mono} pb-2 text-[14px] uppercase tracking-[0.14em]`} style={{ color: "#4fb0a5" }}>sips</span>
-                </div>
-                <AnimatePresence>
-                  {granted && (
-                    <motion.p initial={reduce ? { opacity: 1 } : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: reduce ? 0 : 1.7 }}
-                      className="mt-4 max-w-sm text-[14px] leading-relaxed" style={{ color: "#3d2817" }}>
-                      Opening balance: 50 sips on the house — ≈ 6 minutes of calling at ₹8/min. No card, no clock. Your cup stays warm.
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-                <p className={`${mono} mt-6 text-[10px] uppercase tracking-[0.12em]`} style={{ color: "#c9a87c" }}>Pouring you in…</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+      <div className="relative flex-1">
+        <Beans />
+        <div className="mx-auto grid max-w-[1080px] gap-8 px-6 py-10 lg:grid-cols-[1fr_380px]">
+          {/* STEP PANEL — porcelain card */}
+          <div>
+            <AnimatePresence mode="wait">
+              {phase === "wizard" ? (
+                <motion.div key={step}
+                  initial={reduce ? { opacity: 0 } : { opacity: 0, y: 22 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reduce ? { opacity: 0 } : { opacity: 0, y: -26 }}
+                  transition={{ duration: 0.32, ease: EASE }}
+                  className="rounded-3xl p-7"
+                  style={{ background: "#fffdf9", border: "1.5px solid #cbb086", boxShadow: "0 3px 8px rgba(42,26,15,0.06), 0 24px 48px -24px rgba(42,26,15,0.28)" }}>
+                  <h1 className="mb-1 font-serif text-[28px] leading-tight" style={{ color: "#2a1a0f" }}>
+                    {["Whose café is this?", "Pick your blend — what are we brewing for your guests?", "The order — what's this tab really for?", "Choose the roast — what language should the cup speak?", "The first pour"][step]}
+                  </h1>
+                  <div className="mb-6 mt-2 h-[3px] w-14 rounded-full" style={{ background: "linear-gradient(90deg,#b8763d,#4fb0a5)" }} />
+                  {stepBody[step]}
+                  <div className="mt-8 flex items-center justify-between border-t pt-5" style={{ borderColor: "#e6d5b8" }}>
+                    <motion.button whileHover={reduce ? undefined : { y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => advance(false)}
+                      className="h-12 rounded-xl px-7 font-serif text-[16px] font-semibold shadow-lg"
+                      style={{ background: "#2a1a0f", color: "#fdf8f0", boxShadow: "0 6px 18px -6px rgba(42,26,15,0.5)" }}>
+                      {step === 4 ? (pourOnly ? "Done" : verified ? "Open the tab ☕" : "Continue") : "Continue →"}
+                    </motion.button>
+                    <button onClick={() => advance(true)} className={`${mono} text-[11px] uppercase tracking-[0.1em] underline-offset-4 hover:underline`} style={{ color: "#a3906e" }}>
+                      {step === 4 ? "Pour later" : "I'll decide at the counter"}
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                /* THE OPENING BALANCE */
+                <motion.div key="grant" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="rounded-3xl p-8"
+                  style={{ background: "#fffdf9", border: "1.5px solid #cbb086", boxShadow: "0 24px 48px -24px rgba(42,26,15,0.28)" }}>
+                  <h1 className="font-serif text-[32px] leading-tight" style={{ color: "#2a1a0f" }}>Your first fifty sips are on the house.</h1>
+                  <div className="relative mt-8 flex items-end gap-3">
+                    {granted && !reduce && (
+                      <motion.span aria-hidden className="absolute -top-16 left-12 w-[7px] rounded-full" style={{ background: "#b8763d", transformOrigin: "top" }}
+                        initial={{ height: 0, opacity: 0 }} animate={{ height: 72, opacity: [0, 1, 1, 0] }} transition={{ duration: 1.4, times: [0, 0.15, 0.8, 1] }} />
+                    )}
+                    {granted && !reduce && (
+                      <svg aria-hidden width="48" height="34" viewBox="0 0 48 34" className="absolute -top-10 left-20">
+                        <path d="M8 32 C 4 24 12 20 8 10" fill="none" stroke="#b8935e" strokeWidth="2.2" strokeLinecap="round" style={{ animation: "vbSteamW 2.4s ease-in-out infinite" }} />
+                        <path d="M22 32 C 18 24 26 20 22 8" fill="none" stroke="#b8935e" strokeWidth="2.2" strokeLinecap="round" style={{ animation: "vbSteamW 2.9s ease-in-out .3s infinite" }} />
+                        <path d="M36 32 C 32 24 40 20 36 12" fill="none" stroke="#b8935e" strokeWidth="2.2" strokeLinecap="round" style={{ animation: "vbSteamW 3.3s ease-in-out .6s infinite" }} />
+                        <style>{`@keyframes vbSteamW{0%{opacity:0;transform:translateY(3px)}40%{opacity:.85}100%{opacity:0;transform:translateY(-8px)}}`}</style>
+                      </svg>
+                    )}
+                    <span className={`${mono} text-[84px] font-semibold leading-none`} style={{ color: "#2a1a0f" }}>
+                      <NumberFlow value={granted ? 50 : 0} transformTiming={{ duration: reduce ? 0 : 1600, easing: "cubic-bezier(0.22,1,0.36,1)" }} />
+                    </span>
+                    <span className={`${mono} pb-2 text-[15px] font-semibold uppercase tracking-[0.14em]`} style={{ color: "#4fb0a5" }}>sips</span>
+                  </div>
+                  <AnimatePresence>
+                    {granted && (
+                      <motion.p initial={reduce ? { opacity: 1 } : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: reduce ? 0 : 1.7 }}
+                        className="mt-4 max-w-sm text-[15px] leading-relaxed" style={{ color: "#3d2817" }}>
+                        Opening balance: 50 sips on the house — ≈ 6 minutes of calling at ₹8/min. No card, no clock. Your cup stays warm.
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                  <p className={`${mono} mt-6 text-[10px] uppercase tracking-[0.12em]`} style={{ color: "#a3906e" }}>Pouring you in…</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-        {/* THE RECEIPT */}
-        <div className="lg:sticky lg:top-8 lg:self-start">
-          <Receipt name={name} brand={brand} lines={lines} tableNo={tableNo} stamped={stamped} />
+          {/* THE COUNTER — brew bar + receipt on a pinboard */}
+          <div className="lg:sticky lg:top-8 lg:self-start">
+            <div className="rounded-3xl p-5" style={{ background: "#efe0c2", border: "1.5px solid #cbb086", boxShadow: "inset 0 2px 10px rgba(42,26,15,0.08)" }}>
+              <div className="-mb-1 flex justify-center"><BrewBar /></div>
+              <div className="relative">
+                {/* receipt clip */}
+                <div className="absolute -top-2 left-1/2 z-10 h-4 w-16 -translate-x-1/2 rounded-b-md" style={{ background: "#b8935e", boxShadow: "0 2px 4px rgba(42,26,15,0.25)" }} />
+                <Receipt name={name} brand={brand} lines={lines} tableNo={tableNo} stamped={stamped} />
+              </div>
+              <p className={`${mono} mt-3 text-center text-[9px] uppercase tracking-[0.16em]`} style={{ color: "#8a6f4d" }}>Every answer prints on your tab</p>
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* ===== bottom NOW SERVING band ===== */}
+      <div className="shrink-0 border-t px-6 py-3" style={{ borderColor: "#cbb086", background: "#fffdf9" }}>
+        <div className="mx-auto max-w-[1080px]"><Ticker dimmed={false} stamp={null} /></div>
       </div>
 
       <AnimatePresence>{calling && <ReadbackSheet onDone={finishTasting} />}</AnimatePresence>

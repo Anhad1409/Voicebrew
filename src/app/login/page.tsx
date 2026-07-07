@@ -213,7 +213,7 @@ export default function LoginPage() {
   const stack = { hidden: {}, show: { transition: { staggerChildren: skipStagger || reduce ? 0 : 0.06 } } };
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: "#fdf8f0" }}>
+    <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: "#faf3e4" }}>
       <div className="grid min-h-full lg:grid-cols-[1.15fr_1fr]">
         {/* ============ LEFT — THE MASTHEAD ============ */}
         <motion.aside
