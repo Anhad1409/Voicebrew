@@ -12,6 +12,15 @@ export const GOALS = ["Collect payments on time", "Verify customers (KYC)", "Win
 export const CAMPAIGN_KINDS = ["Payment reminders", "Collections follow-ups", "KYC / verification", "Lead qualification", "Promotional offers", "Surveys & feedback", "Missed-call callbacks"];
 export const PROMO_KINDS = new Set(["Lead qualification", "Promotional offers"]);
 
+// FIELDS V2 (ONBOARDING-FIELDS-V2.md) — 7 evidence-backed additions
+export const SETUPS = ["Tele-caller team", "Auto-dialer / IVR", "Another AI voice tool", "WhatsApp & SMS only", "Not calling yet"];
+export const DIRECTIONS = ["Outbound campaigns", "Inbound answering", "Both ways"];
+export const DLT_STATUS = ["DLT-registered already", "Registration in progress", "DLT? Tell me more"];
+export const TIMELINES = ["This week", "This month", "This quarter", "Just tasting"];
+export const PERSONAS = ["Warm & friendly (Hindi-first)", "Polite & formal (English)", "Firm but fair (collections)", "Upbeat seller (Hinglish)", "Surprise me"];
+export const WINDOWS = ["Mornings (9–12)", "Afternoons (12–4)", "Evenings (4–8)", "You pick — keep me TRAI-safe"];
+export const CRMS = ["LeadSquared", "Zoho", "Salesforce", "HubSpot", "Excel / Sheets", "Our own LMS-LOS", "Nowhere yet"];
+
 // promotional → 140-series · service/transactional → 160-series (silent routing)
 export const PATH_OF: Record<string, "promo" | "service"> = {
   "EMI reminders": "service", Collections: "service", "KYC verification": "service",
@@ -28,7 +37,7 @@ export const GREETINGS: Record<string, string> = {
   Bengali: "Nomoshkar! Apnar EMI kal due ache.",
 };
 
-export const STEP_LABELS = ["NAME ON THE TAB", "PICK YOUR BLEND", "THE ORDER", "CHOOSE THE ROAST", "THE FIRST POUR"];
+export const STEP_LABELS = ["NAME ON THE TAB", "PICK YOUR BLEND", "THE ORDER", "CHOOSE THE ROAST", "TRAIN YOUR BARISTA", "THE FIRST POUR"];
 
 export const GRANT = { SCROLL: 0, STAMP: 400, POUR: 900, SUB: 2600, WIPE: 3400, SKIP_AFTER: 300 } as const;
 

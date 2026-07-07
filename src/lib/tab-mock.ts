@@ -6,6 +6,8 @@ export type TabProfile = {
   name?: string; email?: string; brand?: string; role?: string; teamSize?: string;
   useCase?: string; vertical?: string; languages?: string[]; volume?: string;
   goals?: string[]; campaignKinds?: string[];
+  currentSetup?: string; callDirection?: string; dltStatus?: string; launchTimeline?: string;
+  baristaPersona?: string; callingWindow?: string; crmStack?: string;
   compliancePath?: "promo" | "service"; phoneVerified?: boolean; phone?: string;
   skipped?: string[]; agreedTerms?: boolean;
 };

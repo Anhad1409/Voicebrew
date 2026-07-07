@@ -13,7 +13,8 @@ import { Check, Phone } from "lucide-react";
 import { VoiceBrewMark } from "@/components/layout/voicebrew-logo";
 import {
   ROLES, TEAM, USE_CASES, VERTICALS, LANGS, VOLUMES, PATH_OF, GREETINGS,
-  STEP_LABELS, GRANT, readback, GOALS, CAMPAIGN_KINDS, PROMO_KINDS, type RLine,
+  STEP_LABELS, GRANT, readback, GOALS, CAMPAIGN_KINDS, PROMO_KINDS,
+  SETUPS, DIRECTIONS, DLT_STATUS, TIMELINES, PERSONAS, WINDOWS, CRMS, type RLine,
 } from "./wizard";
 import { getProfile, setProfile, ensureTableNo, grantOpeningBalance } from "@/lib/tab-mock";
 import { Beans } from "../login/Beans";
@@ -87,7 +88,7 @@ function BrewBar() {
 
 /* ---------- mini cup progress token ---------- */
 function CupToken({ quarter }: { quarter: number }) {
-  const fill = Math.min(1, quarter / 5);
+  const fill = Math.min(1, quarter / 6);
   return (
     <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden>
       <path d="M8 12 h24 l-3.4 22 a4 4 0 0 1 -4 3.4 h-9.2 a4 4 0 0 1 -4 -3.4 Z" fill="#fffdf9" stroke="#d3b78f" strokeWidth="1.5" />
@@ -219,6 +220,14 @@ export default function WelcomePage() {
   const [vertical, setVertical] = useState("");
   const [goals, setGoals] = useState<string[]>([]);
   const [kinds, setKinds] = useState<string[]>([]);
+  // fields v2 (ONBOARDING-FIELDS-V2.md)
+  const [setup, setSetup] = useState("");
+  const [direction, setDirection] = useState("");
+  const [dlt, setDlt] = useState("");
+  const [timeline, setTimeline] = useState("");
+  const [persona, setPersona] = useState("");
+  const [window_, setWindow_] = useState("");
+  const [crm, setCrm] = useState("");
   const [langs, setLangs] = useState<string[]>([]);
   const [volume, setVolume] = useState("");
   const [phone, setPhone] = useState("");
@@ -244,13 +253,13 @@ export default function WelcomePage() {
       if (localStorage.getItem("vb-onboarded")) {
         // already granted: allow "pour later" users back in for step 4 only
         if (p.phoneVerified) { router.replace("/dashboard"); return; }
-        setName(p.name || ""); setPourOnly(true); setStep(4);
+        setName(p.name || ""); setPourOnly(true); setStep(5);
         return;
       }
       if (!p.name) { router.replace("/signup"); return; }
       setName(p.name);
       const saved = Number(sessionStorage.getItem("vb-wizard-step") || "0");
-      if (saved > 0 && saved < 5) setStep(saved);
+      if (saved > 0 && saved < 6) setStep(saved);
     } catch {}
     return () => timeouts.current.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -311,26 +320,40 @@ export default function WelcomePage() {
       if (skip || !useCase) print("BLEND", "LEFT ROOM FOR MILK", "milk");
       else print("BLEND", `${useCase.toUpperCase()} (${PATH_OF[useCase] === "service" ? "SERVICE" : "PROMO"})`);
       if (vertical) print("HOUSE", vertical.toUpperCase());
-      setProfile({ useCase, vertical, compliancePath: useCase ? PATH_OF[useCase] : undefined });
+      if (setup) print("BREWING TODAY", setup.toUpperCase());
+      setProfile({ useCase, vertical, currentSetup: setup, compliancePath: useCase ? PATH_OF[useCase] : undefined });
       setStep(2);
     } else if (step === 2) {
-      // THE ORDER — goals + campaign kinds (promo kinds sharpen the compliance path)
-      if (skip || (goals.length === 0 && kinds.length === 0)) print("THE ORDER", "LEFT ROOM FOR MILK", "milk");
+      // THE ORDER — direction + goals + campaign kinds (+ conditional DLT stamp)
+      if (direction) print("POUR DIRECTION", direction.toUpperCase());
+      if (skip || (goals.length === 0 && kinds.length === 0 && !direction)) print("THE ORDER", "LEFT ROOM FOR MILK", "milk");
       else {
         if (goals.length) print("FOR", goals.map((g) => g.toUpperCase()).join(" · "));
         if (kinds.length) print("CAMPAIGNS", kinds.map((k) => k.toUpperCase()).join(" · "));
       }
       const promo = kinds.some((k) => PROMO_KINDS.has(k));
-      setProfile({ goals, campaignKinds: kinds, compliancePath: promo ? "promo" : (useCase ? PATH_OF[useCase] : undefined) });
+      if (promo && dlt) print("INSPECTOR'S STAMP", dlt.toUpperCase());
+      setProfile({ goals, campaignKinds: kinds, callDirection: direction, dltStatus: dlt || undefined, compliancePath: promo ? "promo" : (useCase ? PATH_OF[useCase] : undefined) });
       setStep(3);
     } else if (step === 3) {
       if (skip || langs.length === 0) print("ROAST", "LEFT ROOM FOR MILK", "milk");
       else print("ROAST", langs.map((l) => l.toUpperCase()).join(" · "));
       if (volume) print("PARTY SIZE", volume.toUpperCase());
-      setProfile({ languages: langs, volume });
+      if (timeline) print("FIRST BATCH DUE", timeline.toUpperCase());
+      setProfile({ languages: langs, volume, launchTimeline: timeline });
       setStep(4);
+    } else if (step === 4) {
+      // TRAIN YOUR BARISTA — persona + serving hours
+      if (skip || (!persona && !window_)) print("YOUR BARISTA", "LEFT ROOM FOR MILK", "milk");
+      else {
+        if (persona) print("YOUR BARISTA", persona.split(" (")[0].toUpperCase());
+        if (window_) print("SERVING HOURS", window_.toUpperCase());
+      }
+      setProfile({ baristaPersona: persona, callingWindow: window_ });
+      setStep(5);
     } else {
-      // step 4 done (verified+tasted, or pour later)
+      // step 6 done (verified+tasted, or pour later)
+      if (crm) { print("BEANS KEPT AT", crm.toUpperCase()); setProfile({ crmStack: crm }); }
       if (pourOnly) { router.push("/dashboard"); return; } // already granted
       if (!verified) print("FIRST POUR", "POUR LATER", "milk");
       startGrant();
@@ -386,9 +409,21 @@ export default function WelcomePage() {
             style={vertical === v ? { background: "#c9a87c", borderColor: "#c9a87c", color: "#2a1a0f" } : { background: "transparent", borderColor: "#6b4423", color: "#eadbc8" }}>{v}</button>
         ))}</div>
       </div>
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#c9a87c" }}>What&apos;s brewing today? <span style={{ color: "#8a6f4d" }}>· how do your calls happen right now</span></div>
+        <div className="flex flex-wrap gap-2">{SETUPS.map((s) => (
+          <button key={s} onClick={() => setSetup(setup === s ? "" : s)} aria-pressed={setup === s}
+            className="rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors"
+            style={setup === s ? { background: "#c9a87c", borderColor: "#c9a87c", color: "#2a1a0f" } : { background: "transparent", borderColor: "#6b4423", color: "#eadbc8" }}>{s}</button>
+        ))}</div>
+      </div>
     </div>,
-    /* 3 — THE ORDER (goals + campaign kinds) */
+    /* 3 — THE ORDER (direction + goals + campaign kinds + conditional DLT) */
     <div key="s-order" className="space-y-5">
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Which way does the coffee flow?</div>
+        <div className="flex flex-wrap gap-2">{DIRECTIONS.map((d) => <Chip key={d} label={d} on={direction === d} onTap={() => setDirection(direction === d ? "" : d)} />)}</div>
+      </div>
       <div>
         <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>What will you use VoiceBrew for? <span style={{ color: "#a3906e" }}>· pick any</span></div>
         <div className="flex flex-wrap gap-2">{GOALS.map((g) => <Chip key={g} label={g} on={goals.includes(g)} onTap={() => setGoals((xs) => xs.includes(g) ? xs.filter((x) => x !== g) : [...xs, g])} />)}</div>
@@ -400,6 +435,17 @@ export default function WelcomePage() {
           <p className={`${mono} mt-2 text-[10px] uppercase tracking-[0.1em]`} style={{ color: "#b8763d" }}>Promotional campaigns pour 10:00–19:00 IST — the house keeps TRAI&apos;s hours.</p>
         )}
       </div>
+      {/* conditional: DLT readiness — only when a promo kind is picked (~80% never see it) */}
+      <AnimatePresence>
+        {kinds.some((k) => PROMO_KINDS.has(k)) && (
+          <motion.div key="dlt" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.28, ease: EASE }} className="overflow-hidden">
+            <div className="rounded-2xl border-[1.5px] p-4" style={{ borderColor: "#b8935e", background: "#fbf4e4" }}>
+              <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Health inspector&apos;s stamp <span style={{ color: "#a3906e" }}>· promo calls in India need DLT papers. Got yours?</span></div>
+              <div className="flex flex-wrap gap-2">{DLT_STATUS.map((d) => <Chip key={d} label={d} on={dlt === d} onTap={() => setDlt(dlt === d ? "" : d)} />)}</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>,
     /* 4 — CHOOSE THE ROAST */
     <div key="s3" className="space-y-5">
@@ -419,11 +465,39 @@ export default function WelcomePage() {
         <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Monthly call volume <span style={{ color: "#c9a87c" }}>· optional</span></div>
         <div className="flex flex-wrap gap-2">{VOLUMES.map((v) => <Chip key={v} label={v} on={volume === v} onTap={() => setVolume(volume === v ? "" : v)} />)}</div>
       </div>
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>When&apos;s the first batch due? <span style={{ color: "#a3906e" }}>· when do you need calls going out</span></div>
+        <div className="flex flex-wrap gap-2">{TIMELINES.map((t) => <Chip key={t} label={t} on={timeline === t} onTap={() => setTimeline(timeline === t ? "" : t)} />)}</div>
+      </div>
     </div>,
-    /* 4 — THE FIRST POUR */
+    /* 5 — TRAIN YOUR BARISTA (new) */
+    <div key="s-barista" className="space-y-5">
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Pick your barista <span style={{ color: "#a3906e" }}>· how should your caller sound on the phone</span></div>
+        <div className="flex flex-wrap gap-2">{PERSONAS.map((p) => <Chip key={p} label={p} on={persona === p} onTap={() => setPersona(persona === p ? "" : p)} />)}</div>
+        <AnimatePresence>
+          {persona && persona !== "Surprise me" && (
+            <motion.p key={persona} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className={`${mono} mt-3 rounded-xl px-3 py-2 text-[12px]`} style={{ background: "#f4e9d8", color: "#3d2817" }}>
+              🎙 Your tasting call will sound {persona.split(" (")[0].toLowerCase()} — you&apos;ll hear it in the next step.
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Serving hours <span style={{ color: "#a3906e" }}>· when should we pour</span></div>
+        <div className="flex flex-wrap gap-2">{WINDOWS.map((w) => <Chip key={w} label={w} on={window_ === w} onTap={() => setWindow_(window_ === w ? "" : w)} />)}</div>
+        <p className={`${mono} mt-2 text-[10px] uppercase tracking-[0.1em]`} style={{ color: "#b8763d" }}>We never call outside 9am–9pm. TRAI&apos;s rules — and ours.</p>
+      </div>
+    </div>,
+    /* 6 — THE FIRST POUR */
     <div key="s4" className="space-y-5">
       <p className="font-serif text-lg italic" style={{ color: "#2a1a0f" }}>Where should we pour the first call?</p>
       <p className={`${mono} -mt-3 text-[11px]`} style={{ color: "#6b4423" }}>Free sips pour only into your own verified cup — no paperwork, no waiting.</p>
+      <div>
+        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Where do you keep the beans? <span style={{ color: "#a3906e" }}>· where your contact lists live</span></div>
+        <div className="flex flex-wrap gap-2">{CRMS.map((c) => <Chip key={c} label={c} on={crm === c} onTap={() => setCrm(crm === c ? "" : c)} />)}</div>
+      </div>
       <div className="flex items-center gap-2">
         <span className={`${mono} rounded-xl border px-3 py-2.5 text-[14px]`} style={{ borderColor: "#d8bf9a", background: "#f4e9d8", color: "#6b4423" }}>+91</span>
         <input value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} inputMode="numeric" placeholder="98••• •••10" disabled={verified}
@@ -476,16 +550,16 @@ export default function WelcomePage() {
           </span>
           <div className="hidden w-56 md:block"><WaveStrip /></div>
           <div className="flex items-center gap-3">
-            <CupToken quarter={phase === "grant" ? 5 : step + (verified ? 1 : 0)} />
+            <CupToken quarter={phase === "grant" ? 6 : step + (verified ? 1 : 0)} />
             <span className={`${mono} text-[10px] uppercase tracking-[0.12em]`} style={{ color: "#c9a87c" }}>
-              {phase === "grant" ? "TAB OPENED" : `${step + 1} of 5 — ${STEP_LABELS[step]}`}
+              {phase === "grant" ? "TAB OPENED" : `${step + 1} of 6 — ${STEP_LABELS[step]}`}
             </span>
           </div>
         </div>
         {/* progress rule */}
         <div className="h-[3px] w-full" style={{ background: "#3d2817" }}>
           <motion.div className="h-full" style={{ background: "linear-gradient(90deg,#b8763d,#4fb0a5)" }}
-            initial={false} animate={{ width: `${phase === "grant" ? 100 : ((step + 1) / 5) * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 24 }} />
+            initial={false} animate={{ width: `${phase === "grant" ? 100 : ((step + 1) / 6) * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 24 }} />
         </div>
       </div>
 
@@ -504,7 +578,7 @@ export default function WelcomePage() {
                   className="rounded-3xl p-7"
                   style={{ background: "#fffdf9", border: "1.5px solid #cbb086", boxShadow: "0 3px 8px rgba(42,26,15,0.06), 0 24px 48px -24px rgba(42,26,15,0.28)" }}>
                   <h1 className="mb-1 font-serif text-[28px] leading-tight" style={{ color: "#2a1a0f" }}>
-                    {["Whose café is this?", "Pick your blend — what are we brewing for your guests?", "The order — what's this tab really for?", "Choose the roast — what language should the cup speak?", "The first pour"][step]}
+                    {["Whose café is this?", "Pick your blend — what are we brewing for your guests?", "The order — what's this tab really for?", "Choose the roast — what language should the cup speak?", "Train your barista — how should the caller sound?", "The first pour"][step]}
                   </h1>
                   <div className="mb-6 mt-2 h-[3px] w-14 rounded-full" style={{ background: "linear-gradient(90deg,#b8763d,#4fb0a5)" }} />
                   {stepBody[step]}
@@ -512,10 +586,10 @@ export default function WelcomePage() {
                     <motion.button whileHover={reduce ? undefined : { y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => advance(false)}
                       className="h-12 rounded-xl px-7 font-serif text-[16px] font-semibold shadow-lg"
                       style={{ background: "#2a1a0f", color: "#fdf8f0", boxShadow: "0 6px 18px -6px rgba(42,26,15,0.5)" }}>
-                      {step === 4 ? (pourOnly ? "Done" : verified ? "Open the tab ☕" : "Continue") : "Continue →"}
+                      {step === 5 ? (pourOnly ? "Done" : verified ? "Open the tab ☕" : "Continue") : "Continue →"}
                     </motion.button>
                     <button onClick={() => advance(true)} className={`${mono} text-[11px] uppercase tracking-[0.1em] underline-offset-4 hover:underline`} style={{ color: "#a3906e" }}>
-                      {step === 4 ? "Pour later" : "I'll decide at the counter"}
+                      {step === 5 ? "Pour later" : "I'll decide at the counter"}
                     </button>
                   </div>
                 </motion.div>

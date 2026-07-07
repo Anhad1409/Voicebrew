@@ -33,8 +33,10 @@ npm run build && npx next start -p 3434
 ```
 Root layout (V6Sidebar + V6Topbar + <main>)
  ├─ /login            → "The Morning Edition" sign-in journey (fixed overlay; LOGIN-DESIGN-SPEC.md)
- ├─ /signup /welcome  → "OPEN A TAB" freemium onboarding: 3-field signup → receipt wizard →
- │                      50 free sips granted (ONBOARDING-DESIGN-SPEC.md; state in lib/tab-mock.ts)
+ ├─ /signup /welcome  → "OPEN A TAB" freemium onboarding: 3-field signup + T&C consent → 6-step
+ │                      receipt wizard (13 capturable details incl. fields-v2: setup, direction,
+ │                      DLT status, timeline, barista persona, calling window, CRM —
+ │                      ONBOARDING-FIELDS-V2.md) → 50 free sips (state in lib/tab-mock.ts)
  ├─ /plans            → "Settle Your Tab" pricing (free / ₹8-per-min Regulars' Card / House Account)
  ├─ /dashboard        → V6Dashboard        (flip-card KPIs, capacity cup, live campaigns…)
  ├─ /today            → V6Today            (brew worklist; cup fills as you tick tasks)
