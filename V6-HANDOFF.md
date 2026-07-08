@@ -32,7 +32,9 @@ npm run build && npx next start -p 3434
 
 ```
 Root layout (V6Sidebar + V6Topbar + <main>)
- ├─ /login            → "The Morning Edition" sign-in journey (fixed overlay; LOGIN-DESIGN-SPEC.md)
+ ├─ /login /signup    → auth journey in the dashboard design language (JourneyShell)
+ ├─ /verify           → email code after signup · /forgot + /reset → password recovery
+ ├─ /magic            → magic-link landing (verifies the bean ✳ → pours into /dashboard)
  ├─ /signup /welcome  → "OPEN A TAB" freemium onboarding: 3-field signup + T&C consent → 6-step
  │                      receipt wizard (13 capturable details incl. fields-v2: setup, direction,
  │                      DLT status, timeline, barista persona, calling window, CRM —

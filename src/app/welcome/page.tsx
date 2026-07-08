@@ -38,8 +38,8 @@ function Chip({ label, on, onTap }: { label: string; on: boolean; onTap: () => v
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
       className="rounded-full border-[1.5px] px-3.5 py-1.5 text-[13px] font-semibold transition-colors"
       style={on
-        ? { background: "#2a1a0f", borderColor: "#2a1a0f", color: "#fdf8f0", boxShadow: "0 2px 6px rgba(42,26,15,0.28)" }
-        : { background: "#fffdf9", borderColor: "#b8935e", color: "#2a1a0f" }}
+        ? { background: "#b8763d", borderColor: "#b8763d", color: "#fdf8f0", boxShadow: "0 2px 8px rgba(184,118,61,0.4)" }
+        : { background: "#fffdf9", borderColor: "#d8bf9a", color: "#3d2817" }}
     >
       {label}
     </motion.button>
@@ -537,28 +537,28 @@ export default function WelcomePage() {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto" style={{ background: "#f8efdd" }}>
-      {/* ===== espresso masthead band ===== */}
-      <div className="shrink-0" style={{ background: "#2a1a0f" }}>
-        <div className="mx-auto flex max-w-[1080px] items-center justify-between px-6 py-4">
+    <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-cream" style={{ backgroundImage: "radial-gradient(1100px 560px at 80% -10%, #f9ead2 0%, transparent 58%), radial-gradient(820px 460px at 2% 102%, #f1e3d2 0%, transparent 60%)" }}>
+      {/* ===== header — dashboard topbar treatment ===== */}
+      <div className="shrink-0 border-b border-foam bg-porcelain/90 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-[1080px] items-center justify-between px-6 py-3.5">
           <span className="flex items-center gap-2.5">
-            <VoiceBrewMark className="size-8 text-[#e8d5b5]" />
+            <VoiceBrewMark className="size-8 text-coffee" />
             <span className="leading-tight">
-              <span className={`${mono} block text-[11px] uppercase tracking-[0.2em]`} style={{ color: "#e8d5b5" }}>VoiceBrew · by Blostem</span>
-              <span className={`${mono} block text-[9px] uppercase tracking-[0.16em]`} style={{ color: "#b8763d" }}>Your tab, printing…</span>
+              <span className="block font-serif text-[15px] font-semibold text-coffee">Voice<span className="text-caramel">Brew</span></span>
+              <span className={`${mono} block text-[9px] uppercase tracking-[0.16em] text-latte`}>Your tab, printing…</span>
             </span>
           </span>
           <div className="hidden w-56 md:block"><WaveStrip /></div>
           <div className="flex items-center gap-3">
             <CupToken quarter={phase === "grant" ? 6 : step + (verified ? 1 : 0)} />
-            <span className={`${mono} text-[10px] uppercase tracking-[0.12em]`} style={{ color: "#c9a87c" }}>
+            <span className={`${mono} text-[10px] uppercase tracking-[0.12em] text-mocha`}>
               {phase === "grant" ? "TAB OPENED" : `${step + 1} of 6 — ${STEP_LABELS[step]}`}
             </span>
           </div>
         </div>
         {/* progress rule */}
-        <div className="h-[3px] w-full" style={{ background: "#3d2817" }}>
-          <motion.div className="h-full" style={{ background: "linear-gradient(90deg,#b8763d,#4fb0a5)" }}
+        <div className="h-[3px] w-full bg-foam">
+          <motion.div className="h-full rounded-r-full bg-brand"
             initial={false} animate={{ width: `${phase === "grant" ? 100 : ((step + 1) / 6) * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 24 }} />
         </div>
       </div>
@@ -576,7 +576,7 @@ export default function WelcomePage() {
                   exit={reduce ? { opacity: 0 } : { opacity: 0, y: -26 }}
                   transition={{ duration: 0.32, ease: EASE }}
                   className="rounded-3xl p-7"
-                  style={{ background: "#fffdf9", border: "1.5px solid #cbb086", boxShadow: "0 3px 8px rgba(42,26,15,0.06), 0 24px 48px -24px rgba(42,26,15,0.28)" }}>
+                  style={{ background: "#fffdf9", border: "1px solid #eadbc8", boxShadow: "0 1px 2px rgba(60,40,20,.05), 0 16px 40px -24px rgba(60,40,20,.25)" }}>
                   <h1 className="mb-1 font-serif text-[28px] leading-tight" style={{ color: "#2a1a0f" }}>
                     {["Whose café is this?", "Pick your blend — what are we brewing for your guests?", "The order — what's this tab really for?", "Choose the roast — what language should the cup speak?", "Train your barista — how should the caller sound?", "The first pour"][step]}
                   </h1>
@@ -584,8 +584,7 @@ export default function WelcomePage() {
                   {stepBody[step]}
                   <div className="mt-8 flex items-center justify-between border-t pt-5" style={{ borderColor: "#e6d5b8" }}>
                     <motion.button whileHover={reduce ? undefined : { y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => advance(false)}
-                      className="h-12 rounded-xl px-7 font-serif text-[16px] font-semibold shadow-lg"
-                      style={{ background: "#2a1a0f", color: "#fdf8f0", boxShadow: "0 6px 18px -6px rgba(42,26,15,0.5)" }}>
+                      className="h-12 rounded-xl bg-brand px-7 font-serif text-[16px] font-semibold text-brand-foreground shadow-cta transition-colors hover:bg-brand-dark">
                       {step === 5 ? (pourOnly ? "Done" : verified ? "Open the tab ☕" : "Continue") : "Continue →"}
                     </motion.button>
                     <button onClick={() => advance(true)} className={`${mono} text-[11px] uppercase tracking-[0.1em] underline-offset-4 hover:underline`} style={{ color: "#a3906e" }}>
@@ -597,7 +596,7 @@ export default function WelcomePage() {
                 /* THE OPENING BALANCE */
                 <motion.div key="grant" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   className="rounded-3xl p-8"
-                  style={{ background: "#fffdf9", border: "1.5px solid #cbb086", boxShadow: "0 24px 48px -24px rgba(42,26,15,0.28)" }}>
+                  style={{ background: "#fffdf9", border: "1px solid #eadbc8", boxShadow: "0 1px 2px rgba(60,40,20,.05), 0 16px 40px -24px rgba(60,40,20,.25)" }}>
                   <h1 className="font-serif text-[32px] leading-tight" style={{ color: "#2a1a0f" }}>Your first fifty sips are on the house.</h1>
                   <div className="relative mt-8 flex items-end gap-3">
                     {granted && !reduce && (
@@ -633,7 +632,7 @@ export default function WelcomePage() {
 
           {/* THE COUNTER — brew bar + receipt on a pinboard */}
           <div className="lg:sticky lg:top-8 lg:self-start">
-            <div className="rounded-3xl p-5" style={{ background: "#efe0c2", border: "1.5px solid #cbb086", boxShadow: "inset 0 2px 10px rgba(42,26,15,0.08)" }}>
+            <div className="rounded-3xl p-5" style={{ background: "rgba(244,233,216,0.6)", border: "1px solid #eadbc8", boxShadow: "inset 0 2px 8px rgba(60,40,20,0.06)" }}>
               <div className="-mb-1 flex justify-center"><BrewBar /></div>
               <div className="relative">
                 {/* receipt clip */}
