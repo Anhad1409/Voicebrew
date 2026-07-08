@@ -596,6 +596,15 @@ export default function WelcomePage() {
                   transition={{ duration: 0.32, ease: EASE }}
                   className="rounded-3xl p-7"
                   style={{ background: "#fffdf9", border: "1px solid #eadbc8", boxShadow: "0 1px 2px rgba(60,40,20,.05), 0 16px 40px -24px rgba(60,40,20,.25)" }}>
+                  {step > 0 && !pourOnly && (
+                    <button
+                      onClick={goBack}
+                      aria-label="Back to the previous step"
+                      className={`${mono} mb-3 inline-flex items-center gap-1.5 rounded-full border border-foam bg-card px-3 py-1.5 text-[11px] uppercase tracking-[0.1em] text-mocha transition-colors hover:bg-oat/60`}
+                    >
+                      ← Step {step} — {STEP_LABELS[step - 1].toLowerCase()}
+                    </button>
+                  )}
                   <h1 className="mb-1 font-serif text-[28px] leading-tight" style={{ color: "#2a1a0f" }}>
                     {["Whose café is this?", "Pick your blend — what are we brewing for your guests?", "The order — what's this tab really for?", "Choose the roast — what language should the cup speak?", "Train your barista — how should the caller sound?", "The first pour"][step]}
                   </h1>
