@@ -64,6 +64,9 @@ export default function ResetPage() {
               <button type="submit" className="mt-5 h-12 w-full rounded-xl bg-brand font-serif text-[16px] font-semibold text-brand-foreground shadow-cta transition-colors hover:bg-brand-dark">
                 Save the new key
               </button>
+              <button type="button" onClick={() => router.push("/login")} className="mt-4 block w-full text-center text-[13px] text-mocha underline-offset-4 hover:underline">
+                ← Back to the counter
+              </button>
             </motion.form>
           ) : (
             <motion.div key="done" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="text-center">

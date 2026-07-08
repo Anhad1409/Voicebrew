@@ -306,8 +306,27 @@ export default function WelcomePage() {
     return () => { window.removeEventListener("keydown", skip); window.removeEventListener("pointerdown", skip); };
   }, [phase, runWipe]);
 
-  /* ---- step advance ---- */
+  /* ---- step navigation ---- */
+  // labels each step owns on the receipt — wiped before re-printing so
+  // going back and changing an answer never leaves a stale line
+  const STEP_LABELS_OWNED: string[][] = [
+    ["HOUSE BLEND", "ROLE", "PARTY OF"],
+    ["BLEND", "HOUSE", "BREWING TODAY"],
+    ["POUR DIRECTION", "THE ORDER", "FOR", "CAMPAIGNS", "INSPECTOR'S STAMP"],
+    ["ROAST", "PARTY SIZE", "FIRST BATCH DUE"],
+    ["YOUR BARISTA", "SERVING HOURS"],
+    ["BEANS KEPT AT", "FIRST POUR"],
+  ];
+  const wipeStepLines = (s: number) =>
+    setLines((prev) => prev.filter((l) => !STEP_LABELS_OWNED[s]?.includes(l.label)));
+
+  const goBack = () => {
+    if (phase !== "wizard" || step === 0 || pourOnly) return;
+    setStep((s) => s - 1);
+  };
+
   const advance = (skip: boolean) => {
+    wipeStepLines(step);
     if (step === 0) {
       if (skip || (!brand && !role && !team)) print("HOUSE BLEND", "LEFT ROOM FOR MILK", "milk");
       else {
@@ -583,10 +602,23 @@ export default function WelcomePage() {
                   <div className="mb-6 mt-2 h-[3px] w-14 rounded-full" style={{ background: "linear-gradient(90deg,#b8763d,#4fb0a5)" }} />
                   {stepBody[step]}
                   <div className="mt-8 flex items-center justify-between border-t pt-5" style={{ borderColor: "#e6d5b8" }}>
-                    <motion.button whileHover={reduce ? undefined : { y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => advance(false)}
-                      className="h-12 rounded-xl bg-brand px-7 font-serif text-[16px] font-semibold text-brand-foreground shadow-cta transition-colors hover:bg-brand-dark">
-                      {step === 5 ? (pourOnly ? "Done" : verified ? "Open the tab ☕" : "Continue") : "Continue →"}
-                    </motion.button>
+                    <div className="flex items-center gap-2.5">
+                      {step > 0 && !pourOnly && (
+                        <motion.button
+                          initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
+                          whileHover={reduce ? undefined : { x: -2 }} whileTap={{ scale: 0.97 }}
+                          onClick={goBack}
+                          className="flex h-12 items-center gap-1.5 rounded-xl border border-foam bg-card px-4 text-[14px] font-medium text-mocha transition-colors hover:bg-oat/60"
+                          aria-label="Back to the previous step"
+                        >
+                          ← Back
+                        </motion.button>
+                      )}
+                      <motion.button whileHover={reduce ? undefined : { y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => advance(false)}
+                        className="h-12 rounded-xl bg-brand px-7 font-serif text-[16px] font-semibold text-brand-foreground shadow-cta transition-colors hover:bg-brand-dark">
+                        {step === 5 ? (pourOnly ? "Done" : verified ? "Open the tab ☕" : "Continue") : "Continue →"}
+                      </motion.button>
+                    </div>
                     <button onClick={() => advance(true)} className={`${mono} text-[11px] uppercase tracking-[0.1em] underline-offset-4 hover:underline`} style={{ color: "#a3906e" }}>
                       {step === 5 ? "Pour later" : "I'll decide at the counter"}
                     </button>
