@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Clock, Plus, X, ArrowUpRight, ArrowDownRight, Gift, Zap, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MiniSpark } from "@/components/ui-bits/mini-spark";
 import { toast } from "@/components/notifications/toaster";
+import Link from "next/link";
+import { Layers } from "lucide-react";
 import { wallet, walletHistory, walletUsage, topupPacks, walletState } from "@/lib/wallet-mock";
 import { TabMeter } from "@/components/wallet/tab-meter";
-import { getPlan } from "@/lib/tab-mock";
+import { useBillingModel, subscriptionPlan } from "@/lib/billing";
 
 function tone(min: number) {
   const s = walletState(min);
@@ -25,15 +27,9 @@ export function WalletMeter({ collapsed = false }: { collapsed?: boolean }) {
   const [open, setOpen] = useState(false);
   const [topup, setTopup] = useState(false);
   const [hist, setHist] = useState(walletHistory);
-  // freemium TAB branch: vb-plan="free" → sips meter (spec §6); paid model untouched
-  const [freePlan, setFreePlan] = useState(false);
-  useEffect(() => {
-    const sync = () => setFreePlan(getPlan() === "free");
-    sync();
-    window.addEventListener("vb-credits-change", sync);
-    window.addEventListener("storage", sync);
-    return () => { window.removeEventListener("vb-credits-change", sync); window.removeEventListener("storage", sync); };
-  }, []);
+  // billing-aware: free → credits meter; explicit subscription → plan card
+  // (channels are the resource, no minute math); metered/legacy → minutes meter.
+  const { model, explicit } = useBillingModel();
   const t = tone(balance);
   const pct = Math.min(100, Math.round((balance / wallet.planMinutes) * 100));
 
@@ -44,7 +40,31 @@ export function WalletMeter({ collapsed = false }: { collapsed?: boolean }) {
     toast({ title: "Balance topped up", body: `+${mins.toLocaleString("en-IN")} minutes added.`, severity: "success" });
   };
 
-  if (freePlan) return <TabMeter collapsed={collapsed} />;
+  if (model === "free") return <TabMeter collapsed={collapsed} />;
+
+  // flat-fee subscription: the resource is channels, not minutes — show the
+  // plan instead of a minute meter (only when the model is explicitly chosen,
+  // so untouched sessions keep the legacy look).
+  if (model === "subscription" && explicit) {
+    if (collapsed) {
+      return (
+        <Link href="/plans" title={`${subscriptionPlan.name} plan · ${subscriptionPlan.channels} channels`}
+          className="relative mx-auto mb-1 flex size-10 items-center justify-center rounded-xl border border-foam bg-oat/60 text-caramel hover:border-latte">
+          <Layers className="size-[18px]" />
+        </Link>
+      );
+    }
+    return (
+      <Link href="/plans" data-tour="wallet"
+        className="mx-3 mb-1 flex items-center gap-2.5 rounded-xl border border-foam bg-oat/60 px-2.5 py-2 text-left transition-colors hover:border-latte">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-caramel/15 text-caramel"><Layers className="size-4" /></span>
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold text-coffee">{subscriptionPlan.name} plan</div>
+          <div className="text-[11px] text-muted-foreground">{subscriptionPlan.channels} channels · flat fee</div>
+        </div>
+      </Link>
+    );
+  }
 
   return (
     <>

@@ -1,7 +1,7 @@
 "use client";
 
-/* v7 Reports — "the ledger shelf". Banner + catalog cards with icon tiles,
-   category chips and a spark deco; run/schedule stay as toasts. */
+/* v7 Reports — banner + catalog cards with icon tiles, category chips and
+   a spark deco; run/schedule stay as toasts. */
 
 import type { LucideIcon } from "lucide-react";
 import { Phone, Megaphone, Filter, Sparkles, Gauge, List, ShieldCheck, Wallet, Download, CalendarClock } from "lucide-react";
@@ -27,13 +27,13 @@ export function V7Reports() {
   return (
     <div className="mx-auto max-w-7xl">
       <V7Banner
-        eyebrow="The ledger shelf"
+        eyebrow="Overview"
         title="Reports"
-        subtitle={<>{reportsCatalog.length} ledgers on the shelf — run one now, or schedule the morning batch.</>}
+        subtitle={<>{reportsCatalog.length} reports — run one now or schedule the morning batch.</>}
         stats={[
-          { label: "On the shelf", value: reportsCatalog.length },
+          { label: "Reports", value: reportsCatalog.length },
           { label: "Categories", value: cats.length },
-          { label: "Activity", value: "7d", spark: timeSeries.map((p) => p.calls) },
+          { label: "7-day activity", value: "7d", spark: timeSeries.map((p) => p.calls) },
         ]}
       />
 

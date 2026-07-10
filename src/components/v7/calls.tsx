@@ -1,7 +1,7 @@
 "use client";
 
-/* v7 Calls — "the pour log". Bucket chips carry their own colors, rows get
-   bean dots + score meters, and the expanded dossier keeps its transcript. */
+/* v7 Calls — bucket chips carry their own colors, rows get bean dots +
+   score meters, and the expanded detail keeps its transcript. */
 
 import { useMemo, useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
@@ -40,24 +40,24 @@ export function V7Calls() {
 
   const reachedPct = calls.length ? Math.round((counts.reached / calls.length) * 100) : 0;
   const avgDur = calls.length ? Math.round(calls.reduce((s, c) => s + c.duration_seconds, 0) / calls.length) : 0;
-  const selectCls = "h-9 rounded-full border border-foam bg-porcelain px-3.5 text-[13px] text-coffee shadow-glass outline-none focus:border-caramel";
+  const selectCls = "h-8 rounded-full border border-foam bg-porcelain px-3 text-[12px] text-coffee shadow-glass outline-none focus:border-caramel";
 
   return (
     <div className="mx-auto max-w-7xl">
       <V7Banner
-        eyebrow="The pour log"
+        eyebrow="Overview"
         title="Calls"
-        subtitle={<><span className="font-medium text-coffee">{calls.length} pours</span> on the record — tap any row for the full dossier.</>}
+        subtitle={<><span className="font-medium text-coffee">{calls.length} calls</span> on record — expand any row for the full detail.</>}
         stats={[
-          { label: "Reached", value: `${reachedPct}%`, spark: timeSeries.map((p) => p.completed), color: "var(--color-success)" },
-          { label: "Avg pour", value: formatDuration(avgDur), spark: timeSeries.map((p) => p.avg_duration) },
+          { label: "Connect rate", value: `${reachedPct}%`, spark: timeSeries.map((p) => p.completed), color: "var(--color-success)" },
+          { label: "Avg duration", value: formatDuration(avgDur), spark: timeSeries.map((p) => p.avg_duration) },
           { label: "Callbacks", value: counts.callback, color: "var(--color-info)" },
         ]}
       />
 
       {/* filters — buckets carry their own colors */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Chip active={filter === "all"} onClick={() => setFilter("all")} dot="var(--color-caramel)" count={calls.length}>Every pour</Chip>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <Chip active={filter === "all"} onClick={() => setFilter("all")} dot="var(--color-caramel)" count={calls.length}>All</Chip>
         {bucketOrder.map((b) => (
           <Chip key={b} active={filter === b} onClick={() => setFilter(filter === b ? "all" : b)} dot={bucketMeta[b].color} count={counts[b]}>
             {bucketMeta[b].label}
@@ -72,18 +72,18 @@ export function V7Calls() {
             {businessOutcomes.map((b) => <option key={b}>{b}</option>)}
           </select>
           <button onClick={() => setTestMode((v) => !v)}
-            className={cn("flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium shadow-glass transition-colors",
+            className={cn("flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium shadow-glass transition-colors",
               testMode ? "border-steam/40 bg-steam/10 text-steam" : "border-foam bg-porcelain text-latte hover:text-mocha")}>
-            <FlaskConical className="size-3.5" /> Test pours
+            <FlaskConical className="size-3.5" /> Test calls
           </button>
           <SearchPill value={q} onChange={setQ} placeholder="Name, phone, or call ID…" className="w-56" />
         </div>
       </div>
 
-      <SectionCard title="The pour log" count={`${rows.length} of ${calls.length}`}
-        help="Pre/after is the lead's warmth score around this call. Expand a row for summary, transcript and recording.">
-        <div className={cn("hidden grid-cols-[20px_minmax(0,1.9fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_150px_76px_minmax(0,1fr)] gap-4 border-b border-foam px-5 py-2 lg:grid", monoLabel)}>
-          <span /><span>Cup</span><span>Call outcome</span><span>Business</span><span>Warmth pre → after</span><span className="text-right">Pour</span><span className="text-right">When</span>
+      <SectionCard title="Call log" count={`${rows.length} of ${calls.length}`}
+        help="Pre/post is the lead score around this call. Expand a row for the summary, transcript and recording.">
+        <div className={cn("hidden grid-cols-[20px_minmax(0,1.9fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_150px_76px_minmax(0,1fr)] gap-3 border-b border-foam px-4 py-1.5 lg:grid", monoLabel)}>
+          <span /><span>Lead</span><span>Outcome</span><span>Business outcome</span><span>Score pre → post</span><span className="text-right">Duration</span><span className="text-right">Time</span>
         </div>
 
         <motion.ul variants={rowStagger} initial="hidden" animate="show">
@@ -96,7 +96,7 @@ export function V7Calls() {
             return (
               <Fragment key={c.id}>
                 <motion.li variants={rowItem} onClick={() => setExpanded(open ? null : c.id)}
-                  className={cn("group grid cursor-pointer grid-cols-1 gap-2 border-b border-foam/70 px-5 py-3 transition-colors last:border-b-0 lg:grid-cols-[20px_minmax(0,1.9fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_150px_76px_minmax(0,1fr)] lg:items-center lg:gap-4",
+                  className={cn("group grid cursor-pointer grid-cols-1 gap-2 border-b border-foam/70 px-4 py-2 transition-colors last:border-b-0 lg:grid-cols-[20px_minmax(0,1.9fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_150px_76px_minmax(0,1fr)] lg:items-center lg:gap-3",
                     open ? "bg-oat/50" : "hover:bg-oat/40")}>
                   <ChevronRight className={cn("size-4 text-latte transition-transform", open && "rotate-90 text-caramel")} />
 
@@ -130,7 +130,7 @@ export function V7Calls() {
                   <div className="text-right font-[family-name:var(--font-data)] text-[11px] text-latte">{formatDateTime(c.initiated_at)}</div>
                 </motion.li>
 
-                {/* the dossier */}
+                {/* expanded call detail */}
                 <AnimatePresence initial={false}>
                   {open && (() => {
                     const summaryLine = b === "reached" ? `${c.lead_name} engaged on the call — ${c.disposition_label || titleCase(c.disposition)}. ${c.next_action ? titleCase(c.next_action) + " queued." : "No further action."}`
@@ -148,7 +148,7 @@ export function V7Calls() {
                     return (
                       <motion.li key={`${c.id}-dossier`} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.28, ease: EASE }} className="overflow-hidden border-b border-foam/70 bg-oat/30 last:border-b-0">
-                        <div className="grid grid-cols-1 gap-5 px-5 py-4 lg:grid-cols-[1.3fr_1fr] lg:pl-14">
+                        <div className="grid grid-cols-1 gap-5 px-4 py-3.5 lg:grid-cols-[1.3fr_1fr] lg:pl-12">
                           <div>
                             <div className="flex items-center gap-2">
                               <BeanDot color={bucketMeta[b].color} className="size-3" />
@@ -195,8 +195,8 @@ export function V7Calls() {
         {rows.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-12 text-center">
             <PhoneOff className="size-5 text-latte" />
-            <p className="font-serif text-lg text-coffee">Nothing in the log</p>
-            <p className="text-sm text-mocha">Pours will land here once campaigns start running.</p>
+            <p className="font-serif text-lg text-coffee">No calls yet</p>
+            <p className="text-sm text-mocha">Calls appear here once a campaign starts dialing.</p>
           </div>
         )}
       </SectionCard>

@@ -1,7 +1,8 @@
 "use client";
 
-/* v7 Campaigns — "the menu board". Same data + actions as v6, re-skinned in
-   the dashboard language: warm banner, chip filters, rich porcelain rows. */
+/* v7 Campaigns — same actions as v6, re-skinned in the dashboard language:
+   warm banner, chip filters, rich porcelain rows. Rows and banner stats read
+   the derived layer so they reconcile with the v7 dashboard. */
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,7 +11,8 @@ import { Plus, SlidersHorizontal, MoreHorizontal, ChevronRight } from "lucide-re
 import { toast } from "@/components/notifications/toaster";
 import { BeanDot, LiveDot } from "@/components/coffee/bean-dot";
 import { MiniSpark } from "@/components/ui-bits/mini-spark";
-import { campaigns, timeSeries } from "@/lib/data";
+import { timeSeries } from "@/lib/data";
+import { worldCampaigns, activeCampaigns, rangeMetrics } from "@/lib/derived";
 import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -40,27 +42,28 @@ export function V7Campaigns() {
   const [menuId, setMenuId] = useState<string | null>(null);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: campaigns.length };
-    for (const s of STATUS.slice(1)) c[s] = campaigns.filter((x) => x.status === s).length;
+    const c: Record<string, number> = { all: worldCampaigns.length };
+    for (const s of STATUS.slice(1)) c[s] = worldCampaigns.filter((x) => x.status === s).length;
     return c;
   }, []);
 
-  const rows = campaigns.filter((c) => tab === "all" || c.status === tab);
-  const active = counts.active ?? 0;
-  const poured = campaigns.reduce((s, c) => s + c.leads_called, 0);
-  const converted = campaigns.reduce((s, c) => s + c.leads_converted, 0);
-  const convPct = poured ? ((converted / poured) * 100).toFixed(1) : "0.0";
+  const rows = worldCampaigns.filter((c) => tab === "all" || c.status === tab);
+  const active = activeCampaigns.length;
+  const called = worldCampaigns.reduce((s, c) => s + c.leads_called, 0);
+  const converted = worldCampaigns.reduce((s, c) => s + c.leads_converted, 0);
+  const convPct = called ? ((converted / called) * 100).toFixed(1) : "0.0";
+  const week = rangeMetrics(7);
 
   return (
     <div className="mx-auto max-w-7xl">
       <V7Banner
-        eyebrow="The menu board"
+        eyebrow="Overview"
         title="Campaigns"
-        subtitle={<>Every blend on the menu — <span className="font-medium text-coffee">{active} brewing</span> right now.</>}
+        subtitle={<>{worldCampaigns.length} campaigns — <span className="font-medium text-coffee">{active} active</span> now.</>}
         stats={[
-          { label: "Brewing now", value: <span className="flex items-center gap-2">{active} {active > 0 && <LiveDot />}</span> },
-          { label: "Calls poured", value: poured.toLocaleString(), spark: timeSeries.map((p) => p.calls) },
-          { label: "House conv.", value: `${convPct}%`, spark: timeSeries.map((p) => p.conversions), color: "var(--color-steam)" },
+          { label: "Active now", value: <span className="flex items-center gap-2">{active} {active > 0 && <LiveDot />}</span> },
+          { label: "Calls · 7 days", value: week.calls.toLocaleString(), spark: timeSeries.map((p) => p.calls) },
+          { label: "Conversion", value: `${convPct}%`, spark: timeSeries.map((p) => p.conversions), color: "var(--color-steam)" },
         ]}
         actions={
           <>
@@ -74,35 +77,35 @@ export function V7Campaigns() {
         }
       />
 
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-3 flex flex-wrap gap-2">
         {STATUS.map((s) => (
           <Chip key={s} active={tab === s} onClick={() => setTab(s)}
             dot={s === "all" ? "var(--color-caramel)" : statusDot[s]} count={counts[s] ?? 0}>
-            {s === "all" ? "Full menu" : s[0].toUpperCase() + s.slice(1)}
+            {s === "all" ? "All" : s[0].toUpperCase() + s.slice(1)}
           </Chip>
         ))}
       </div>
 
-      <SectionCard title="The menu" count={`${rows.length} blend${rows.length === 1 ? "" : "s"}`}
-        help="Each row is a campaign. The bar shows how much of the batch has been poured (leads called ÷ total).">
+      <SectionCard title="All campaigns" count={`${rows.length} campaign${rows.length === 1 ? "" : "s"}`}
+        help="Progress is leads called out of total. Click a row to open the campaign.">
         {/* column labels */}
-        <div className={cn("hidden grid-cols-[minmax(0,2.2fr)_minmax(0,1.6fr)_92px_88px_110px_96px_36px] gap-4 border-b border-foam px-5 py-2 lg:grid", monoLabel)}>
-          <span>Blend</span><span>Batch poured</span><span className="text-right">Conv.</span>
-          <span className="text-right">7-day</span><span>Status</span><span className="text-right">Roasted</span><span />
+        <div className={cn("hidden grid-cols-[minmax(0,2.2fr)_minmax(0,1.6fr)_92px_88px_110px_96px_36px] gap-3 border-b border-foam px-4 py-1.5 lg:grid", monoLabel)}>
+          <span>Campaign</span><span>Progress</span><span className="text-right">Conv.</span>
+          <span className="text-right">7-day</span><span>Status</span><span className="text-right">Created</span><span />
         </div>
 
         <motion.ul variants={rowStagger} initial="hidden" animate="show">
           {rows.map((c) => {
-            const pouredPct = c.total_leads > 0 ? (c.leads_called / c.total_leads) * 100 : 0;
+            const progressPct = c.total_leads > 0 ? (c.leads_called / c.total_leads) * 100 : 0;
             const conv = c.leads_called > 0 ? ((c.leads_converted / c.leads_called) * 100).toFixed(1) : "0.0";
             const live = c.status === "active";
             return (
               <motion.li key={c.id} variants={rowItem}
                 onClick={() => router.push(`/campaigns/${c.id}`)}
-                className="group grid cursor-pointer grid-cols-1 gap-2 border-b border-foam/70 px-5 py-3.5 transition-colors last:border-b-0 hover:bg-oat/40 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1.6fr)_92px_88px_110px_96px_36px] lg:items-center lg:gap-4">
-                {/* blend */}
-                <div className="flex min-w-0 items-center gap-3">
-                  <BeanDot color={statusDot[c.status] ?? "var(--color-latte)"} className="size-3.5" />
+                className="group grid cursor-pointer grid-cols-1 gap-2 border-b border-foam/70 px-4 py-2.5 transition-colors last:border-b-0 hover:bg-oat/40 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1.6fr)_92px_88px_110px_96px_36px] lg:items-center lg:gap-3">
+                {/* campaign */}
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <BeanDot color={statusDot[c.status] ?? "var(--color-latte)"} className="size-3" />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="truncate font-medium text-coffee transition-colors group-hover:text-brand-dark">{c.name}</span>
@@ -114,9 +117,9 @@ export function V7Campaigns() {
                   </div>
                 </div>
 
-                {/* batch poured */}
+                {/* progress */}
                 <div>
-                  <Meter pct={pouredPct} color={live ? "var(--color-caramel)" : "var(--color-latte)"} />
+                  <Meter pct={progressPct} color={live ? "var(--color-caramel)" : "var(--color-latte)"} />
                   <div className="mt-1 font-[family-name:var(--font-data)] text-[11px] text-mocha tabular-nums">
                     {c.leads_called} / {c.total_leads} leads
                   </div>
@@ -124,7 +127,7 @@ export function V7Campaigns() {
 
                 {/* conversion */}
                 <div className="text-right">
-                  <span className="font-serif text-[17px] font-semibold text-coffee tabular-nums">{conv}%</span>
+                  <span className="font-serif text-[15px] font-semibold text-coffee tabular-nums">{conv}%</span>
                   <div className="font-[family-name:var(--font-data)] text-[10px] text-latte tabular-nums">{c.leads_converted} won</div>
                 </div>
 
@@ -175,10 +178,10 @@ export function V7Campaigns() {
         {rows.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-12 text-center">
             <BeanDot color="var(--color-latte)" className="size-5" />
-            <p className="font-serif text-lg text-coffee">Nothing {tab} on the menu</p>
-            <p className="text-sm text-mocha">Roast a new blend — it takes about two minutes.</p>
+            <p className="font-serif text-lg text-coffee">No {tab} campaigns</p>
+            <p className="text-sm text-mocha">Create one in about two minutes.</p>
             <Button size="sm" onClick={() => router.push("/campaigns/quick")} className="mt-2 gap-1.5 bg-brand text-brand-foreground shadow-cta hover:bg-brand-dark">
-              <Plus className="size-4" /> Quick Campaign <ChevronRight className="size-3.5" />
+              <Plus className="size-4" /> New campaign <ChevronRight className="size-3.5" />
             </Button>
           </div>
         )}

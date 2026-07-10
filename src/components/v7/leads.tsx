@@ -1,7 +1,7 @@
 "use client";
 
-/* v7 Leads — "cups on the counter". Temperature bands as chips, latte-art
-   initial avatars, score meters, hover-reveal Call. Same data as the live page. */
+/* v7 Leads — temperature bands as chips, latte-art initial avatars, score
+   meters, hover-reveal Call. Same data as the live page. */
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -54,9 +54,9 @@ export function V7Leads() {
   return (
     <div className="mx-auto max-w-7xl">
       <V7Banner
-        eyebrow="The counter"
+        eyebrow="Overview"
         title="Leads"
-        subtitle={<><span className="font-medium text-coffee">{leads.length} cups</span> on the counter — sorted by how warm they still are.</>}
+        subtitle={<><span className="font-medium text-coffee">{leads.length} leads</span> — ranked by score.</>}
         stats={[
           { label: "Hot", value: <span className="text-danger">{counts.hot}</span> },
           { label: "Warm", value: <span className="text-caramel">{counts.warm}</span> },
@@ -64,17 +64,17 @@ export function V7Leads() {
         ]}
         actions={
           <>
-            <Button size="sm" onClick={() => toast({ title: "Add leads", body: "Opens the add-leads sheet on the live page — this is the v7 preview.", severity: "info" })}
+            <Button size="sm" onClick={() => toast({ title: "Add leads", body: "Opens the add-leads form.", severity: "info" })}
               className="gap-1.5 bg-brand text-brand-foreground shadow-cta hover:bg-brand-dark"><Plus className="size-4" /> Add leads</Button>
-            <Button variant="outline" size="sm" onClick={() => toast({ title: "Import CSV", body: "Bulk import wizard — v7 preview.", severity: "info" })}
+            <Button variant="outline" size="sm" onClick={() => toast({ title: "Import CSV", body: "Opens the CSV import wizard.", severity: "info" })}
               className="gap-1.5 border-foam bg-porcelain text-mocha hover:text-coffee"><Upload className="size-4" /> Import</Button>
           </>
         }
       />
 
       {/* filters: bands as chips + campaign + search */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Chip active={band === "all"} onClick={() => setBand("all")} dot="var(--color-caramel)" count={leads.length}>All cups</Chip>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <Chip active={band === "all"} onClick={() => setBand("all")} dot="var(--color-caramel)" count={leads.length}>All</Chip>
         {(Object.keys(bandMeta) as Band[]).map((b) => (
           <Chip key={b} active={band === b} onClick={() => setBand(band === b ? "all" : b)} icon={bandMeta[b].icon} count={counts[b]}>
             {bandMeta[b].label}
@@ -83,8 +83,8 @@ export function V7Leads() {
 
         <div className="relative ml-auto">
           <button onClick={() => setCampOpen((o) => !o)}
-            className="flex h-9 items-center gap-2 rounded-full border border-foam bg-porcelain px-3.5 text-[13px] shadow-glass hover:border-latte">
-            <span className="text-latte">Blend:</span>
+            className="flex h-8 items-center gap-2 rounded-full border border-foam bg-porcelain px-3 text-[12px] shadow-glass hover:border-latte">
+            <span className="text-latte">Campaign:</span>
             <span className="max-w-[180px] truncate font-medium text-coffee">{campaign}</span>
             <ChevronDown className="size-3.5 text-latte" />
           </button>
@@ -103,10 +103,10 @@ export function V7Leads() {
         <SearchPill value={q} onChange={setQ} placeholder="Search name or phone…" className="w-60" />
       </div>
 
-      <SectionCard title="On the counter" count={`${rows.length} of ${leads.length}`}
-        help="Score is 0–100, brewed from call outcomes. Hot ≥ 70, warm ≥ 40 — cold cups may be worth a re-pour.">
-        <div className={cn("hidden grid-cols-[minmax(0,2.1fr)_minmax(0,1.4fr)_150px_72px_minmax(0,1.2fr)_96px] gap-4 border-b border-foam px-5 py-2 lg:grid", monoLabel)}>
-          <span>Cup</span><span>Blend</span><span>Warmth</span><span className="text-right">Pours</span><span>Last outcome</span><span />
+      <SectionCard title="All leads" count={`${rows.length} of ${leads.length}`}
+        help="Score is 0–100 from call outcomes. Hot ≥ 70, warm ≥ 40.">
+        <div className={cn("hidden grid-cols-[minmax(0,2.1fr)_minmax(0,1.4fr)_150px_72px_minmax(0,1.2fr)_96px] gap-3 border-b border-foam px-4 py-1.5 lg:grid", monoLabel)}>
+          <span>Lead</span><span>Campaign</span><span>Score</span><span className="text-right">Calls</span><span>Last outcome</span><span />
         </div>
 
         <motion.ul variants={rowStagger} initial="hidden" animate="show">
@@ -115,9 +115,9 @@ export function V7Leads() {
             return (
               <motion.li key={l.idx} variants={rowItem}
                 onClick={() => router.push(`/leads/${l.idx}`)}
-                className="group grid cursor-pointer grid-cols-1 gap-2 border-b border-foam/70 px-5 py-3 transition-colors last:border-b-0 hover:bg-oat/40 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1.4fr)_150px_72px_minmax(0,1.2fr)_96px] lg:items-center lg:gap-4">
+                className="group grid cursor-pointer grid-cols-1 gap-2 border-b border-foam/70 px-4 py-2 transition-colors last:border-b-0 hover:bg-oat/40 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1.4fr)_150px_72px_minmax(0,1.2fr)_96px] lg:items-center lg:gap-3">
                 {/* who */}
-                <div className="flex min-w-0 items-center gap-3">
+                <div className="flex min-w-0 items-center gap-2.5">
                   <InitialBean name={l.name} band={l.band} />
                   <div className="min-w-0">
                     <div className="truncate font-medium text-coffee transition-colors group-hover:text-brand-dark">{titleCase(l.name)}</div>
@@ -128,7 +128,7 @@ export function V7Leads() {
                 {/* campaign */}
                 <div className="truncate text-[13px] text-mocha">{l.campaign}</div>
 
-                {/* warmth: pill + meter + number */}
+                {/* score: pill + meter + number */}
                 <div>
                   <div className="flex items-center gap-2">
                     <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium", meta.pill)}>
@@ -139,7 +139,7 @@ export function V7Leads() {
                   <Meter pct={l.score} color={meta.meter} className="mt-1.5 w-[120px]" />
                 </div>
 
-                {/* pours */}
+                {/* calls */}
                 <div className="text-right font-[family-name:var(--font-data)] text-[13px] text-coffee tabular-nums">{l.calls}</div>
 
                 {/* last outcome */}
@@ -160,8 +160,8 @@ export function V7Leads() {
         {rows.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-12 text-center">
             <Snowflake className="size-5 text-steam" />
-            <p className="font-serif text-lg text-coffee">No cups match that filter</p>
-            <p className="text-sm text-mocha">Loosen the filters, or add fresh leads to the counter.</p>
+            <p className="font-serif text-lg text-coffee">No leads match these filters</p>
+            <p className="text-sm text-mocha">Loosen the filters or add new leads.</p>
           </div>
         )}
       </SectionCard>

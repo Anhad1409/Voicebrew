@@ -1,7 +1,7 @@
 "use client";
 
-/* Freemium TAB state of the wallet — "{n} sips · on the house". Spec §6.
-   Reads tab-mock only; the paid minutes model is untouched. */
+/* Freemium credit meter — professional wording in-app (credits · free trial);
+   the receipt-style visuals stay. Reads tab-mock only; paid models untouched. */
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -55,7 +55,7 @@ export function TabMeter({ collapsed = false }: { collapsed?: boolean }) {
   return (
     <>
       {collapsed ? (
-        <button onClick={() => setOpen(true)} title={`${sips} sips · on the house`}
+        <button onClick={() => setOpen(true)} title={`${sips} credits · free trial`}
           className="relative mx-auto mb-1 flex size-10 items-center justify-center rounded-xl border border-[#d8bf9a] bg-cream">
           <CupGlyphMini warm={warm} />
           <span className="absolute right-0.5 top-0.5 size-2 rounded-full" style={{ background: "#4fb0a5" }} />
@@ -70,9 +70,9 @@ export function TabMeter({ collapsed = false }: { collapsed?: boolean }) {
                 <span className="text-sm font-semibold tabular-nums text-coffee">
                   <NumberFlow value={sips} transformTiming={{ duration: echo ? 800 : 350, easing: "ease-out" }} />
                 </span>
-                <span className="text-[11px] text-muted-foreground">sips</span>
+                <span className="text-[11px] text-muted-foreground">credits</span>
               </div>
-              <div className={`${mono} text-[9px] uppercase tracking-[0.1em] text-latte`}>on the house</div>
+              <div className={`${mono} text-[9px] uppercase tracking-[0.1em] text-latte`}>free trial</div>
               <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-foam">
                 <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: barColor }} />
               </div>
@@ -82,7 +82,7 @@ export function TabMeter({ collapsed = false }: { collapsed?: boolean }) {
             <button
               onClick={() => { try { localStorage.setItem("vb-nudge-seen", String(Date.now())); } catch {} setNudgeOk(false); }}
               className={`${mono} mt-1 block w-full px-1 text-left text-[9px] leading-snug text-latte hover:text-mocha`}>
-              TABLE {tableNo || "—"}, YOUR TAB IS RUNNING LIGHT — SETTLE UP WHEN YOU&apos;RE READY. ✕
+              CREDITS RUNNING LOW — UPGRADE WHEN YOU&apos;RE READY. ✕
             </button>
           )}
         </div>
@@ -93,26 +93,26 @@ export function TabMeter({ collapsed = false }: { collapsed?: boolean }) {
           <div className="fixed inset-0 z-50 bg-espresso/30 backdrop-blur-[2px]" onClick={() => setOpen(false)} />
           <aside className="fixed inset-y-0 left-0 z-50 flex w-[380px] max-w-[92vw] flex-col border-r border-foam bg-porcelain shadow-card-lg">
             <div className="flex items-center justify-between border-b border-foam px-5 py-4">
-              <div className="flex items-center gap-2"><CupGlyphMini warm={warm} /><span className="font-serif text-lg font-semibold text-coffee">Your tab</span></div>
+              <div className="flex items-center gap-2"><CupGlyphMini warm={warm} /><span className="font-serif text-lg font-semibold text-coffee">Trial credits</span></div>
               <button onClick={() => setOpen(false)} aria-label="Close" className="text-muted-foreground hover:text-coffee"><X className="size-4" /></button>
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <div className="rounded-2xl border border-[#d8bf9a] bg-cream p-4">
                 <div className="flex items-baseline gap-1.5">
                   <span className="font-serif text-4xl font-semibold text-coffee">{sips}</span>
-                  <span className="text-sm text-muted-foreground">sips</span>
+                  <span className="text-sm text-muted-foreground">credits</span>
                 </div>
-                <div className="mt-0.5 text-xs text-muted-foreground">≈ {sipsToMin(sips)} min at ₹8/min · free sips never expire</div>
-                {tableNo && <div className={`${mono} mt-2 text-[10px] uppercase tracking-[0.12em] text-steam`}>Table No. {tableNo} — seated</div>}
+                <div className="mt-0.5 text-xs text-muted-foreground">≈ {sipsToMin(sips)} min of calling at ₹8/min · free credits never expire</div>
+                {tableNo && <div className={`${mono} mt-2 text-[10px] uppercase tracking-[0.12em] text-steam`}>Account #{tableNo}</div>}
               </div>
               <div className={`${mono} mt-4 space-y-1.5 text-[11px] uppercase text-mocha`}>
-                {ledger.length === 0 && <div className="text-latte">NO LINES YET — THE POT IS FULL.</div>}
+                {ledger.length === 0 && <div className="text-latte">NO USAGE YET.</div>}
                 {ledger.map((l, i) => (
                   <div key={i} className="flex items-baseline gap-1.5">
                     <span className="min-w-0 truncate">{l.label}</span>
                     <span className="mx-1 flex-1 border-b border-dotted border-latte" style={{ transform: "translateY(-3px)" }} />
                     <span style={{ color: l.delta === null ? "#4fb0a5" : l.delta >= 0 ? "#4fb0a5" : "#a5432c" }}>
-                      {l.delta === null ? "ON THE HOUSE" : l.delta >= 0 ? `+${l.delta}` : l.delta}
+                      {l.delta === null ? "FREE" : l.delta >= 0 ? `+${l.delta}` : l.delta}
                     </span>
                   </div>
                 ))}
@@ -121,7 +121,7 @@ export function TabMeter({ collapsed = false }: { collapsed?: boolean }) {
             <div className="border-t border-foam p-4">
               <Link href="/plans" onClick={() => setOpen(false)}
                 className="flex h-11 w-full items-center justify-center rounded-xl bg-coffee font-serif text-[15px] font-semibold text-cream hover:bg-espresso">
-                Settle your tab →
+                Upgrade plan →
               </Link>
             </div>
           </aside>

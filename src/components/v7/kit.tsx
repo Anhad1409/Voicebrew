@@ -26,7 +26,7 @@ export function V7Banner({ eyebrow, title, subtitle, stats, actions }: {
   return (
     <motion.div
       initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE }}
-      className="relative mb-5 overflow-hidden rounded-2xl border border-foam p-6 shadow-glass"
+      className="relative mb-4 overflow-hidden rounded-2xl border border-foam p-4 shadow-glass"
       style={{ background: "linear-gradient(115deg, #fffdf9 0%, #f9efdd 58%, #f1e1c6 100%)" }}
     >
       {/* oversized bean + steam, barely-there wallpaper */}
@@ -36,20 +36,20 @@ export function V7Banner({ eyebrow, title, subtitle, stats, actions }: {
         <path d="M52 96 C 44 78, 62 72, 54 54 M76 90 C 68 74, 84 68, 76 50" stroke="var(--color-caramel)" strokeWidth="5" strokeLinecap="round" fill="none" />
       </svg>
 
-      <div className="relative flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-        <div className="min-w-[220px]">
+      <div className="relative flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="min-w-[200px]">
           <div className={monoLabel}>{eyebrow}</div>
-          <h1 className="mt-1 font-serif text-[28px] font-semibold leading-tight tracking-tight text-coffee">{title}</h1>
-          <p className="mt-1 text-sm text-mocha">{subtitle}</p>
+          <h1 className="mt-0.5 font-serif text-[22px] font-semibold leading-tight tracking-tight text-coffee">{title}</h1>
+          <p className="mt-0.5 text-[13px] text-mocha">{subtitle}</p>
         </div>
 
         {stats && stats.length > 0 && (
-          <div className="flex flex-wrap items-stretch gap-2.5">
+          <div className="flex flex-wrap items-stretch gap-2">
             {stats.map((s) => (
-              <div key={s.label} className="flex min-w-[118px] flex-col justify-between rounded-xl border border-foam bg-porcelain/80 px-3.5 py-2.5 shadow-glass backdrop-blur-[2px]">
+              <div key={s.label} className="flex min-w-[104px] flex-col justify-between rounded-xl border border-foam bg-porcelain/80 px-3 py-2 shadow-glass backdrop-blur-[2px]">
                 <span className={monoLabel}>{s.label}</span>
                 <span className="mt-1 flex items-end justify-between gap-2">
-                  <span className="font-serif text-xl font-semibold leading-none text-coffee tabular-nums">{s.value}</span>
+                  <span className="font-serif text-lg font-semibold leading-none text-coffee tabular-nums">{s.value}</span>
                   {s.spark && <MiniSpark data={s.spark} color={s.color ?? "var(--color-caramel)"} w={52} h={18} />}
                 </span>
               </div>
@@ -72,7 +72,7 @@ export function Chip({ active, onClick, dot, icon, children, count }: {
   return (
     <button onClick={onClick}
       className={cn(
-        "flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition-all",
+        "flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium transition-all",
         active
           ? "border-caramel bg-brand text-brand-foreground shadow-cta"
           : "border-foam bg-porcelain text-mocha shadow-glass hover:border-latte hover:text-coffee",
@@ -96,12 +96,12 @@ export function SearchPill({ value, onChange, placeholder, className }: {
   value: string; onChange: (v: string) => void; placeholder: string; className?: string;
 }) {
   return (
-    <label className={cn("flex h-9 items-center gap-2 rounded-full border border-foam bg-porcelain px-3.5 shadow-glass transition-colors focus-within:border-caramel", className)}>
+    <label className={cn("flex h-8 items-center gap-2 rounded-full border border-foam bg-porcelain px-3 shadow-glass transition-colors focus-within:border-caramel", className)}>
       <svg viewBox="0 0 20 20" className="size-4 shrink-0 text-latte" fill="none" stroke="currentColor" strokeWidth="1.8">
         <circle cx="9" cy="9" r="5.5" /><path d="m13.5 13.5 3.5 3.5" strokeLinecap="round" />
       </svg>
       <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full bg-transparent text-[13px] text-coffee outline-none placeholder:text-latte" />
+        className="w-full bg-transparent text-[12px] text-coffee outline-none placeholder:text-latte" />
     </label>
   );
 }
@@ -114,9 +114,9 @@ export function SectionCard({ title, count, help, aside, children, className }: 
 }) {
   return (
     <section className={cn("overflow-hidden rounded-2xl border border-foam bg-porcelain shadow-glass", className)}>
-      <header className="flex items-center gap-2.5 border-b border-foam bg-cream/60 px-5 py-3.5">
+      <header className="flex items-center gap-2.5 border-b border-foam bg-cream/60 px-4 py-2.5">
         <BeanDot color="var(--color-caramel)" />
-        <h2 className="font-serif text-[17px] font-semibold text-coffee">{title}</h2>
+        <h2 className="font-serif text-[15px] font-semibold text-coffee">{title}</h2>
         {count && <span className="font-[family-name:var(--font-data)] text-[11px] text-latte tabular-nums">{count}</span>}
         <span className="flex-1" />
         {aside}
@@ -166,7 +166,7 @@ const AVATAR_BG: Record<string, string> = {
 export function InitialBean({ name, band = "warm", className }: { name: string; band?: string; className?: string }) {
   const initials = name.split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
   return (
-    <span className={cn("grid size-9 shrink-0 place-items-center rounded-full font-serif text-[13px] font-semibold text-porcelain shadow-glass", className)}
+    <span className={cn("grid size-8 shrink-0 place-items-center rounded-full font-serif text-[12px] font-semibold text-porcelain shadow-glass", className)}
       style={{ background: AVATAR_BG[band] ?? AVATAR_BG.warm }}>
       {initials}
     </span>

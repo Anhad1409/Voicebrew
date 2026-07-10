@@ -1,26 +1,27 @@
 "use client";
 
-/* /v7 — preview hub for the re-brewed list pages. The live routes are
+/* /v7 — preview hub for the redesigned pages. The live routes are
    untouched; each card opens the v7 take for side-by-side comparison. */
 
 import Link from "next/link";
-import { ArrowRight, Megaphone, Users, Phone, FileBarChart } from "lucide-react";
+import { ArrowRight, LayoutDashboard, Megaphone, Users, Phone, FileBarChart } from "lucide-react";
 import { V7Banner, monoLabel } from "@/components/v7/kit";
 
 const PAGES = [
-  { href: "/v7/campaigns", live: "/campaigns", icon: Megaphone, name: "Campaigns", desc: "The menu board — chip filters, pour-progress bars, live equalizers." },
-  { href: "/v7/leads", live: "/leads", icon: Users, name: "Leads", desc: "Cups on the counter — temperature bands, warmth meters, latte-art avatars." },
-  { href: "/v7/calls", live: "/calls", icon: Phone, name: "Calls", desc: "The pour log — colored outcome chips, warmth deltas, expandable dossiers." },
-  { href: "/v7/reports", live: "/reports", icon: FileBarChart, name: "Reports", desc: "The ledger shelf — icon tiles, category chips, 7-day sparks." },
+  { href: "/v7/dashboard", live: "/dashboard", icon: LayoutDashboard, name: "Dashboard", desc: "Billing-aware capacity, reconciled metrics, compliance, goals and a live activity feed." },
+  { href: "/v7/campaigns", live: "/campaigns", icon: Megaphone, name: "Campaigns", desc: "Chip filters, progress bars and live indicators." },
+  { href: "/v7/leads", live: "/leads", icon: Users, name: "Leads", desc: "Temperature bands, score meters and quick-call actions." },
+  { href: "/v7/calls", live: "/calls", icon: Phone, name: "Calls", desc: "Colored outcome filters, score deltas and expandable call detail." },
+  { href: "/v7/reports", live: "/reports", icon: FileBarChart, name: "Reports", desc: "Icon tiles, category chips and 7-day trends." },
 ];
 
 export default function V7Index() {
   return (
     <div className="mx-auto max-w-7xl">
       <V7Banner
-        eyebrow="Version seven · preview"
-        title="List pages, re-brewed"
-        subtitle="The dashboard's language, applied to every page with a list on it. Live routes are untouched — compare side by side."
+        eyebrow="Version seven"
+        title="v7 preview"
+        subtitle="The dashboard design language applied app-wide, with professional in-app copy. Live routes are untouched — compare side by side."
       />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {PAGES.map((p) => (

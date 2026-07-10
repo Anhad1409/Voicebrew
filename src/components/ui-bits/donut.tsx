@@ -1,7 +1,7 @@
 type Slice = { key: string; label: string; value: number; color: string };
 
 // Dependency-free SVG donut.
-export function Donut({ data, size = 150, thickness = 18 }: { data: Slice[]; size?: number; thickness?: number }) {
+export function Donut({ data, size = 150, thickness = 18, centerLabel = "calls today" }: { data: Slice[]; size?: number; thickness?: number; centerLabel?: string }) {
   const total = data.reduce((s, d) => s + d.value, 0) || 1;
   const r = (size - thickness) / 2;
   const c = size / 2;
@@ -36,7 +36,7 @@ export function Donut({ data, size = 150, thickness = 18 }: { data: Slice[]; siz
           {total}
         </text>
         <text x={c} y={c + 16} textAnchor="middle" className="fill-muted-foreground" fontSize="9">
-          calls today
+          {centerLabel}
         </text>
       </svg>
 
