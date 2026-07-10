@@ -402,17 +402,23 @@ function CampaignCard() {
 
 /* ---------------- 7. freemium first-run ---------------- */
 
-function FirstRunPanel({ phoneDone }: { phoneDone: boolean }) {
+function FirstRunPanel({ testCallDone }: { testCallDone: boolean }) {
   const reduce = useReducedMotion();
+  // No "verify your number" step: calling numbers are provisioned and managed
+  // by the platform, so there is nothing for the customer to verify.
   const steps = [
-    { n: 1, title: "Verify your phone number", desc: "Confirm the number you call from so carriers trust your traffic.", href: "/settings", done: phoneDone },
-    { n: 2, title: "Make a test call", desc: "Hear your agent live before any lead does.", href: "/voice-playground", done: false },
-    { n: 3, title: "Create your first campaign", desc: "Pick an agent, add leads and start calling.", href: "/campaigns/quick", done: false },
+    { n: 1, title: "Make a test call", desc: "We'll call your phone so you can hear your agent live before any lead does.", href: "/voice-playground", done: testCallDone },
+    { n: 2, title: "Create your first campaign", desc: "Pick an agent, set the goal and start calling.", href: "/campaigns/quick", done: false },
+    { n: 3, title: "Add your leads", desc: "Upload a CSV or add them one by one.", href: "/leads", done: false },
   ];
   return (
     <motion.div initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE }}>
       <SectionCard title="Get set up" count={`${steps.filter((s) => s.done).length} of ${steps.length} done`}>
         <div className="space-y-2.5 p-4 sm:p-5">
+          <div className="flex items-center gap-2.5 rounded-xl bg-oat/50 px-4 py-2.5 text-xs text-mocha">
+            <CircleCheck className="size-4 shrink-0 text-success" />
+            Your calling number is ready — we provision and manage carrier-verified numbers for you, nothing to set up.
+          </div>
           {steps.map((s) => (
             <Link key={s.n} href={s.href}
               className="flex items-center gap-4 rounded-xl border border-foam bg-cream/40 px-4 py-3.5 transition-colors hover:border-latte hover:bg-oat/40">
@@ -454,12 +460,12 @@ export function V7Dashboard() {
   // Freemium state (localStorage/sessionStorage → effect for SSR safety).
   const [credits, setCredits] = useState(0);
   const [ledgerCount, setLedgerCount] = useState<number | null>(null);
-  const [phoneDone, setPhoneDone] = useState(false);
+  const [testCallDone, setTestCallDone] = useState(false);
   useEffect(() => {
     const sync = () => {
       setCredits(getCredits());
       setLedgerCount(getLedger().length);
-      try { setPhoneDone(!!sessionStorage.getItem("vb-poured")); } catch { /* private mode */ }
+      try { setTestCallDone(!!sessionStorage.getItem("vb-poured")); } catch { /* private mode */ }
     };
     sync();
     window.addEventListener("vb-credits-change", sync);
@@ -494,7 +500,7 @@ export function V7Dashboard() {
 
       {firstRun ? (
         /* 7 — freemium first-run replaces the metric sections */
-        <FirstRunPanel phoneDone={phoneDone} />
+        <FirstRunPanel testCallDone={testCallDone} />
       ) : (
         <>
           {/* 3 — KPI strip */}
