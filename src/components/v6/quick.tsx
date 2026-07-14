@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronLeft, Sparkles, FileText, Phone, Bot, GitBranch, Target, ListChecks, UploadCloud, ArrowRight, PartyPopper } from "lucide-react";
+import { Check, ChevronLeft, Sparkles, Bot, GitBranch, Target, ListChecks, ArrowRight, PartyPopper } from "lucide-react";
 import { PageHeader } from "@/components/ui-bits/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { toast } from "@/components/notifications/toaster";
 import { cn } from "@/lib/utils";
 import { products, phoneNumbers, scoreBands, type Product } from "@/lib/campaign-config-mock";
 import { SetupGuideButton } from "@/components/setup-guide/setup-guide";
+import { LeadUpload, type LeadUploadInfo } from "@/components/campaigns/lead-upload";
 
 const STEPS = ["Product", "Details", "Review", "Leads"];
 const inputCls = "w-full rounded-lg border border-foam bg-card px-3 py-2 text-sm text-coffee outline-none focus:border-caramel focus:ring-1 focus:ring-caramel/30";
@@ -39,7 +40,7 @@ export function V6Quick() {
   const [product, setProduct] = useState<Product | null>(null);
   const [name, setName] = useState("");
   const [created, setCreated] = useState(false);
-  const [leadState, setLeadState] = useState<"empty" | "preview" | "done">("empty");
+  const [leads, setLeads] = useState<LeadUploadInfo>({ state: "empty", fileName: "", total: 0, valid: 0, invalid: 0 });
 
   const pick = (p: Product) => { setProduct(p); setName(`${p.name} Campaign`); setStep(1); };
   const resolved = product && [
@@ -128,37 +129,10 @@ export function V6Quick() {
               <div><div className="text-sm font-semibold text-coffee">Campaign created — it's in draft</div><div className="text-xs text-muted-foreground">Upload leads now, then activate it from the campaign page.</div></div>
             </div>
 
-            {leadState === "empty" && (
-              <button onClick={() => setLeadState("preview")} className="flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-latte bg-oat/30 px-6 py-10 text-center transition-colors hover:border-caramel hover:bg-oat/50">
-                <UploadCloud className="size-7 text-caramel" />
-                <div className="text-sm font-medium text-coffee">Click to select a CSV / Excel file</div>
-                <div className="text-xs text-muted-foreground">Required column: <span className="font-data">phone</span>. Optional: full_name, email + custom fields.</div>
-              </button>
-            )}
-
-            {leadState === "preview" && (
-              <div className="rounded-2xl border border-foam bg-card p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-coffee"><FileText className="size-4 text-mocha" /> leads.csv</div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-lg bg-oat/50 py-2"><div className="font-serif text-xl font-semibold text-coffee">2</div><div className="text-[11px] text-muted-foreground">total rows</div></div>
-                  <div className="rounded-lg bg-success/10 py-2"><div className="font-serif text-xl font-semibold text-success">2</div><div className="text-[11px] text-muted-foreground">valid</div></div>
-                  <div className="rounded-lg bg-foam py-2"><div className="font-serif text-xl font-semibold text-mocha">0</div><div className="text-[11px] text-muted-foreground">invalid</div></div>
-                </div>
-                <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><Phone className="size-3.5" /> 9115551310 · Rohit Sharma &nbsp;·&nbsp; 8699940412 · Anita Desai</div>
-                <Button onClick={() => { setLeadState("done"); toast({ title: "Leads imported", body: "2 leads imported successfully.", severity: "success" }); }} className="mt-4 w-full gap-1.5 bg-brand text-brand-foreground hover:bg-brand-dark"><UploadCloud className="size-4" /> Upload Leads</Button>
-              </div>
-            )}
-
-            {leadState === "done" && (
-              <div className="rounded-2xl border border-success/30 bg-success/8 p-5 text-center">
-                <Check className="mx-auto size-7 text-success" />
-                <div className="mt-2 text-sm font-semibold text-coffee">2 leads imported successfully</div>
-                <div className="text-xs text-muted-foreground">Your campaign is ready — activate it to start calling.</div>
-              </div>
-            )}
+            <LeadUpload onChange={setLeads} />
 
             <div className="mt-7 flex items-center justify-end gap-2">
-              {leadState !== "done" && <Button variant="ghost" onClick={() => router.push("/campaigns")} className="text-mocha">Skip for now</Button>}
+              {leads.state !== "done" && <Button variant="ghost" onClick={() => router.push("/campaigns")} className="text-mocha">Skip for now</Button>}
               <Button onClick={() => router.push("/campaigns")} className="gap-1.5 bg-coffee text-cream hover:bg-espresso">Go to Campaign <ArrowRight className="size-4" /></Button>
             </div>
           </div>
@@ -179,7 +153,7 @@ export function V6Quick() {
           ); }) : <p className="text-xs text-muted-foreground">Pick a product — its template auto-resolves the conversation flow, scoring, lead schema, voice &amp; LLM.</p>}
         </div>
         <div className="mt-4 flex items-center gap-2"><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-foam"><div className="h-full rounded-full bg-gradient-to-r from-mocha to-caramel transition-all" style={{ width: `${((created ? 4 : step + 1) / 4) * 100}%` }} /></div><span className="font-data text-[11px] text-muted-foreground">{created ? 4 : step + 1}/4</span></div>
-        {leadState === "done" && <div className="mt-2 flex items-center gap-1.5 text-xs text-success"><Check className="size-3.5" /> 2 leads imported</div>}
+        {leads.state === "done" && <div className="mt-2 flex items-center gap-1.5 text-xs text-success"><Check className="size-3.5" /> {leads.valid} lead{leads.valid === 1 ? "" : "s"} imported</div>}
       </aside>
       </div>
     </div>

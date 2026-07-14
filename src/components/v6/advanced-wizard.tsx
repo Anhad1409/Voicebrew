@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import {
   Check, ChevronLeft, ChevronRight, Info, Save, Plus, Trash2, Lock, AlertTriangle,
   ListChecks, Users2, Target, GitBranch, Phone, BookOpen, Sparkles, ChevronDown, Braces, Wrench,
-  CalendarClock, ShieldAlert, Coffee, Bell, Calendar,
+  CalendarClock, ShieldAlert, Coffee, Bell, Calendar, UploadCloud,
 } from "lucide-react";
+import { LeadUpload, type LeadUploadInfo } from "@/components/campaigns/lead-upload";
 import { PageHeader } from "@/components/ui-bits/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ const inputCls = "w-full rounded-lg border border-foam bg-card px-3 py-2 text-sm
 const STEPS = [
   { key: "basic", label: "Basics", icon: Info, sub: "Name, agent & calling rules" },
   { key: "schema", label: "Lead Schema", icon: ListChecks, sub: "The columns each lead carries" },
+  { key: "leads", label: "Upload Leads", icon: UploadCloud, sub: "CSV, paste, or add later" },
   { key: "customer", label: "Customer Data", icon: Users2, sub: "What to collect on the call" },
   { key: "scoring", label: "Scoring", icon: Target, sub: "How leads are ranked" },
   { key: "flow", label: "Conversation", icon: GitBranch, sub: "What the agent says" },
@@ -87,6 +89,7 @@ export function V6AdvancedWizard() {
   const [cdata, setCdata] = useState<{ label: string }[]>([]);
   const [warmT, setWarmT] = useState(scoreBands.warm);
   const [hotT, setHotT] = useState(scoreBands.hot);
+  const [leadInfo, setLeadInfo] = useState<LeadUploadInfo>({ state: "empty", fileName: "", total: 0, valid: 0, invalid: 0 });
   const [prompt, setPrompt] = useState("You are {agent_name} from {company}. Greet warmly, confirm the right person, state the benefit in one line, handle objections, and capture intent. Respect Do-Not-Call.");
   const [objs, setObjs] = useState<{ o: string; r: string }[]>([{ o: "not available right now", r: "what would be a good time to call you back?" }]);
   const [transferOn, setTransferOn] = useState(false);
@@ -129,6 +132,7 @@ export function V6AdvancedWizard() {
   const summary = [
     { k: "Type", v: type, done: true },
     { k: "Lead schema", v: xfields.length ? `${xfields.length} extra field${xfields.length > 1 ? "s" : ""}` : "core only", done: xfields.length > 0 },
+    { k: "Leads", v: leadInfo.state === "done" ? `${leadInfo.valid} imported` : leadInfo.state === "preview" ? `${leadInfo.valid} ready to import` : "add later", done: leadInfo.state === "done" },
     { k: "Customer data", v: cdata.length ? `${cdata.length} field${cdata.length > 1 ? "s" : ""}` : "none", done: cdata.length > 0 },
     { k: "Scoring", v: `${warmT} / ${hotT}`, done: true },
     { k: "Objection handlers", v: `${objs.length}`, done: objs.length > 0 },
@@ -143,18 +147,19 @@ export function V6AdvancedWizard() {
   // wizard to the matching page (via `before`) so the tour shows real content,
   // not just an overview. Triggered by the "Show me how" button (start-tour).
   const advTour: TourStep[] = [
-    { sel: '[data-tour="adv-steps"]', title: "Nine steps, one campaign", body: `${STEPS.map((s) => s.label).join(" · ")}. Green = done — jump to any step from this rail anytime, and hover any ⓘ for help as you go.`, before: () => setStep(0) },
+    { sel: '[data-tour="adv-steps"]', title: "Ten steps, one campaign", body: `${STEPS.map((s) => s.label).join(" · ")}. Green = done — jump to any step from this rail anytime, and hover any ⓘ for help as you go.`, before: () => setStep(0) },
     { sel: '[data-tour="adv-form"]', title: "1 · Basics", body: "Name the campaign and its agent — the only required fields to advance. Language, greeting, calling rules and limits live here too.", before: () => setStep(0) },
     { sel: '[data-tour="adv-form"]', title: "2 · Lead Schema", body: "The columns each lead carries. Phone, Full Name and Email are automatic — add extras like monthly_income. One extra field unlocks Next.", before: () => setStep(1) },
-    { sel: '[data-tour="adv-form"]', title: "3 · Customer Data", body: "Extra details the agent collects live on the call. Auto-prefixed ld_enrich_ and stored per call — needs the Customer Data skill on.", before: () => setStep(2) },
-    { sel: '[data-tour="adv-form"]', title: "4 · Scoring", body: "Set where Cold becomes Warm becomes Hot, weight your scoring fields, and review the locked in-call adjustments.", before: () => setStep(3) },
-    { sel: '[data-tour="adv-form"]', title: "5 · Conversation", body: "What the agent says — system prompt, greeting, the {variables} it can use, and your objection handlers.", before: () => setStep(4) },
-    { sel: '[data-tour="adv-form"]', title: "6 · Phone & Outcomes", body: "Pick the outbound number, switch on human transfer, and review the call dispositions the agent records.", before: () => setStep(5) },
-    { sel: '[data-tour="adv-form"]', title: "7 · Agent Skills", body: "Real-time tools the agent can invoke mid-call. Core skills stay on; toggle the optional ones per campaign.", before: () => setStep(6) },
-    { sel: '[data-tour="adv-form"]', title: "8 · Schedule", body: "Start now or pick a date, then choose the days and calling window — calls only ever dial inside it.", before: () => setStep(7) },
-    { sel: '[data-tour="adv-form"]', title: "9 · Smart pauses", body: "Auto-pause during quiet hours, and let VoiceBrew step in if many customers report the same blocker.", before: () => setStep(8) },
-    { sel: '[data-tour="adv-next"]', title: "Save or create", body: "Save as Draft on any step — drafts live for 5 days. When every step looks good, Create Campaign here or from the summary panel.", before: () => setStep(8) },
-    { sel: '[data-tour="adv-summary"]', title: "Live summary", body: "This panel updates as you build and tracks your progress. Create the campaign from here anytime.", before: () => setStep(8) },
+    { sel: '[data-tour="adv-form"]', title: "3 · Upload Leads", body: "Drop the CSV this campaign will dial — columns map to your schema by name, invalid phones are flagged before import. Optional: add leads later instead.", before: () => setStep(2) },
+    { sel: '[data-tour="adv-form"]', title: "4 · Customer Data", body: "Extra details the agent collects live on the call. Auto-prefixed ld_enrich_ and stored per call — needs the Customer Data skill on.", before: () => setStep(3) },
+    { sel: '[data-tour="adv-form"]', title: "5 · Scoring", body: "Set where Cold becomes Warm becomes Hot, weight your scoring fields, and review the locked in-call adjustments.", before: () => setStep(4) },
+    { sel: '[data-tour="adv-form"]', title: "6 · Conversation", body: "What the agent says — system prompt, greeting, the {variables} it can use, and your objection handlers.", before: () => setStep(5) },
+    { sel: '[data-tour="adv-form"]', title: "7 · Phone & Outcomes", body: "Pick the outbound number, switch on human transfer, and review the call dispositions the agent records.", before: () => setStep(6) },
+    { sel: '[data-tour="adv-form"]', title: "8 · Agent Skills", body: "Real-time tools the agent can invoke mid-call. Core skills stay on; toggle the optional ones per campaign.", before: () => setStep(7) },
+    { sel: '[data-tour="adv-form"]', title: "9 · Schedule", body: "Start now or pick a date, then choose the days and calling window — calls only ever dial inside it.", before: () => setStep(8) },
+    { sel: '[data-tour="adv-form"]', title: "10 · Smart pauses", body: "Auto-pause during quiet hours, and let VoiceBrew step in if many customers report the same blocker.", before: () => setStep(9) },
+    { sel: '[data-tour="adv-next"]', title: "Save or create", body: "Save as Draft on any step — drafts live for 5 days. When every step looks good, Create Campaign here or from the summary panel.", before: () => setStep(9) },
+    { sel: '[data-tour="adv-summary"]', title: "Live summary", body: "This panel updates as you build and tracks your progress. Create the campaign from here anytime.", before: () => setStep(9) },
   ];
 
   return (
@@ -250,6 +255,18 @@ export function V6AdvancedWizard() {
                   <Button onClick={addX} variant="outline" size="sm" className="gap-1.5 text-mocha"><Plus className="size-4" /> Add field</Button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* STEP: UPLOAD LEADS */}
+          {cur.key === "leads" && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Upload the list this campaign will dial. Required column: <code className="font-data text-mocha">phone</code> —
+                extra columns are matched to your <span className="font-medium text-coffee">Lead Schema</span> fields by name.
+                {xfields.length > 0 && <> Expecting: <span className="font-data text-mocha">{["phone", "full_name", "email", ...xfields.map((f) => f.name)].join(", ")}</span>.</>}
+              </p>
+              <LeadUpload onChange={setLeadInfo} note="Optional — you can also add leads any time from the campaign page or the Leads section." />
             </div>
           )}
 
