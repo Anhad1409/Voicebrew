@@ -66,7 +66,9 @@ function Toggle({ on, set, dim }: { on: boolean; set?: () => void; dim?: boolean
 }
 type XField = { label: string; name: string; type: string; def: string; required: boolean; scoring: boolean; convo: boolean };
 
-export function V6AdvancedWizard() {
+export type EditCampaign = { id: string; name: string; description?: string | null; agent?: string; language?: string };
+
+export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [tried, setTried] = useState(false);
@@ -80,11 +82,11 @@ export function V6AdvancedWizard() {
     window.addEventListener("start-tour", capture);
     return () => window.removeEventListener("start-tour", capture);
   }, []);
-  const [name, setName] = useState("");
-  const [desc, setDesc] = useState("");
-  const [agent, setAgent] = useState("");
+  const [name, setName] = useState(edit?.name ?? "");
+  const [desc, setDesc] = useState(edit?.description ?? "");
+  const [agent, setAgent] = useState(edit?.agent ?? "");
   const [type, setType] = useState(campaignTypes2[0]);
-  const [lang, setLang] = useState(langs[0]);
+  const [lang, setLang] = useState(() => langs.find((l) => l.toLowerCase() === edit?.language?.toLowerCase()) ?? langs[0]);
   const [xfields, setXfields] = useState<XField[]>([]);
   const [cdata, setCdata] = useState<{ label: string }[]>([]);
   const [warmT, setWarmT] = useState(scoreBands.warm);
@@ -126,7 +128,15 @@ export function V6AdvancedWizard() {
   })();
   const goNext = () => { if (!canNext) { setTried(true); return; } setTried(false); setStep((s) => Math.min(STEPS.length - 1, s + 1)); };
   const draft = () => toast({ title: "Saved as draft", body: "Resume anytime — drafts live for 5 days.", severity: "info" });
-  const create = () => { toast({ title: "Campaign scheduled", body: `“${name || "Untitled"}” will run ${schedLine.toLowerCase()}.`, severity: "success" }); router.push("/campaigns"); };
+  const create = () => {
+    if (edit) {
+      toast({ title: "Changes saved", body: `“${name || edit.name}” updated.`, severity: "success" });
+      router.push(`/campaigns/${edit.id}`);
+      return;
+    }
+    toast({ title: "Campaign scheduled", body: `“${name || "Untitled"}” will run ${schedLine.toLowerCase()}.`, severity: "success" });
+    router.push("/campaigns");
+  };
 
   // live summary rows
   const summary = [
@@ -164,7 +174,8 @@ export function V6AdvancedWizard() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageHeader title="Create Campaign" subtitle="Advanced — full control, step by step."
+      <PageHeader title={edit ? "Edit Campaign" : "Create Campaign"}
+        subtitle={edit ? `Editing “${edit.name}” — changes apply when you save.` : "Advanced — full control, step by step."}
         actions={
           <div className="flex items-center gap-2">
             <button data-tour="adv-help" onClick={() => window.dispatchEvent(new CustomEvent("start-tour"))} className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-foam bg-oat/70 px-3 py-1.5 text-xs font-medium text-mocha transition-colors hover:bg-foam">
@@ -490,7 +501,7 @@ export function V6AdvancedWizard() {
               <Button variant="outline" size="sm" onClick={draft} className="gap-1.5 text-mocha"><Save className="size-4" /> Save Draft</Button>
               {step < STEPS.length - 1
                 ? <Button onClick={goNext} className="gap-1.5 bg-brand text-brand-foreground hover:bg-brand-dark">Next <ChevronRight className="size-4" /></Button>
-                : <Button onClick={create} className="gap-1.5 bg-coffee text-cream hover:bg-espresso">Create Campaign <Check className="size-4" /></Button>}
+                : <Button onClick={create} className="gap-1.5 bg-coffee text-cream hover:bg-espresso">{edit ? "Save Changes" : "Create Campaign"} <Check className="size-4" /></Button>}
             </div>
           </div>
         </div>
@@ -512,8 +523,8 @@ export function V6AdvancedWizard() {
 
           <div className="mt-4 flex items-center gap-2"><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-foam"><div className="h-full rounded-full bg-gradient-to-r from-mocha to-caramel transition-all" style={{ width: `${((step + 1) / STEPS.length) * 100}%` }} /></div><span className="font-data text-[11px] text-muted-foreground">{step + 1}/{STEPS.length}</span></div>
 
-          <Button onClick={create} className="mt-4 w-full gap-1.5 bg-coffee text-cream hover:bg-espresso"><Check className="size-4" /> Create Campaign</Button>
-          <p className="mt-2 text-center text-[11px] text-muted-foreground">Saved as draft — activate when ready.</p>
+          <Button onClick={create} className="mt-4 w-full gap-1.5 bg-coffee text-cream hover:bg-espresso"><Check className="size-4" /> {edit ? "Save Changes" : "Create Campaign"}</Button>
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">{edit ? "Changes apply immediately on save." : "Saved as draft — activate when ready."}</p>
         </aside>
       </div>
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
-  ChevronLeft, Play, Pause, Info, ListChecks, Users2, Target, GitBranch, Bot, PhoneForwarded,
+  ChevronLeft, Play, Pause, Pencil, Info, ListChecks, Users2, Target, GitBranch, Bot, PhoneForwarded,
   Wand2, Tags, Gauge, UploadCloud, CheckCircle2, Phone, Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,9 @@ export function V6CampaignDetail() {
           <StatusBadge value={status} />
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => router.push(`/campaigns/${c.id}/edit`)} className="gap-1.5 border-foam text-mocha hover:text-coffee">
+            <Pencil className="size-4" /> Edit
+          </Button>
           <Button onClick={activate} className={cn("gap-1.5", status === "active" ? "bg-warning text-white hover:bg-warning/90" : "bg-brand text-brand-foreground hover:bg-brand-dark")}>
             {status === "active" ? <><Pause className="size-4" /> Pause</> : <><Play className="size-4" /> {status === "draft" ? "Activate" : "Resume"}</>}
           </Button>

@@ -7,7 +7,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Plus, SlidersHorizontal, MoreHorizontal, ChevronRight } from "lucide-react";
+import { Plus, SlidersHorizontal, MoreHorizontal, Pencil, ChevronRight } from "lucide-react";
 import { toast } from "@/components/notifications/toaster";
 import { BeanDot, LiveDot } from "@/components/coffee/bean-dot";
 import { MiniSpark } from "@/components/ui-bits/mini-spark";
@@ -89,7 +89,7 @@ export function V7Campaigns() {
       <SectionCard title="All campaigns" count={`${rows.length} campaign${rows.length === 1 ? "" : "s"}`}
         help="Progress is leads called out of total. Click a row to open the campaign.">
         {/* column labels */}
-        <div className={cn("hidden grid-cols-[minmax(0,2.2fr)_minmax(0,1.6fr)_92px_88px_110px_96px_36px] gap-3 border-b border-foam px-4 py-1.5 lg:grid", monoLabel)}>
+        <div className={cn("hidden grid-cols-[minmax(0,2.2fr)_minmax(0,1.6fr)_92px_88px_110px_96px_68px] gap-3 border-b border-foam px-4 py-1.5 lg:grid", monoLabel)}>
           <span>Campaign</span><span>Progress</span><span className="text-right">Conv.</span>
           <span className="text-right">7-day</span><span>Status</span><span className="text-right">Created</span><span />
         </div>
@@ -102,7 +102,7 @@ export function V7Campaigns() {
             return (
               <motion.li key={c.id} variants={rowItem}
                 onClick={() => router.push(`/campaigns/${c.id}`)}
-                className="group grid cursor-pointer grid-cols-1 gap-2 border-b border-foam/70 px-4 py-2.5 transition-colors last:border-b-0 hover:bg-oat/40 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1.6fr)_92px_88px_110px_96px_36px] lg:items-center lg:gap-3">
+                className="group grid cursor-pointer grid-cols-1 gap-2 border-b border-foam/70 px-4 py-2.5 transition-colors last:border-b-0 hover:bg-oat/40 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1.6fr)_92px_88px_110px_96px_68px] lg:items-center lg:gap-3">
                 {/* campaign */}
                 <div className="flex min-w-0 items-center gap-2.5">
                   <BeanDot color={statusDot[c.status] ?? "var(--color-latte)"} className="size-3" />
@@ -146,10 +146,14 @@ export function V7Campaigns() {
                 {/* created */}
                 <div className="text-right font-[family-name:var(--font-data)] text-[11px] text-latte">{formatDate(c.created_at)}</div>
 
-                {/* menu */}
-                <div className="relative text-right" onClick={(e) => e.stopPropagation()}>
-                  <button onClick={() => setMenuId(menuId === c.id ? null : c.id)}
-                    className="rounded-lg p-1.5 text-latte opacity-0 transition-all hover:bg-foam hover:text-coffee group-hover:opacity-100 max-lg:opacity-100">
+                {/* actions: edit + menu */}
+                <div className="relative flex items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
+                  <button onClick={() => router.push(`/campaigns/${c.id}/edit`)} title="Edit campaign" aria-label={`Edit ${c.name}`}
+                    className="rounded-lg p-1.5 text-latte transition-colors hover:bg-foam hover:text-coffee">
+                    <Pencil className="size-4" />
+                  </button>
+                  <button onClick={() => setMenuId(menuId === c.id ? null : c.id)} aria-label="More actions"
+                    className="rounded-lg p-1.5 text-latte transition-colors hover:bg-foam hover:text-coffee">
                     <MoreHorizontal className="size-4" />
                   </button>
                   {menuId === c.id && (
@@ -158,7 +162,7 @@ export function V7Campaigns() {
                       <div className="absolute right-0 z-50 mt-1 w-40 rounded-xl border border-foam bg-porcelain p-1 text-left text-sm shadow-card-lg">
                         {[
                           { l: "Open", fn: () => router.push(`/campaigns/${c.id}`) },
-                          { l: "Edit", fn: () => router.push("/campaigns/new") },
+                          { l: "Edit", fn: () => router.push(`/campaigns/${c.id}/edit`) },
                           { l: c.status === "active" ? "Pause" : "Activate", fn: () => toast({ title: c.status === "active" ? "Paused" : "Activated", body: `“${c.name}”`, severity: "info" }) },
                           { l: "Duplicate", fn: () => toast({ title: "Campaign duplicated", body: `“${c.name} (Copy)” created as draft.`, severity: "success" }) },
                           { l: "Delete", fn: () => toast({ title: "Delete campaign?", body: "This would remove the campaign.", severity: "warning" }), danger: true },
