@@ -52,12 +52,17 @@ export default function PhoneNumbersPage() {
         <ul className="mt-4 divide-y divide-foam/70">
           {pool.map((n, i) => (
             <li key={n.num} className="flex flex-wrap items-center gap-4 py-3.5">
-              <div className="min-w-[200px]">
+              <div className="min-w-[220px]">
                 <div className="flex items-center gap-2">
                   <span className={cn("font-data text-[15px] font-semibold", n.on ? "text-coffee" : "text-latte line-through")}>{n.num}</span>
                   <span className="rounded-full bg-oat/70 px-2 py-0.5 font-data text-[10px] text-mocha">{n.provider}</span>
                 </div>
-                <div className="mt-0.5 text-xs text-muted-foreground">{n.usedToday} of {n.limit} calls today</div>
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="h-1.5 w-32 overflow-hidden rounded-full bg-foam">
+                    <div className={cn("h-full rounded-full", n.on ? "bg-gradient-to-r from-mocha to-caramel" : "bg-latte/50")} style={{ width: `${Math.min(100, (n.usedToday / Math.max(1, n.limit)) * 100)}%` }} />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{n.usedToday} of {n.limit} today</span>
+                </div>
               </div>
               <div className="ml-auto flex items-center gap-3">
                 <label className="flex items-center gap-2 text-xs text-mocha">
@@ -74,9 +79,6 @@ export default function PhoneNumbersPage() {
                 <button aria-label={`Remove ${n.num}`}
                   onClick={() => { setPool((p) => p.filter((_, j) => j !== i)); toast({ title: "Number removed", body: `${n.num} left the pool.`, severity: "warning" }); }}
                   className="text-latte transition-colors hover:text-danger"><Trash2 className="size-4" /></button>
-              </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-foam">
-                <div className={cn("h-full rounded-full", n.on ? "bg-gradient-to-r from-mocha to-caramel" : "bg-latte/50")} style={{ width: `${Math.min(100, (n.usedToday / Math.max(1, n.limit)) * 100)}%` }} />
               </div>
             </li>
           ))}

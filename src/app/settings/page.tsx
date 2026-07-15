@@ -19,6 +19,13 @@ const TABS = [
   { key: "Compliance", icon: ShieldCheck },
   { key: "API Keys", icon: KeyRound },
 ];
+const QUICK_DESC: Record<string, string> = {
+  Organization: "Profile, industry & website context",
+  Team: "Users, roles & plan usage",
+  Providers: "Telephony, STT, LLM & TTS",
+  Compliance: "DND, calling hours & consent",
+  "API Keys": "Webhook authentication keys",
+};
 const inputCls = "w-full rounded-lg border border-foam bg-card px-3 py-2 text-sm text-coffee outline-none focus:border-caramel focus:ring-1 focus:ring-caramel/30";
 const team = [
   { name: currentUser.full_name, email: currentUser.email, role: "super_admin" },
@@ -75,22 +82,26 @@ function SettingsGroup({ title, blurb, items }: { title: string; blurb: string; 
   const [enabled, setEnabled] = useState(true);
   return (
     <section className="mt-6">
-      <h2 className="font-serif text-lg font-semibold text-coffee">{title}</h2>
-      <p className="mb-3 text-sm text-muted-foreground">{blurb}</p>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="flex items-center gap-2.5">
+        <span className="size-2 rounded-full bg-caramel" />
+        <h2 className="font-serif text-lg font-semibold text-coffee">{title}</h2>
+        <span className="rounded-full bg-oat px-2 py-0.5 font-[family-name:var(--font-data)] text-[10px] text-mocha tabular-nums">{items.length}</span>
+      </div>
+      <p className="mb-3 mt-0.5 text-sm text-muted-foreground">{blurb}</p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {items.map((c) => {
           const Icon = c.icon;
           const inner = (
             <>
               <div className="flex items-start justify-between">
-                <span className="flex size-9 items-center justify-center rounded-xl bg-secondary text-brand"><Icon className="size-4" /></span>
+                <span className="flex size-9 items-center justify-center rounded-xl bg-secondary text-brand transition-transform group-hover:scale-105"><Icon className="size-4" /></span>
                 {c.badge && <span className={cn("rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide", badgeTone[c.badge])}>{c.badge}</span>}
               </div>
-              <div className="mt-2.5 flex items-center gap-1 text-sm font-medium text-coffee">{c.title}<ChevronRight className="size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" /></div>
-              <p className="mt-0.5 text-xs text-muted-foreground">{c.desc}</p>
+              <div className="mt-2.5 flex items-center gap-1 text-sm font-semibold text-coffee">{c.title}<ChevronRight className="size-3.5 text-caramel opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" /></div>
+              <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-muted-foreground">{c.desc}</p>
             </>
           );
-          const cls = "group rounded-2xl border border-foam bg-porcelain p-4 text-left shadow-glass transition-all hover:border-caramel";
+          const cls = "group flex min-h-[118px] flex-col rounded-2xl border border-foam bg-porcelain p-4 text-left shadow-glass transition-all hover:-translate-y-0.5 hover:border-caramel hover:shadow-glass-hover";
           return c.href
             ? <Link key={c.title} href={c.href} className={cls}>{inner}</Link>
             : <button key={c.title} onClick={() => { setOpen(c); setEnabled(true); }} className={cls}>{inner}</button>;
@@ -186,13 +197,14 @@ export default function SettingsPage() {
       </div>
 
       {/* quick settings cards */}
-      <div data-tour="set-quick" className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div data-tour="set-quick" className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {TABS.map((t) => {
           const Icon = t.icon; const active = tab === t.key;
           return (
-            <button key={t.key} onClick={() => setTab(t.key)} className={cn("rounded-2xl border bg-porcelain p-3 text-left shadow-glass transition-all", active ? "border-caramel ring-1 ring-caramel/30" : "border-foam hover:border-latte")}>
-              <span className="flex size-8 items-center justify-center rounded-xl bg-secondary text-brand"><Icon className="size-4" /></span>
-              <div className="mt-2 text-sm font-medium text-coffee">{t.key}</div>
+            <button key={t.key} onClick={() => setTab(t.key)} className={cn("group rounded-2xl border p-3.5 text-left shadow-glass transition-all", active ? "border-caramel bg-caramel/8 ring-1 ring-caramel/25" : "border-foam bg-porcelain hover:-translate-y-0.5 hover:border-latte hover:shadow-glass-hover")}>
+              <span className={cn("flex size-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105", active ? "bg-caramel text-cream" : "bg-secondary text-brand")}><Icon className="size-4" /></span>
+              <div className="mt-2.5 text-sm font-semibold text-coffee">{t.key}</div>
+              <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">{QUICK_DESC[t.key]}</div>
             </button>
           );
         })}

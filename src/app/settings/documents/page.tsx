@@ -120,22 +120,28 @@ export default function DocumentsPage() {
           </div>
           <Button onClick={runRetrieval} className="gap-1.5 bg-brand text-brand-foreground shadow-cta hover:bg-brand-dark"><Search className="size-4" /> Run Retrieval</Button>
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
-          <label className="flex items-center gap-2 text-mocha">Scope
-            <select className="h-8 rounded-full border border-foam bg-porcelain px-3 text-[12px] text-coffee shadow-glass outline-none"><option>All documents (whole KB)</option>{docs.map((d) => <option key={d.file}>{d.file}</option>)}</select>
-          </label>
-          <label className="flex items-center gap-2 text-mocha">Top-K
-            <input type="number" value={topK} onChange={(e) => setTopK(Math.max(1, +e.target.value))} className="w-16 rounded-lg border border-foam bg-cream px-2 py-1.5 text-right font-data text-coffee outline-none focus:border-caramel" />
-          </label>
-          <label className="flex items-center gap-2 text-mocha">Min similarity
-            <input type="number" step={0.05} min={0} max={1} value={minSim} onChange={(e) => setMinSim(Math.min(1, Math.max(0, +e.target.value)))} className="w-20 rounded-lg border border-foam bg-cream px-2 py-1.5 text-right font-data text-coffee outline-none focus:border-caramel" />
-          </label>
-          <label className="flex items-center gap-2 text-mocha">
-            <button role="switch" aria-checked={rerank} onClick={() => setRerank((v) => !v)} className={cn("relative h-5 w-9 rounded-full transition-colors", rerank ? "bg-success" : "bg-foam")}>
-              <span className={cn("absolute top-0.5 size-4 rounded-full bg-white shadow transition-all", rerank ? "left-[18px]" : "left-0.5")} />
-            </button>
-            Cross-encoder rerank
-          </label>
+        <div className="mt-3 grid grid-cols-2 gap-3 rounded-xl bg-oat/40 p-3.5 sm:grid-cols-4">
+          <div>
+            <div className={monoLabel}>Scope</div>
+            <select className="mt-1 w-full rounded-lg border border-foam bg-porcelain px-2.5 py-1.5 text-[12px] text-coffee outline-none focus:border-caramel"><option>Whole KB</option>{docs.map((d) => <option key={d.file}>{d.file}</option>)}</select>
+          </div>
+          <div>
+            <div className={monoLabel}>Top-K</div>
+            <input type="number" value={topK} onChange={(e) => setTopK(Math.max(1, +e.target.value))} className="mt-1 w-full rounded-lg border border-foam bg-porcelain px-2.5 py-1.5 text-right font-data text-[12px] text-coffee outline-none focus:border-caramel" />
+          </div>
+          <div>
+            <div className={monoLabel}>Min similarity</div>
+            <input type="number" step={0.05} min={0} max={1} value={minSim} onChange={(e) => setMinSim(Math.min(1, Math.max(0, +e.target.value)))} className="mt-1 w-full rounded-lg border border-foam bg-porcelain px-2.5 py-1.5 text-right font-data text-[12px] text-coffee outline-none focus:border-caramel" />
+          </div>
+          <div>
+            <div className={monoLabel}>Rerank</div>
+            <label className="mt-1 flex h-[34px] items-center gap-2 text-xs text-mocha">
+              <button role="switch" aria-checked={rerank} onClick={() => setRerank((v) => !v)} className={cn("relative h-5 w-9 rounded-full transition-colors", rerank ? "bg-success" : "bg-foam")}>
+                <span className={cn("absolute top-0.5 size-4 rounded-full bg-white shadow transition-all", rerank ? "left-[18px]" : "left-0.5")} />
+              </button>
+              Cross-encoder
+            </label>
+          </div>
         </div>
 
         {results && (

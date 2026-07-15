@@ -4,11 +4,11 @@
    the agent can send mid-call (from the Jul-15 dive). */
 
 import { useState } from "react";
-import Link from "next/link";
-import { ChevronLeft, Mail, Plus, Trash2, ShieldCheck } from "lucide-react";
+import { Mail, FileText, Plus, Trash2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/notifications/toaster";
 import { cn } from "@/lib/utils";
+import { SettingsShell, HowItWorks } from "@/components/settings/settings-shell";
 
 type Provider = { name: string; from: string; def: boolean };
 type Tpl = { name: string; subject: string };
@@ -38,13 +38,17 @@ export default function EmailConfigPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <Link href="/settings" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-coffee"><ChevronLeft className="size-4" /> Back to Settings</Link>
-      <h1 className="flex items-center gap-2.5 font-serif text-3xl font-semibold tracking-tight text-coffee"><Mail className="size-6 text-caramel" /> Email Configuration</h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">Connect one or more email providers (Resend, SendGrid, or any SMTP host) for outbound email.</p>
-
+    <SettingsShell icon={Mail} title="Email Configuration"
+      blurb="Connect one or more email providers (Resend, SendGrid, or any SMTP host) for outbound email."
+      status={providers.length > 0 ? <span className="rounded-full border border-success/25 bg-success/10 px-2.5 py-0.5 text-[11px] font-medium text-success">● {providers.length} provider{providers.length === 1 ? "" : "s"} live</span> : undefined}
+      aside={<HowItWorks steps={[
+        { t: "Connect a provider", d: "Verify the from-address your domain sends as." },
+        { t: "Write templates", d: "Pre-approved emails with {placeholders} — the agent can never freestyle." },
+        { t: "Attach in the wizard", d: "Campaigns pick templates in the Email & SMS step." },
+      ]} />}
+    >
       {/* providers */}
-      <section className="mt-5 rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
+      <section className="rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="font-serif text-lg font-semibold text-coffee">Email Providers</h2>
@@ -87,7 +91,7 @@ export default function EmailConfigPage() {
       </section>
 
       {/* templates */}
-      <section className="mt-5 rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
+      <section className="rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="font-serif text-lg font-semibold text-coffee">Email Templates</h2>
@@ -126,6 +130,6 @@ export default function EmailConfigPage() {
           </ul>
         )}
       </section>
-    </div>
+    </SettingsShell>
   );
 }

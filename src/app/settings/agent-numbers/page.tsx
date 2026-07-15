@@ -3,11 +3,11 @@
 /* Settings → Human Agent Numbers — where the bot transfers calls to. */
 
 import { useState } from "react";
-import Link from "next/link";
-import { ChevronLeft, PhoneForwarded, Plus, Trash2 } from "lucide-react";
+import { PhoneForwarded, Plus, Trash2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/notifications/toaster";
 import { cn } from "@/lib/utils";
+import { SettingsShell, HowItWorks } from "@/components/settings/settings-shell";
 
 type AgentNum = { num: string; label: string; assigned: string | null; active: boolean };
 
@@ -25,19 +25,20 @@ export default function AgentNumbersPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <Link href="/settings" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-coffee"><ChevronLeft className="size-4" /> Back to Settings</Link>
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="flex items-center gap-2.5 font-serif text-3xl font-semibold tracking-tight text-coffee"><PhoneForwarded className="size-6 text-caramel" /> Human Agent Numbers</h1>
-          <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">The phone numbers the bot transfers calls to. Add your agents&apos; numbers here, then assign one to each agent when you invite them. Only active, unassigned numbers can be handed to a new agent.</p>
-        </div>
-        <Button onClick={() => setAdding(true)} className="gap-1.5 bg-brand text-brand-foreground shadow-cta hover:bg-brand-dark"><Plus className="size-4" /> Add number</Button>
-      </div>
-
+    <SettingsShell icon={PhoneForwarded} title="Human Agent Numbers"
+      blurb="The phone numbers the bot transfers calls to. Add your agents' numbers here, then assign one to each agent when you invite them."
+      actions={<Button onClick={() => setAdding(true)} className="gap-1.5 bg-brand text-brand-foreground shadow-cta hover:bg-brand-dark"><Plus className="size-4" /> Add number</Button>}
+      aside={<HowItWorks title="How transfers work" steps={[
+        { t: "Register an agent's line", d: "Any mobile or landline your team answers." },
+        { t: "Assign it on invite", d: "Each teammate gets exactly one line — only active, unassigned numbers can be handed to a new agent." },
+        { t: "The bot warm-transfers", d: "Mid-call, 'Transfer Call to Agent' rings this number and bridges the customer." },
+      ]} />}
+    >
       <section className="rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
-        <h2 className="font-serif text-lg font-semibold text-coffee">Registered numbers</h2>
-        <p className="text-xs text-muted-foreground">{nums.length} number{nums.length === 1 ? "" : "s"} registered</p>
+        <div className="flex items-baseline justify-between">
+          <h2 className="font-serif text-[17px] font-semibold text-coffee">Registered numbers</h2>
+          <span className="font-data text-[11px] text-latte tabular-nums">{nums.length} registered</span>
+        </div>
 
         {adding && (
           <div className="mt-4 grid gap-2.5 rounded-xl border border-caramel/40 bg-card p-4 sm:grid-cols-[1fr_1fr_auto_auto]">
@@ -49,9 +50,11 @@ export default function AgentNumbersPage() {
         )}
 
         {nums.length === 0 && !adding ? (
-          <div className="mt-4 space-y-2.5">
-            {[0, 1, 2].map((i) => <div key={i} className="h-12 rounded-xl bg-oat/40" />)}
-            <p className="pt-2 text-center text-sm text-muted-foreground">No numbers yet — add your first agent line to enable warm transfers.</p>
+          <div className="mt-4 flex flex-col items-center gap-2.5 rounded-xl border border-dashed border-latte bg-oat/25 py-12 text-center">
+            <span className="grid size-11 place-items-center rounded-full bg-porcelain text-latte shadow-glass"><UserRound className="size-5" /></span>
+            <p className="text-sm font-medium text-coffee">No agent lines yet</p>
+            <p className="max-w-xs text-xs leading-relaxed text-muted-foreground">Warm transfer is off until at least one active line exists — the agent handles everything solo meanwhile.</p>
+            <Button size="sm" onClick={() => setAdding(true)} className="mt-1 gap-1.5 bg-brand text-brand-foreground hover:bg-brand-dark"><Plus className="size-3.5" /> Add your first number</Button>
           </div>
         ) : (
           <ul className="mt-4 divide-y divide-foam/70">
@@ -75,6 +78,6 @@ export default function AgentNumbersPage() {
           </ul>
         )}
       </section>
-    </div>
+    </SettingsShell>
   );
 }
