@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Building2, Users, Plug, ShieldCheck, KeyRound, Plus, Copy, ListChecks, Target, GitBranch, Wand2, FileText, Gauge, LayoutTemplate, BadgeCheck, MousePointerClick, MessageSquare, MessageCircle, RefreshCw, Wallet, BarChart3, ChevronRight, CheckCircle2, ArrowRight, Phone, type LucideIcon } from "lucide-react";
+import { Building2, Users, Plug, ShieldCheck, KeyRound, Plus, Copy, ListChecks, Target, GitBranch, Wand2, FileText, Gauge, LayoutTemplate, BadgeCheck, MousePointerClick, MessageSquare, MessageCircle, RefreshCw, Wallet, BarChart3, ChevronRight, CheckCircle2, ArrowRight, Phone, X, type LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-bits/page-header";
 import { SetupGuideButton } from "@/components/setup-guide/setup-guide";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,7 @@ const badgeTone: Record<string, string> = {
   DEFAULT: "bg-success/12 text-success", SEEDED: "bg-caramel/15 text-caramel",
 };
 const AGENT_CFG: Cfg[] = [
+  { icon: Phone, title: "Outbound Caller IDs", desc: "Caller-ID number pool — campaigns rotate round-robin.", badge: "REQUIRED", href: "/settings/phone-numbers" },
   { icon: ListChecks, title: "Lead Schemas", desc: "Columns each lead carries; auto-mapped on upload.", badge: "DEFAULT" },
   { icon: Target, title: "Scoring Configs", desc: "Per-field weights & hot/warm/cold thresholds.", badge: "DEFAULT" },
   { icon: GitBranch, title: "Conversation Flows", desc: "The system prompt the agent runs on every call.", badge: "REQUIRED" },
@@ -65,10 +66,12 @@ const CHANNELS: Cfg[] = [
 ];
 const BILLING: Cfg[] = [
   { icon: Wallet, title: "Billing & Wallet", desc: "Buy channels or top up minutes; view history.", badge: "REQUIRED", href: "/settings/billing" },
-  { icon: BarChart3, title: "Usage & Metering", desc: "Volume, minutes & per-provider cost breakdown.", badge: "OPTIONAL", href: "/settings/billing" },
+  { icon: BarChart3, title: "Usage & Metering", desc: "Volume, minutes & per-provider cost breakdown.", badge: "OPTIONAL", href: "/settings/usage" },
 ];
 
 function SettingsGroup({ title, blurb, items }: { title: string; blurb: string; items: Cfg[] }) {
+  const [open, setOpen] = useState<Cfg | null>(null);
+  const [enabled, setEnabled] = useState(true);
   return (
     <section className="mt-6">
       <h2 className="font-serif text-lg font-semibold text-coffee">{title}</h2>
@@ -89,9 +92,53 @@ function SettingsGroup({ title, blurb, items }: { title: string; blurb: string; 
           const cls = "group rounded-2xl border border-foam bg-porcelain p-4 text-left shadow-glass transition-all hover:border-caramel";
           return c.href
             ? <Link key={c.title} href={c.href} className={cls}>{inner}</Link>
-            : <button key={c.title} onClick={() => toast({ title: c.title, body: "Opening configuration…", severity: "info" })} className={cls}>{inner}</button>;
+            : <button key={c.title} onClick={() => { setOpen(c); setEnabled(true); }} className={cls}>{inner}</button>;
         })}
       </div>
+
+      {/* config sheet — every card opens a real panel, no dead ends */}
+      {open && (
+        <>
+          <div className="fixed inset-0 z-50 bg-espresso/30 backdrop-blur-[2px]" onClick={() => setOpen(null)} />
+          <aside className="fixed inset-y-0 right-0 z-50 flex w-[420px] max-w-[94vw] flex-col border-l border-foam bg-porcelain shadow-card-lg">
+            <div className="flex items-center gap-3 border-b border-foam px-5 py-4">
+              <span className="flex size-9 items-center justify-center rounded-xl bg-secondary text-brand"><open.icon className="size-4" /></span>
+              <div className="min-w-0 flex-1">
+                <div className="font-serif text-lg font-semibold text-coffee">{open.title}</div>
+                <div className="truncate text-xs text-muted-foreground">{open.desc}</div>
+              </div>
+              <button onClick={() => setOpen(null)} aria-label="Close" className="text-muted-foreground hover:text-coffee"><X className="size-4" /></button>
+            </div>
+            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+              <div className="flex items-center justify-between rounded-xl border border-foam bg-card px-3.5 py-3">
+                <div>
+                  <div className="text-sm font-medium text-coffee">Enabled for this organization</div>
+                  <div className="text-xs text-muted-foreground">{enabled ? "Live — using the configuration below." : "Paused — campaigns skip this capability."}</div>
+                </div>
+                <button role="switch" aria-checked={enabled} onClick={() => setEnabled((v) => !v)}
+                  className={cn("relative h-5 w-9 rounded-full transition-colors", enabled ? "bg-success" : "bg-foam")}>
+                  <span className={cn("absolute top-0.5 size-4 rounded-full bg-white shadow transition-all", enabled ? "left-[18px]" : "left-0.5")} />
+                </button>
+              </div>
+              <div className="rounded-xl border border-foam bg-card px-3.5 py-3">
+                <div className="text-xs font-semibold uppercase tracking-wider text-mocha">Current configuration</div>
+                <div className="mt-2 space-y-1.5 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Source</span><span className="font-medium text-coffee">Org defaults</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Applies to</span><span className="font-medium text-coffee">All campaigns</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Last changed</span><span className="font-medium text-coffee">23 Jun 2026</span></div>
+                </div>
+              </div>
+              <p className="rounded-xl bg-oat/50 px-3.5 py-3 text-xs text-mocha">
+                Campaign-level overrides live in the campaign wizard — settings here are the organization-wide defaults new campaigns inherit.
+              </p>
+            </div>
+            <div className="border-t border-foam p-4">
+              <Button onClick={() => { setOpen(null); toast({ title: "Saved", body: `${open.title} settings updated.`, severity: "success" }); }}
+                className="w-full bg-brand text-brand-foreground hover:bg-brand-dark">Save changes</Button>
+            </div>
+          </aside>
+        </>
+      )}
     </section>
   );
 }

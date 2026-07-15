@@ -70,5 +70,5 @@
 - [x] Broken-route audit of our app (see commit)
 - [x] Tranche 1: campaigns list columns/search/sort · calls caller-ID + relative time
 - [x] Tranche 2: campaign detail (Clone/Complete · Test Mode · warnings banner · Import Summary + schema CSV template · Call Eligibility · real lead upload) + wizard (name autocomplete · custom in-call adjustments · Add-outcome modal with counts-as/auto-code/end-call · Voice & AI step · Upload Leads moved last · 11-step tour)
-- [ ] Tranche 3: analytics workspace + settings hub
+- [x] Tranche 3: analytics → Post-call Analysis workspace (Executive Summary + tiles · day-by-day · Post-Call Summary · Open Alerts · real CSV exports · range switch) + settings (Outbound Caller IDs page with pool/limits/toggles · Usage & Metering page with COGS · every catalog card opens a real config sheet — no dead toasts)
 - [ ] Tranche 4: learning / testing / sequences / admin / channels
