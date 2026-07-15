@@ -16,7 +16,7 @@ import { worldCampaigns, activeCampaigns, rangeMetrics } from "@/lib/derived";
 import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { V7Banner, Chip, SectionCard, Meter, Equalizer, monoLabel, rowStagger, rowItem } from "./kit";
+import { V7Banner, Chip, SearchPill, SectionCard, Meter, Equalizer, monoLabel, rowStagger, rowItem } from "./kit";
 
 const STATUS = ["all", "draft", "active", "paused", "completed"] as const;
 type Status = (typeof STATUS)[number];
@@ -40,6 +40,8 @@ export function V7Campaigns() {
   const router = useRouter();
   const [tab, setTab] = useState<Status>("all");
   const [menuId, setMenuId] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [newestFirst, setNewestFirst] = useState(true);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: worldCampaigns.length };
@@ -47,7 +49,10 @@ export function V7Campaigns() {
     return c;
   }, []);
 
-  const rows = worldCampaigns.filter((c) => tab === "all" || c.status === tab);
+  const rows = worldCampaigns
+    .filter((c) => tab === "all" || c.status === tab)
+    .filter((c) => !q || `${c.name} ${c.agent_name}`.toLowerCase().includes(q.toLowerCase()))
+    .sort((a, b) => (newestFirst ? 1 : -1) * (new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
   const active = activeCampaigns.length;
   const called = worldCampaigns.reduce((s, c) => s + c.leads_called, 0);
   const converted = worldCampaigns.reduce((s, c) => s + c.leads_converted, 0);
@@ -77,13 +82,14 @@ export function V7Campaigns() {
         }
       />
 
-      <div className="mb-3 flex flex-wrap gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         {STATUS.map((s) => (
           <Chip key={s} active={tab === s} onClick={() => setTab(s)}
             dot={s === "all" ? "var(--color-caramel)" : statusDot[s]} count={counts[s] ?? 0}>
             {s === "all" ? "All" : s[0].toUpperCase() + s.slice(1)}
           </Chip>
         ))}
+        <SearchPill value={q} onChange={setQ} placeholder="Search campaigns…" className="ml-auto w-64" />
       </div>
 
       <SectionCard title="All campaigns" count={`${rows.length} campaign${rows.length === 1 ? "" : "s"}`}
@@ -91,7 +97,11 @@ export function V7Campaigns() {
         {/* column labels */}
         <div className={cn("hidden grid-cols-[minmax(0,2.2fr)_minmax(0,1.6fr)_92px_88px_110px_96px_68px] gap-3 border-b border-foam px-4 py-1.5 lg:grid", monoLabel)}>
           <span>Campaign</span><span>Progress</span><span className="text-right">Conv.</span>
-          <span className="text-right">7-day</span><span>Status</span><span className="text-right">Created</span><span />
+          <span className="text-right">7-day</span><span>Status</span>
+          <button onClick={() => setNewestFirst((v) => !v)} title="Sort by created date"
+            className="flex items-center justify-end gap-1 text-right uppercase tracking-[0.14em] text-mocha transition-colors hover:text-coffee">
+            Created <span className="text-caramel">{newestFirst ? "↓" : "↑"}</span>
+          </button><span />
         </div>
 
         <motion.ul variants={rowStagger} initial="hidden" animate="show">

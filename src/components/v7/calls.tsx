@@ -3,7 +3,7 @@
 /* v7 Calls — bucket chips carry their own colors, rows get bean dots +
    score meters, and the expanded detail keeps its transcript. */
 
-import { useMemo, useState, Fragment } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { PhoneOff, ChevronRight, Headset, Play, FileText, Volume2, FlaskConical } from "lucide-react";
@@ -16,6 +16,26 @@ import { V7Banner, Chip, SearchPill, SectionCard, Meter, monoLabel, rowStagger, 
 
 const businessOutcomes = ["All outcomes", "Not Connected", "Ended — No Outcome", "Transferred", "Callback Scheduled", "Do Not Call", "Not Interested", "Wrong Number"];
 const preScore = (id: string) => 35 + (id.charCodeAt(id.length - 1) % 45);
+// caller-ID pool (round-robin, like the outbound number pool) — deterministic per call
+const CALLER_POOL = ["+91 80353 41719", "+91 80353 12770"];
+const callerOf = (id: string) => CALLER_POOL[id.charCodeAt(0) % CALLER_POOL.length];
+
+/* relative + absolute timestamp; relative computed after mount (SSR-safe) */
+function RelTime({ iso }: { iso: string }) {
+  const [rel, setRel] = useState<string | null>(null);
+  useEffect(() => {
+    const ms = Date.now() - new Date(iso).getTime();
+    if (Number.isNaN(ms)) return;
+    const d = Math.floor(ms / 86_400_000), h = Math.floor(ms / 3_600_000), m = Math.floor(ms / 60_000);
+    setRel(d > 0 ? `${d}d ago` : h > 0 ? `${h}h ago` : `${Math.max(1, m)}m ago`);
+  }, [iso]);
+  return (
+    <div className="text-right leading-tight">
+      {rel && <div className="font-[family-name:var(--font-data)] text-[12px] font-medium text-mocha">{rel}</div>}
+      <div className="font-[family-name:var(--font-data)] text-[10px] text-latte">{formatDateTime(iso)}</div>
+    </div>
+  );
+}
 
 export function V7Calls() {
   const router = useRouter();
@@ -127,7 +147,7 @@ export function V7Calls() {
                   </div>
 
                   <div className="text-right font-[family-name:var(--font-data)] text-[13px] text-coffee tabular-nums">{formatDuration(c.duration_seconds)}</div>
-                  <div className="text-right font-[family-name:var(--font-data)] text-[11px] text-latte">{formatDateTime(c.initiated_at)}</div>
+                  <RelTime iso={c.initiated_at} />
                 </motion.li>
 
                 {/* expanded call detail */}
@@ -162,6 +182,7 @@ export function V7Calls() {
                               <Fact k="Next action" v={c.next_action ? titleCase(c.next_action) : "—"} />
                               <Fact k="When" v={formatDateTime(c.initiated_at)} />
                               <Fact k="Call ID" v={<span className="font-[family-name:var(--font-data)] text-xs">{c.id.slice(0, 8)}</span>} />
+                              <Fact k="Caller ID" v={<span className="font-[family-name:var(--font-data)] text-xs">{callerOf(c.id)}</span>} />
                             </div>
                             <div className="mt-4 flex flex-wrap items-center gap-2" onClick={(e) => e.stopPropagation()}>
                               <button className="inline-flex items-center gap-1.5 rounded-full border border-foam bg-porcelain px-3 py-1.5 text-xs font-medium text-mocha shadow-glass hover:border-caramel"><Play className="size-3.5 text-caramel" /> Play recording</button>
