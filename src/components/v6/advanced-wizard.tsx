@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Check, ChevronLeft, ChevronRight, Info, Save, Plus, Trash2, Lock, AlertTriangle,
   ListChecks, Users2, Target, GitBranch, Phone, BookOpen, Sparkles, ChevronDown, Braces, Wrench,
-  CalendarClock, ShieldAlert, Coffee, Bell, Calendar, UploadCloud, Bot, Play, X,
+  CalendarClock, ShieldAlert, Coffee, Bell, Calendar, UploadCloud, Bot, Play, X, Mail, MessageSquare,
 } from "lucide-react";
 import { LeadUpload, type LeadUploadInfo } from "@/components/campaigns/lead-upload";
 import { worldCampaigns } from "@/lib/derived";
@@ -33,9 +33,20 @@ const STEPS = [
   { key: "voiceai", label: "Voice & AI", icon: Bot, sub: "Transcriber, LLM & speaking voice" },
   { key: "phone", label: "Phone & Outcomes", icon: Phone, sub: "Number, transfer & dispositions" },
   { key: "skills", label: "Agent Skills", icon: Wrench, sub: "Real-time tools the agent can use" },
+  { key: "messaging", label: "Email & SMS", icon: Mail, sub: "Templates the agent can send", badge: "new" },
   { key: "schedule", label: "Schedule", icon: CalendarClock, sub: "When it runs", badge: "new" },
   { key: "pauses", label: "Smart pauses", icon: ShieldAlert, sub: "Quiet hours & auto-pause", badge: "new" },
   { key: "leads", label: "Upload Leads", icon: UploadCloud, sub: "CSV, paste, or add later" },
+];
+
+// seed template libraries (org-level; provider setup lives in Settings)
+const SEED_EMAIL_TPLS = [
+  { name: "Loan offer summary", subject: "Your pre-approved offer, {full_name}", on: true },
+  { name: "Payment link follow-up", subject: "Complete your payment — secure link inside", on: false },
+];
+const SEED_SMS_TPLS = [
+  { name: "Payment reminder", body: "Dear {full_name}, your EMI of ₹{emi_amount} is due on {due_date}. Pay: {link}", dlt: true, on: true },
+  { name: "KYC link", body: "{full_name}, complete your KYC here: {link} — takes 2 minutes.", dlt: true, on: false },
 ];
 
 // Voice & AI option sets (org defaults first, matching the provider stack)
@@ -114,6 +125,11 @@ export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
   const [outcomeOpen, setOutcomeOpen] = useState(false);
   const [oName, setOName] = useState(""); const [oCounts, setOCounts] = useState(COUNTS_AS[0]);
   const [oDesc, setODesc] = useState(""); const [oEnd, setOEnd] = useState(false);
+  // messaging templates the agent may send mid-call
+  const [emailTpls, setEmailTpls] = useState(SEED_EMAIL_TPLS);
+  const [smsTpls, setSmsTpls] = useState(SEED_SMS_TPLS);
+  const [newEmail, setNewEmail] = useState<{ name: string; subject: string } | null>(null);
+  const [newSms, setNewSms] = useState<{ name: string; body: string } | null>(null);
   // voice & AI
   const [llm, setLlm] = useState(LLM_OPTS[0]);
   const [tts, setTts] = useState(TTS_OPTS[0]);
@@ -186,6 +202,7 @@ export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
     { k: "Voice & AI", v: preset === PRESETS[0] ? `${speed.toFixed(1)}× · t${temp.toFixed(1)}` : preset, done: true },
     { k: "Custom outcomes", v: outcomes.length ? `${outcomes.length}` : "built-ins only", done: outcomes.length > 0 },
     { k: "Transfer", v: transferOn ? "On" : "Off", done: true },
+    { k: "Messaging", v: `${emailTpls.filter((t) => t.on).length} email · ${smsTpls.filter((t) => t.on).length} SMS`, done: emailTpls.some((t) => t.on) || smsTpls.some((t) => t.on) },
     { k: "Agent skills", v: `${skills.filter((s) => s.on).length} on`, done: true },
     { k: "Schedule", v: schedLine, done: true },
     { k: "Quiet hours", v: quietOn ? `${quiet.length} window${quiet.length > 1 ? "s" : ""}` : "off", done: quietOn },
@@ -196,7 +213,7 @@ export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
   // wizard to the matching page (via `before`) so the tour shows real content,
   // not just an overview. Triggered by the "Show me how" button (start-tour).
   const advTour: TourStep[] = [
-    { sel: '[data-tour="adv-steps"]', title: "Eleven steps, one campaign", body: `${STEPS.map((s) => s.label).join(" · ")}. Green = done — jump to any step from this rail anytime, and hover any ⓘ for help as you go.`, before: () => setStep(0) },
+    { sel: '[data-tour="adv-steps"]', title: "Twelve steps, one campaign", body: `${STEPS.map((s) => s.label).join(" · ")}. Green = done — jump to any step from this rail anytime, and hover any ⓘ for help as you go.`, before: () => setStep(0) },
     { sel: '[data-tour="adv-form"]', title: "1 · Basics", body: "Name the campaign and its agent — the only required fields to advance. Language, greeting, calling rules and limits live here too.", before: () => setStep(0) },
     { sel: '[data-tour="adv-form"]', title: "2 · Lead Schema", body: "The columns each lead carries. Phone, Full Name and Email are automatic — add extras like monthly_income. One extra field unlocks Next.", before: () => setStep(1) },
     { sel: '[data-tour="adv-form"]', title: "3 · Customer Data", body: "Extra details the agent collects live on the call. Auto-prefixed ld_enrich_ and stored per call — needs the Customer Data skill on.", before: () => setStep(2) },
@@ -205,11 +222,12 @@ export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
     { sel: '[data-tour="adv-form"]', title: "6 · Voice & AI", body: "Transcriber language, the LLM brain, the speaking voice with preview, and call-behaviour presets with fine-tuning.", before: () => setStep(5) },
     { sel: '[data-tour="adv-form"]', title: "7 · Phone & Outcomes", body: "Pick the outbound number, switch on human transfer, and define custom outcomes — each counts as a result that drives colour and follow-up.", before: () => setStep(6) },
     { sel: '[data-tour="adv-form"]', title: "8 · Agent Skills", body: "Real-time tools the agent can invoke mid-call. Core skills stay on; toggle the optional ones per campaign.", before: () => setStep(7) },
-    { sel: '[data-tour="adv-form"]', title: "9 · Schedule", body: "Start now or pick a date, then choose the days and calling window — calls only ever dial inside it.", before: () => setStep(8) },
-    { sel: '[data-tour="adv-form"]', title: "10 · Smart pauses", body: "Auto-pause during quiet hours, and let VoiceBrew step in if many customers report the same blocker.", before: () => setStep(9) },
-    { sel: '[data-tour="adv-form"]', title: "11 · Upload Leads", body: "Last step: drop the CSV this campaign will dial — columns map to your schema by name, invalid phones are flagged before import. Or add leads later.", before: () => setStep(10) },
-    { sel: '[data-tour="adv-next"]', title: "Save or create", body: "Save as Draft on any step — drafts live for 5 days. When every step looks good, Create Campaign here or from the summary panel.", before: () => setStep(10) },
-    { sel: '[data-tour="adv-summary"]', title: "Live summary", body: "This panel updates as you build and tracks your progress. Create the campaign from here anytime.", before: () => setStep(10) },
+    { sel: '[data-tour="adv-form"]', title: "9 · Email & SMS", body: "Pre-approved templates the agent can send mid-call — {placeholders} fill from the lead row. SMS honours DLT approval.", before: () => setStep(8) },
+    { sel: '[data-tour="adv-form"]', title: "10 · Schedule", body: "Start now or pick a date, then choose the days and calling window — calls only ever dial inside it.", before: () => setStep(9) },
+    { sel: '[data-tour="adv-form"]', title: "11 · Smart pauses", body: "Auto-pause during quiet hours, and let VoiceBrew step in if many customers report the same blocker.", before: () => setStep(10) },
+    { sel: '[data-tour="adv-form"]', title: "12 · Upload Leads", body: "Last step: drop the CSV this campaign will dial — columns map to your schema by name, invalid phones are flagged before import. Or add leads later.", before: () => setStep(11) },
+    { sel: '[data-tour="adv-next"]', title: "Save or create", body: "Save as Draft on any step — drafts live for 5 days. When every step looks good, Create Campaign here or from the summary panel.", before: () => setStep(11) },
+    { sel: '[data-tour="adv-summary"]', title: "Live summary", body: "This panel updates as you build and tracks your progress. Create the campaign from here anytime.", before: () => setStep(11) },
   ];
 
   return (
@@ -554,6 +572,73 @@ export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
                 })}
               </div>
               <button onClick={() => toast({ title: "Add custom skill", body: "Connect a tool/API the agent can call. Configure in Settings → Agent Skills.", severity: "info" })} className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-latte px-3 py-2 text-sm text-mocha transition-colors hover:border-caramel"><Plus className="size-4" /> Add custom skill</button>
+            </div>
+          )}
+
+          {/* STEP: EMAIL & SMS TEMPLATES */}
+          {cur.key === "messaging" && (
+            <div className="space-y-6">
+              <p className="text-sm text-muted-foreground">
+                Pre-approved messages the agent can send <span className="font-medium text-coffee">during the call</span> ("I&apos;m sending you the link now").
+                <code className="font-data text-mocha"> {"{placeholders}"}</code> fill from the lead row at send time. Attach the ones this campaign may use.
+              </p>
+
+              <Group title="Email templates" help="Requires an email provider (Settings → Email Configuration). The agent can only send templates attached here — never free-form email.">
+                <div className="space-y-2">
+                  {emailTpls.map((t, i) => (
+                    <div key={t.name} className="flex items-center gap-3 rounded-xl border border-foam bg-card px-3.5 py-2.5">
+                      <Mail className="size-4 shrink-0 text-caramel" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-coffee">{t.name}</div>
+                        <div className="truncate font-data text-[11px] text-muted-foreground">{t.subject}</div>
+                      </div>
+                      <Toggle on={t.on} set={() => setEmailTpls((x) => x.map((y, j) => (j === i ? { ...y, on: !y.on } : y)))} />
+                    </div>
+                  ))}
+                  {newEmail ? (
+                    <div className="space-y-2 rounded-xl border border-caramel/40 bg-card p-3">
+                      <Input value={newEmail.name} onChange={(e) => setNewEmail({ ...newEmail, name: e.target.value })} placeholder="Template name — e.g. Sanction letter" className={inputCls} autoFocus />
+                      <Input value={newEmail.subject} onChange={(e) => setNewEmail({ ...newEmail, subject: e.target.value })} placeholder="Subject — supports {full_name}, {company}…" className={inputCls} />
+                      <div className="flex gap-2">
+                        <Button size="sm" disabled={!newEmail.name.trim()} onClick={() => { setEmailTpls((x) => [...x, { name: newEmail.name.trim(), subject: newEmail.subject.trim() || "—", on: true }]); setNewEmail(null); toast({ title: "Email template added", body: "Attached to this campaign.", severity: "success" }); }} className="bg-brand text-brand-foreground hover:bg-brand-dark">Add</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setNewEmail(null)} className="text-mocha">Cancel</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={() => setNewEmail({ name: "", subject: "" })} className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-latte px-3 py-2 text-sm text-mocha transition-colors hover:border-caramel"><Plus className="size-4" /> New email template</button>
+                  )}
+                </div>
+              </Group>
+
+              <Group title="SMS templates" help="India: promotional SMS routes through your DLT-registered 140-series header; service messages use the 160-series. Only DLT-approved templates get sent.">
+                <div className="space-y-2">
+                  {smsTpls.map((t, i) => (
+                    <div key={t.name} className="flex items-center gap-3 rounded-xl border border-foam bg-card px-3.5 py-2.5">
+                      <MessageSquare className="size-4 shrink-0 text-steam" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 text-sm font-medium text-coffee">{t.name}
+                          {t.dlt ? <span className="rounded-full bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">DLT ✓</span>
+                            : <span className="rounded-full bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">DLT pending</span>}
+                        </div>
+                        <div className="truncate font-data text-[11px] text-muted-foreground">{t.body}</div>
+                      </div>
+                      <Toggle on={t.on} set={() => setSmsTpls((x) => x.map((y, j) => (j === i ? { ...y, on: !y.on } : y)))} />
+                    </div>
+                  ))}
+                  {newSms ? (
+                    <div className="space-y-2 rounded-xl border border-caramel/40 bg-card p-3">
+                      <Input value={newSms.name} onChange={(e) => setNewSms({ ...newSms, name: e.target.value })} placeholder="Template name" className={inputCls} autoFocus />
+                      <textarea value={newSms.body} onChange={(e) => setNewSms({ ...newSms, body: e.target.value })} placeholder="Message — supports {full_name}, {link}… Submitted for DLT approval on save." className={inputCls + " h-16 resize-none"} />
+                      <div className="flex gap-2">
+                        <Button size="sm" disabled={!newSms.name.trim()} onClick={() => { setSmsTpls((x) => [...x, { name: newSms.name.trim(), body: newSms.body.trim() || "—", dlt: false, on: true }]); setNewSms(null); toast({ title: "SMS template added", body: "Queued for DLT approval — it sends once approved.", severity: "info" }); }} className="bg-brand text-brand-foreground hover:bg-brand-dark">Add</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setNewSms(null)} className="text-mocha">Cancel</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={() => setNewSms({ name: "", body: "" })} className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-latte px-3 py-2 text-sm text-mocha transition-colors hover:border-caramel"><Plus className="size-4" /> New SMS template</button>
+                  )}
+                </div>
+              </Group>
             </div>
           )}
 

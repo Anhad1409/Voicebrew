@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import { Download, Activity, AlertTriangle, ChevronDown } from "lucide-react";
 import { AreaChart } from "@/components/ui-bits/area-chart";
 import { timeSeries, calls, leads } from "@/lib/data";
-import { rangeMetrics, worldCampaigns, leadTemperature } from "@/lib/derived";
+import { rangeMetrics, worldCampaigns, activeCampaigns, leadTemperature, agentQuality } from "@/lib/derived";
 import { formatDuration, formatINR, formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/notifications/toaster";
@@ -61,6 +61,78 @@ export default function AnalyticsPage() {
   const convPct = Math.round(m.convRate * 100);
   const pts = timeSeries.slice(-range);
   const bestDay = pts.reduce((b, p) => ((p.conversions || Math.round(p.completed * 0.18)) > (b.conversions || Math.round(b.completed * 0.18)) ? p : b), pts[0]);
+  const [showHot, setShowHot] = useState(false);
+  const [actRange, setActRange] = useState<7 | 14 | 30 | 90>(30);
+  const [gran, setGran] = useState<"Day" | "Week" | "Month">("Day");
+
+  const totalLeadsAll = worldCampaigns.reduce((s2, c) => s2 + c.total_leads, 0);
+  const blended = m.calls ? m.cost / m.calls : 0;
+
+  // campaign-world hot-lead roster — tile count === table rows === dashboard temperature
+  const hotRoster = useMemo(() => {
+    const first = ["Dipti", "Hitesha", "Shatakshi", "Arnika", "Sumit", "Pankaj", "Srinandan", "Sameen", "Rohit", "Anita", "Karan", "Meera"];
+    const last = ["Yadav", "Mishra", "Raj", "Singh", "Tripathy", "Sharma", "Desai", "Mehta", "Nair", "Kumar"];
+    const rows: { name: string; phone: string; campaign: string; lastCalled: string; calls: number; score: number }[] = [];
+    let i = 0;
+    for (const c of worldCampaigns) {
+      for (let k = 0; k < c.hot; k++) {
+        rows.push({
+          name: `${first[(i * 7) % first.length]} ${last[(i * 5) % last.length]}`,
+          phone: `+91 9${String(100000000 + ((i * 987654321) % 899999999)).slice(0, 9)}`,
+          campaign: c.name,
+          lastCalled: `${String(1 + (i % 12)).padStart(2, "0")} Jul, ${String(9 + (i % 11)).padStart(2, "0")}:${String((i * 17) % 60).padStart(2, "0")}`,
+          calls: 1 + (i % 8),
+          score: 70 + ((i * 13) % 31),
+        });
+        i++;
+      }
+    }
+    return rows.sort((a, b) => b.score - a.score);
+  }, []);
+
+  // long synthetic series for 30/90-day views (deterministic tiling of the seed)
+  const activity = useMemo(() => {
+    const base = timeSeries;
+    const out: { date: string; calls: number; completed: number; conversions: number }[] = [];
+    const last = new Date(base[base.length - 1].date + "T00:00:00");
+    for (let d = actRange - 1; d >= 0; d--) {
+      const src = base[(actRange - 1 - d) % base.length];
+      const f = 1 + (Math.floor((actRange - 1 - d) / base.length) % 3) * 0.18;
+      const dt = new Date(last); dt.setDate(dt.getDate() - d);
+      out.push({
+        date: dt.toISOString().slice(0, 10),
+        calls: Math.round(src.calls * f),
+        completed: Math.round(src.completed * f),
+        conversions: src.conversions || Math.round(src.completed * 0.18 * f),
+      });
+    }
+    if (gran === "Day") return out;
+    const size = gran === "Week" ? 7 : 30;
+    const g: typeof out = [];
+    for (let i2 = 0; i2 < out.length; i2 += size) {
+      const chunk = out.slice(i2, i2 + size);
+      g.push({
+        date: chunk[chunk.length - 1].date,
+        calls: chunk.reduce((a, b) => a + b.calls, 0),
+        completed: chunk.reduce((a, b) => a + b.completed, 0),
+        conversions: chunk.reduce((a, b) => a + b.conversions, 0),
+      });
+    }
+    return g;
+  }, [actRange, gran]);
+
+  // hour-of-day answered distribution (9:00–18:00), weights over connected
+  const hourly = useMemo(() => {
+    const weights = [6, 9, 11, 10, 8, 4, 7, 9, 5];
+    const tot = weights.reduce((a, b) => a + b, 0);
+    const rows = weights.map((w, i2) => ({
+      win: `${String(9 + i2).padStart(2, "0")}:00 - ${String(10 + i2).padStart(2, "0")}:00`,
+      n: Math.round((w / tot) * m.connected),
+    }));
+    const totalN = rows.reduce((a, b) => a + b.n, 0) || 1;
+    const min = rows.reduce((a, b) => (b.n < a.n ? b : a), rows[0]);
+    return { rows, totalN, min, max: Math.max(...rows.map((r) => r.n), 1) };
+  }, [m]);
 
   const exportBtns = (
     <div className="flex flex-wrap items-center gap-2">
@@ -105,6 +177,59 @@ export default function AnalyticsPage() {
 
       {tab === "Overview" && (
         <div className="space-y-5">
+          {/* status bar */}
+          <div className="flex items-center gap-2.5 rounded-xl border border-foam bg-porcelain px-4 py-2.5 shadow-glass">
+            <span className="size-2 rounded-full bg-success" />
+            <span className="text-sm font-medium text-coffee">Overview: {range === 7 ? "Last 7 days" : "Last 14 days"}</span>
+            <span className="text-xs text-muted-foreground">Live data</span>
+            <span className="ml-auto font-[family-name:var(--font-data)] text-[11px] text-latte">synced just now</span>
+          </div>
+
+          {/* KPI grid with hot-leads drill-down */}
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Tile label="Total Calls" value={m.calls.toLocaleString()} sub={`${range} days of dialing`} />
+            <Tile label="Conversion Rate" value={`${(totalLeadsAll ? (m.conversions / totalLeadsAll) * 100 : 0).toFixed(1)}%`} sub={`${m.conversions} converted / ${totalLeadsAll} leads`} />
+            <Tile label="Total Cost" value={formatINR(m.cost)} sub={`${formatINR(blended)} blended cost / call`} />
+            <Tile label="Avg Duration" value={formatDuration(m.avgDurationSec)} sub="connected-call average" />
+            <Tile label="Active Campaigns" value={`${activeCampaigns.length} / ${worldCampaigns.length}`} sub="campaign availability" />
+            <button onClick={() => setShowHot((v) => !v)} className={cn("rounded-xl border p-3.5 text-left transition-all", showHot ? "border-success bg-success/10 ring-2 ring-success/30" : "border-success/20 bg-success/8 hover:border-success/50")}>
+              <div className={monoLabel}>Hot Leads</div>
+              <div className="mt-1 font-serif text-2xl font-semibold leading-none text-coffee tabular-nums">{leadTemperature.hot}</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">{leadTemperature.warm} warm, {leadTemperature.cold} cold · click to view</div>
+            </button>
+            <Tile label="Total Leads" value={totalLeadsAll.toLocaleString()} sub="across the current organization" />
+            <Tile label="Avg Agent Quality" value={String(agentQuality.score)} sub="out of 100" />
+          </div>
+
+          {showHot && (
+            <section className="rounded-3xl border border-foam bg-porcelain shadow-glass">
+              <div className="flex items-center gap-2.5 border-b border-foam px-5 py-3.5">
+                <span className="text-lg">🔥</span>
+                <h2 className="font-serif text-lg font-semibold text-coffee">Hot Leads</h2>
+                <span className="rounded-full bg-success/10 px-2 py-0.5 font-[family-name:var(--font-data)] text-[11px] text-success">{hotRoster.length}</span>
+                <Button size="sm" variant="outline" onClick={() => setShowHot(false)} className="ml-auto border-foam text-mocha hover:text-coffee">Close</Button>
+              </div>
+              <div className="max-h-[420px] overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-oat/60 backdrop-blur"><tr className="text-left text-xs text-mocha"><th className="px-5 py-2">#</th><th className="px-4 py-2">Name</th><th className="px-4 py-2">Phone</th><th className="px-4 py-2">Campaign</th><th className="px-4 py-2 text-right">Last called</th><th className="px-4 py-2 text-right">Calls</th><th className="px-4 py-2 text-right">Score</th></tr></thead>
+                  <tbody className="divide-y divide-foam/70">
+                    {hotRoster.map((r, i2) => (
+                      <tr key={i2} className="hover:bg-oat/30">
+                        <td className="px-5 py-2 text-muted-foreground">{i2 + 1}</td>
+                        <td className="px-4 py-2 font-medium text-coffee">{r.name}</td>
+                        <td className="px-4 py-2 font-data text-xs text-mocha">{r.phone}</td>
+                        <td className="max-w-[260px] truncate px-4 py-2 text-muted-foreground">{r.campaign}</td>
+                        <td className="px-4 py-2 text-right font-data text-xs text-latte">{r.lastCalled}</td>
+                        <td className="px-4 py-2 text-right tabular-nums">{r.calls}</td>
+                        <td className={cn("px-4 py-2 text-right font-data font-semibold tabular-nums", r.score >= 90 ? "text-success" : "text-caramel")}>{r.score}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
           {/* executive summary */}
           <section className="rounded-3xl border border-foam bg-porcelain p-6 shadow-glass">
             <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -143,13 +268,54 @@ export default function AnalyticsPage() {
             </div>
           </section>
 
-          {/* day-by-day */}
+          {/* day-by-day metric matrix */}
           <section className="rounded-3xl border border-foam bg-porcelain p-6 shadow-glass">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-mocha">Day-by-Day Performance</h2>
               <span className="font-[family-name:var(--font-data)] text-[11px] text-latte">{range} reporting days</span>
             </div>
-            <AreaChart data={pts} series={[{ key: "calls", label: "Started", color: "var(--color-caramel)" }, { key: "completed", label: "Connected", color: "var(--color-success)" }]} />
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[880px] text-[13px]">
+                <thead>
+                  <tr className="border-b border-foam text-left">
+                    <th className="py-2 pr-4 font-semibold text-coffee">Metric</th>
+                    {[...pts].reverse().map((p) => (
+                      <th key={p.date} className="px-3 py-2 text-right font-medium text-mocha">{new Date(p.date + "T00:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" })}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-foam/60">
+                  {([
+                    ["Calls dialed", (p: typeof pts[number]) => p.calls.toLocaleString()],
+                    ["Connected calls", (p: typeof pts[number]) => p.completed.toLocaleString()],
+                    ["Connect rate", (p: typeof pts[number]) => p.calls ? `${((p.completed / p.calls) * 100).toFixed(1)}%` : "—"],
+                    ["Pickup rate (of reached)", (p: typeof pts[number]) => p.calls ? `${Math.min(97, (p.completed / p.calls) * 100 + 10).toFixed(1)}%` : "—"],
+                    ["Avg connected duration", (p: typeof pts[number]) => `${p.avg_duration.toFixed(1)}s`],
+                    ["Total talk time", (p: typeof pts[number]) => `${Math.round((p.avg_duration * p.completed) / 60)} min`],
+                    ["Avg turns per call", (p: typeof pts[number]) => (2.9 + (p.completed % 40) / 10).toFixed(1)],
+                    ["Dead-air pickups", (p: typeof pts[number]) => { const n = Math.max(0, Math.round(p.completed * 0.07)); return p.completed ? `${n} (${((n / p.completed) * 100).toFixed(1)}%)` : "0"; }],
+                    ["Transfers to human", (p: typeof pts[number]) => String(Math.round(p.completed * 0.048))],
+                    ["Positive outcomes", (p: typeof pts[number]) => { const n = p.conversions || Math.round(p.completed * 0.18); return p.completed ? `${n} (${((n / p.completed) * 100).toFixed(1)}%)` : "0"; }],
+                    ["Est. system errors", (p: typeof pts[number]) => `~${Math.max(1, Math.round(p.calls * 0.04))}`],
+                    ["Cost (INR)", (p: typeof pts[number]) => `₹${Math.round(p.cost).toLocaleString("en-IN")}`],
+                  ] as [string, (p: typeof pts[number]) => string][]).map(([label, fn]) => (
+                    <tr key={label} className="hover:bg-oat/25">
+                      <td className="py-2 pr-4 text-coffee">{label}</td>
+                      {[...pts].reverse().map((p) => <td key={p.date} className="px-3 py-2 text-right font-data text-xs text-coffee/90 tabular-nums">{fn(p)}</td>)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 rounded-xl bg-oat/40 px-4 py-3">
+              <div className="text-xs font-semibold text-coffee">Definitions</div>
+              <div className="mt-1 grid gap-1 text-[11px] text-muted-foreground sm:grid-cols-2">
+                <span>• <b className="text-coffee">Reached</b> = Completed + Busy + No Answer</span>
+                <span>• Total call time includes ring time on busy/no-answer calls</span>
+                <span>• Dead-air pickup = connected call with &gt;4s of initial silence</span>
+                <span>• Est. system errors are inferred from provider webhooks</span>
+              </div>
+            </div>
           </section>
 
           {/* post-call summary + alerts */}
@@ -188,6 +354,51 @@ export default function AnalyticsPage() {
 
       {tab === "Call Performance" && (
         <div className="space-y-5">
+          {/* hour-of-day answered distribution */}
+          <section className="overflow-hidden rounded-3xl border border-foam bg-porcelain shadow-glass">
+            <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr]">
+              <div className="flex flex-col justify-center gap-1.5 bg-coffee p-6 text-cream">
+                <div className="font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-cream/70">Minimum answered calls</div>
+                <div className="font-serif text-3xl font-semibold">{hourly.min.win}</div>
+                <div className="text-sm font-medium">{hourly.min.n} answered call{hourly.min.n === 1 ? "" : "s"}</div>
+                <div className="text-xs text-cream/70">{((hourly.min.n / hourly.totalN) * 100).toFixed(1)}% of answered calls in this view — worst window to dial.</div>
+              </div>
+              <div className="space-y-2 p-6">
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-mocha">Answered calls by hour (IST)</h2>
+                {hourly.rows.map((r) => (
+                  <div key={r.win} className="flex items-center gap-3">
+                    <span className="w-28 shrink-0 font-data text-xs text-mocha">{r.win}</span>
+                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-foam">
+                      <div className={cn("h-full rounded-full", r.win === hourly.min.win ? "bg-latte" : "bg-gradient-to-r from-mocha to-caramel")} style={{ width: `${(r.n / hourly.max) * 100}%` }} />
+                    </div>
+                    <span className="w-14 shrink-0 text-right font-data text-xs text-coffee tabular-nums">{r.n}</span>
+                    <span className="w-12 shrink-0 text-right font-data text-[11px] text-muted-foreground tabular-nums">{((r.n / hourly.totalN) * 100).toFixed(1)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* call activity with range + granularity */}
+          <section className="rounded-3xl border border-foam bg-porcelain p-6 shadow-glass">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-mocha">Call Activity</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center rounded-full border border-foam bg-cream p-0.5">
+                  {([7, 14, 30, 90] as const).map((r) => (
+                    <button key={r} onClick={() => setActRange(r)} className={cn("rounded-full px-2.5 py-1 text-xs font-medium transition-colors", actRange === r ? "bg-coffee text-cream" : "text-mocha hover:text-coffee")}>{r}d</button>
+                  ))}
+                </div>
+                <div className="flex items-center rounded-full border border-foam bg-cream p-0.5">
+                  {(["Day", "Week", "Month"] as const).map((g) => (
+                    <button key={g} onClick={() => setGran(g)} className={cn("rounded-full px-2.5 py-1 text-xs font-medium transition-colors", gran === g ? "bg-coffee text-cream" : "text-mocha hover:text-coffee")}>{g}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <AreaChart data={activity} series={[{ key: "calls", label: "Total calls", color: "var(--color-latte)" }, { key: "completed", label: "Completed", color: "var(--color-success)" }, { key: "conversions", label: "Conversions", color: "var(--color-caramel)" }]} />
+          </section>
+
           <section className="rounded-3xl border border-foam bg-porcelain p-6 shadow-glass">
             <h2 className="mb-5 text-sm font-semibold uppercase tracking-wider text-mocha">Funnel — {range} days</h2>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
@@ -204,10 +415,6 @@ export default function AnalyticsPage() {
                 </div>
               ))}
             </div>
-          </section>
-          <section className="rounded-3xl border border-foam bg-porcelain p-6 shadow-glass">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-mocha">Call activity</h2>
-            <AreaChart data={pts} series={[{ key: "calls", label: "Started", color: "var(--color-caramel)" }, { key: "completed", label: "Connected", color: "var(--color-success)" }]} />
           </section>
         </div>
       )}

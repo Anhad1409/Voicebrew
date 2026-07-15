@@ -1,54 +1,133 @@
 "use client";
 
+/* Admin Console — platform-level management for Blostem staff.
+   Org switching, platform KPIs, and entry points into admin tooling. */
+
 import { useState } from "react";
-import { Building2, Users, Percent, IndianRupee } from "lucide-react";
-import { PageHeader } from "@/components/ui-bits/page-header";
-import { StatCard } from "@/components/ui-bits/stat-card";
+import Link from "next/link";
+import { Shield, Check, Building2, Users, Megaphone, ShieldCheck, ArrowRight, SlidersHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "@/components/notifications/toaster";
 import { cn } from "@/lib/utils";
-import { formatINR } from "@/lib/format";
 
-const orgs = [
-  { name: "Blostem Bank (demo)", plan: "Growth", channels: 10, status: "active" },
-  { name: "Indus Capital", plan: "Scale", channels: 24, status: "active" },
-  { name: "Kashi Finserv", plan: "Starter", channels: 4, status: "trial" },
+const monoLabel = "font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-mocha";
+
+const ORGS = [
+  "Blostem Demo Organization",
+  "Demo Organization",
+  "Fintechglow Capital Consultancy Pvt Ltd",
+  "MoneyBuddha",
+  "Smoke Test Org",
+  "test-vision",
+  "Voice Harness Sandbox",
 ];
-const flags = [
-  ["Minute-balance billing", "Per-minute wallet model", true],
-  ["AI Learning Engine", "Auto-suggested improvements", true],
-  ["Learning Lab experiments", "A/B sweeps", false],
-  ["Custom HTTP integrations", "Outbound webhooks", true],
+
+const KPIS = [
+  { icon: Building2, label: "Total Organizations", value: "7", sub: "partner + internal" },
+  { icon: Users, label: "Total Users", value: "23", sub: "across all organizations" },
+  { icon: Megaphone, label: "Active Campaigns", value: "2", sub: "running right now" },
+  { icon: ShieldCheck, label: "Blostem Staff", value: "4", sub: "super_admin + blostem_admin" },
 ];
 
 export default function AdminPage() {
-  const [f, setF] = useState(() => flags.map(([, , on]) => on as boolean));
+  const [active, setActive] = useState("Demo Organization");
+
+  const switchOrg = (org: string) => {
+    if (org === active) return;
+    setActive(org);
+    toast({ title: `Switched to ${org}`, body: "Dashboards now scope to this organization.", severity: "success" });
+  };
+
   return (
     <div className="mx-auto max-w-7xl">
-      <PageHeader title="Admin" subtitle="Platform administration — orgs, provisioning & feature flags" />
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Organizations" value="3" icon={Building2} sub="2 active · 1 trial" />
-        <StatCard label="Active users" value="28" icon={Users} sub="last 30 days" />
-        <StatCard label="Blended margin" value="64%" icon={Percent} sub="across plans" />
-        <StatCard label="MRR" value={formatINR(412000)} icon={IndianRupee} sub="recurring" />
+      <h1 className="flex items-center gap-2.5 font-serif text-3xl font-semibold tracking-tight text-coffee">
+        <Shield className="size-6 text-caramel" /> Admin Console
+      </h1>
+      <p className="mt-1.5 text-sm text-muted-foreground">Platform-level management for Blostem staff only.</p>
+
+      {/* ---- switch organization ---- */}
+      <section className="mt-5 rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="font-serif text-lg font-semibold text-coffee">Switch Organization</h2>
+          <p className="text-sm text-muted-foreground">
+            Currently viewing: <span className="font-medium text-coffee">{active}</span>
+          </p>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+          {ORGS.map((org) => {
+            const isActive = org === active;
+            return (
+              <button key={org} onClick={() => switchOrg(org)}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl border p-3 text-left transition-all",
+                  isActive
+                    ? "border-caramel bg-cream/70 shadow-cta"
+                    : "border-foam bg-card hover:border-latte hover:bg-cream/40",
+                )}>
+                <span className="grid size-9 shrink-0 place-items-center rounded-full font-serif text-[14px] font-semibold text-porcelain shadow-glass"
+                  style={{ background: "linear-gradient(135deg, #c9a87c, #b8763d)" }}>
+                  {org[0].toUpperCase()}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-coffee">{org}</span>
+                {isActive && <Check className="size-4 shrink-0 text-caramel" />}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ---- platform KPIs ---- */}
+      <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {KPIS.map((k) => (
+          <div key={k.label} className="rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
+            <div className="flex items-center gap-2"><k.icon className="size-4 text-caramel" /><span className={monoLabel}>{k.label}</span></div>
+            <div className="mt-2 font-serif text-[26px] font-semibold leading-none text-coffee tabular-nums">{k.value}</div>
+            <div className="mt-1.5 text-[11px] text-muted-foreground">{k.sub}</div>
+          </div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
-        <div className="overflow-hidden rounded-2xl border border-foam bg-porcelain shadow-glass">
-          <div className="px-5 py-3 text-sm font-semibold text-coffee">Organizations</div>
-          <table className="w-full text-sm">
-            <thead><tr className="bg-oat/40 text-left text-xs text-mocha"><th className="px-5 py-2.5">Org</th><th className="px-4 py-2.5">Plan</th><th className="px-4 py-2.5">Channels</th><th className="px-4 py-2.5">Status</th></tr></thead>
-            <tbody className="divide-y divide-foam">{orgs.map((o) => <tr key={o.name}><td className="px-5 py-2.5 font-medium text-coffee">{o.name}</td><td className="px-4 py-2.5 text-muted-foreground">{o.plan}</td><td className="px-4 py-2.5 font-data text-coffee">{o.channels}</td><td className="px-4 py-2.5"><span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", o.status === "active" ? "bg-success/12 text-success" : "bg-warning/12 text-warning")}>{o.status}</span></td></tr>)}</tbody>
-          </table>
+      {/* ---- admin tooling ---- */}
+      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="flex flex-col rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
+          <div className="flex items-center gap-2">
+            <Building2 className="size-4 text-caramel" />
+            <h2 className="font-serif text-lg font-semibold text-coffee">Organizations</h2>
+          </div>
+          <p className="mt-1.5 flex-1 text-sm text-muted-foreground">Create and manage partner organizations.</p>
+          <div className="mt-4">
+            <Button variant="outline" className="border-foam text-mocha hover:text-coffee"
+              onClick={() => toast({ title: "Organizations", body: `Showing all ${ORGS.length} organizations on the platform.`, severity: "info" })}>
+              View All <ArrowRight className="size-4" />
+            </Button>
+          </div>
         </div>
-        <div className="rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
-          <div className="mb-3 text-sm font-semibold text-coffee">Feature flags</div>
-          <div className="space-y-2">
-            {flags.map(([t, d], i) => (
-              <button key={t as string} onClick={() => { setF((p) => p.map((v, j) => (j === i ? !v : v))); toast({ title: t as string, body: f[i] ? "Disabled" : "Enabled", severity: "info" }); }} className="flex w-full items-center justify-between rounded-xl border border-foam bg-card p-3 text-left">
-                <div><div className="text-sm font-medium text-coffee">{t}</div><div className="text-xs text-muted-foreground">{d}</div></div>
-                <span className={cn("relative h-5 w-9 rounded-full transition-colors", f[i] ? "bg-success" : "bg-foam")}><span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-all", f[i] ? "left-[18px]" : "left-0.5")} /></span>
-              </button>
-            ))}
+
+        <div className="flex flex-col rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
+          <div className="flex items-center gap-2">
+            <Users className="size-4 text-caramel" />
+            <h2 className="font-serif text-lg font-semibold text-coffee">Blostem Users</h2>
+          </div>
+          <p className="mt-1.5 flex-1 text-sm text-muted-foreground">Manage super_admin and blostem_admin accounts.</p>
+          <div className="mt-4">
+            <Button variant="outline" className="border-foam text-mocha hover:text-coffee"
+              onClick={() => toast({ title: "Blostem Users", body: "Showing all 4 staff accounts — 2 super_admin, 2 blostem_admin.", severity: "info" })}>
+              View All <ArrowRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="size-4 text-caramel" />
+            <h2 className="font-serif text-lg font-semibold text-coffee">Feature Management</h2>
+          </div>
+          <p className="mt-1.5 flex-1 text-sm text-muted-foreground">Enable or disable dashboard features per organization.</p>
+          <div className="mt-4">
+            <Link href="/admin/features"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-brand px-2.5 text-sm font-medium text-brand-foreground shadow-cta transition-all hover:bg-brand-dark">
+              Manage <ArrowRight className="size-4" />
+            </Link>
           </div>
         </div>
       </div>

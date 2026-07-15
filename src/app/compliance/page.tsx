@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { ShieldCheck, PhoneOff, FileCheck2, Clock, EyeOff, Download, Search } from "lucide-react";
+import { Fragment, useState } from "react";
+import { ShieldCheck, PhoneOff, FileCheck2, Clock, EyeOff, Download, Search, ChevronDown } from "lucide-react";
 import { PageHeader } from "@/components/ui-bits/page-header";
 import { StatCard } from "@/components/ui-bits/stat-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Chip } from "@/components/v7/kit";
 import { toast } from "@/components/notifications/toaster";
 import { cn } from "@/lib/utils";
 
@@ -28,8 +29,50 @@ const audit = [
   { who: "Rohan Verma", what: "Exported consent report (Q2)", at: "18 Jun 10:30" },
 ];
 
+/* ---------- compliance audit log: every pre-dial check, pass or fail ---------- */
+
+const CHECK_TYPES = ["Consent", "Retry cooldown", "Call frequency", "Calling hours", "DND registry"] as const;
+const RESULTS = ["All", "pass", "fail"] as const;
+
+type PreDialCheck = {
+  id: number;
+  type: (typeof CHECK_TYPES)[number];
+  result: "pass" | "fail";
+  details: Record<string, unknown>;
+  at: string;
+};
+
+const preDialChecks: PreDialCheck[] = [
+  { id: 1, type: "Call frequency", result: "pass", details: { phone: "+919329385312", calls_today: 0, max_per_day: 3, calls_this_week: 2, max_per_week: 10 }, at: "14 Jul 2026, 04:20 pm" },
+  { id: 2, type: "Consent", result: "pass", details: { phone: "+919329385312", consent_id: "cns_8f21a4", channel: "web_form", captured_at: "2026-07-02T11:14:09Z", status: "active" }, at: "14 Jul 2026, 04:19 pm" },
+  { id: 3, type: "DND registry", result: "pass", details: { phone: "+919812078245", dnd_registered: false, registry: "TRAI_NCPR", last_synced: "2026-07-14T06:00:12Z", category: null }, at: "14 Jul 2026, 03:47 pm" },
+  { id: 4, type: "Consent", result: "fail", details: { phone: "+919812078245", consent_id: null, channel: null, status: "missing", reason: "no_active_consent_on_record" }, at: "14 Jul 2026, 03:46 pm" },
+  { id: 5, type: "Calling hours", result: "pass", details: { phone: "+919876504410", local_time: "14:55", window_start: "09:00", window_end: "21:00", timezone: "Asia/Kolkata", within_window: true }, at: "14 Jul 2026, 02:55 pm" },
+  { id: 6, type: "Retry cooldown", result: "fail", details: { phone: "+919090412276", last_attempt: "2026-07-14T11:05:00+05:30", cooldown_minutes: 240, elapsed_minutes: 96, ok: false }, at: "14 Jul 2026, 12:41 pm" },
+  { id: 7, type: "Call frequency", result: "fail", details: { phone: "+919090412276", calls_today: 3, max_per_day: 3, calls_this_week: 7, max_per_week: 10 }, at: "14 Jul 2026, 12:40 pm" },
+  { id: 8, type: "DND registry", result: "fail", details: { phone: "+919876504410", dnd_registered: true, registry: "TRAI_NCPR", last_synced: "2026-07-14T06:00:12Z", category: "fully_blocked" }, at: "14 Jul 2026, 11:26 am" },
+  { id: 9, type: "Consent", result: "pass", details: { phone: "+919090412276", consent_id: "cns_2d9c77", channel: "ivr_optin", captured_at: "2026-06-19T08:40:31Z", status: "active" }, at: "14 Jul 2026, 10:09 am" },
+  { id: 10, type: "Retry cooldown", result: "pass", details: { phone: "+919329385312", last_attempt: "2026-07-13T18:58:00+05:30", cooldown_minutes: 240, elapsed_minutes: 872, ok: true }, at: "14 Jul 2026, 09:30 am" },
+  { id: 11, type: "Calling hours", result: "fail", details: { phone: "+919812078245", local_time: "21:12", window_start: "09:00", window_end: "21:00", timezone: "Asia/Kolkata", within_window: false }, at: "13 Jul 2026, 09:12 pm" },
+  { id: 12, type: "Call frequency", result: "pass", details: { phone: "+919876504410", calls_today: 1, max_per_day: 3, calls_this_week: 4, max_per_week: 10 }, at: "13 Jul 2026, 06:58 pm" },
+  { id: 13, type: "Consent", result: "fail", details: { phone: "+919876504410", consent_id: null, channel: null, status: "expired", reason: "consent_expired_2026-06-30" }, at: "13 Jul 2026, 05:12 pm" },
+  { id: 14, type: "DND registry", result: "pass", details: { phone: "+919329385312", dnd_registered: false, registry: "TRAI_NCPR", last_synced: "2026-07-13T06:00:04Z", category: null }, at: "13 Jul 2026, 02:40 pm" },
+  { id: 15, type: "Calling hours", result: "pass", details: { phone: "+919090412276", local_time: "11:03", window_start: "09:00", window_end: "21:00", timezone: "Asia/Kolkata", within_window: true }, at: "13 Jul 2026, 11:03 am" },
+  { id: 16, type: "Retry cooldown", result: "pass", details: { phone: "+919812078245", last_attempt: "2026-07-12T16:20:00+05:30", cooldown_minutes: 240, elapsed_minutes: 1010, ok: true }, at: "13 Jul 2026, 09:10 am" },
+];
+
+const monoTh = "px-4 py-2.5 text-left font-[family-name:var(--font-data)] text-[10px] font-medium uppercase tracking-[0.14em] text-mocha";
+
 export default function CompliancePage() {
   const [tab, setTab] = useState(TABS[0]);
+  const [checkFilter, setCheckFilter] = useState<string>("All");
+  const [resultFilter, setResultFilter] = useState<string>("All");
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  const filteredChecks = preDialChecks.filter(
+    (c) => (checkFilter === "All" || c.type === checkFilter) && (resultFilter === "All" || c.result === resultFilter),
+  );
+
   return (
     <div className="mx-auto max-w-7xl">
       <PageHeader title="Compliance" subtitle="DNC, consent, calling-window & audit trail"
@@ -83,6 +126,86 @@ export default function CompliancePage() {
           <ul className="divide-y divide-foam">{audit.map((a, i) => <li key={i} className="flex items-center gap-3 px-5 py-3"><span className="flex size-8 items-center justify-center rounded-full bg-secondary text-mocha"><FileCheck2 className="size-4" /></span><div className="flex-1"><div className="text-sm text-coffee">{a.what}</div><div className="text-[11px] text-muted-foreground">{a.who}</div></div><span className="text-xs text-muted-foreground">{a.at}</span></li>)}</ul>
         </div>
       )}
+
+      <section className="mt-8 overflow-hidden rounded-2xl border border-foam bg-porcelain shadow-glass">
+        <div className="border-b border-foam p-5">
+          <h2 className="font-serif text-lg font-semibold text-coffee">Compliance Audit Log</h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">Every pre-dial check the platform ran, pass or fail.</p>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {["All", ...CHECK_TYPES].map((t) => (
+              <Chip key={t} active={checkFilter === t} onClick={() => { setCheckFilter(t); setExpandedId(null); }}>{t}</Chip>
+            ))}
+            <select
+              value={resultFilter}
+              onChange={(e) => { setResultFilter(e.target.value); setExpandedId(null); }}
+              aria-label="Filter by result"
+              className="ml-auto h-8 rounded-full border border-foam bg-porcelain px-3 text-[12px] text-coffee shadow-glass outline-none focus:border-caramel"
+            >
+              {RESULTS.map((r) => <option key={r} value={r}>{r === "All" ? "All results" : r}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-oat/40">
+                <th className={monoTh}>Check type</th>
+                <th className={monoTh}>Result</th>
+                <th className={monoTh}>Details</th>
+                <th className={cn(monoTh, "text-right")}>Checked at</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredChecks.map((c) => {
+                const open = expandedId === c.id;
+                return (
+                  <Fragment key={c.id}>
+                    <tr
+                      onClick={() => setExpandedId(open ? null : c.id)}
+                      aria-expanded={open}
+                      className={cn("cursor-pointer border-t border-foam transition-colors hover:bg-oat/30", open && "bg-oat/20")}
+                    >
+                      <td className="whitespace-nowrap px-4 py-2.5 font-medium text-coffee">{c.type}</td>
+                      <td className="whitespace-nowrap px-4 py-2.5">
+                        <span className={cn(
+                          "inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium leading-none",
+                          c.result === "pass" ? "border-success/30 bg-success/12 text-success" : "border-danger/30 bg-danger/10 text-danger",
+                        )}>{c.result}</span>
+                      </td>
+                      <td className="w-full max-w-0 px-4 py-2.5">
+                        <span className="block truncate font-data text-xs text-mocha">{JSON.stringify(c.details)}</span>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-2.5 text-right text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1.5">
+                          {c.at}
+                          <ChevronDown className={cn("size-3.5 text-latte transition-transform", open && "rotate-180")} />
+                        </span>
+                      </td>
+                    </tr>
+                    {open && (
+                      <tr>
+                        <td colSpan={4} className="px-4 pb-4 pt-0">
+                          <pre className="overflow-x-auto rounded-xl bg-oat/40 p-4 font-data text-[11px] leading-relaxed text-coffee">{JSON.stringify(c.details, null, 2)}</pre>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
+              {filteredChecks.length === 0 && (
+                <tr className="border-t border-foam">
+                  <td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">No checks match the current filters.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="border-t border-foam bg-cream/60 px-5 py-3 text-xs text-muted-foreground">
+          Checks run automatically before every dial — failures block the call and are logged here.
+        </div>
+      </section>
     </div>
   );
 }
