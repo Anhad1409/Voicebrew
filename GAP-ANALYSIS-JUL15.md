@@ -69,6 +69,6 @@
 - [x] Mapping + gap doc (this file)
 - [x] Broken-route audit of our app (see commit)
 - [x] Tranche 1: campaigns list columns/search/sort · calls caller-ID + relative time
-- [ ] Tranche 2: campaign detail (test mode, import summary, eligibility) + wizard scoring/outcomes/voice-AI
+- [x] Tranche 2: campaign detail (Clone/Complete · Test Mode · warnings banner · Import Summary + schema CSV template · Call Eligibility · real lead upload) + wizard (name autocomplete · custom in-call adjustments · Add-outcome modal with counts-as/auto-code/end-call · Voice & AI step · Upload Leads moved last · 11-step tour)
 - [ ] Tranche 3: analytics workspace + settings hub
 - [ ] Tranche 4: learning / testing / sequences / admin / channels

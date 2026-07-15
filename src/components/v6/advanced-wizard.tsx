@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import {
   Check, ChevronLeft, ChevronRight, Info, Save, Plus, Trash2, Lock, AlertTriangle,
   ListChecks, Users2, Target, GitBranch, Phone, BookOpen, Sparkles, ChevronDown, Braces, Wrench,
-  CalendarClock, ShieldAlert, Coffee, Bell, Calendar, UploadCloud,
+  CalendarClock, ShieldAlert, Coffee, Bell, Calendar, UploadCloud, Bot, Play, X,
 } from "lucide-react";
 import { LeadUpload, type LeadUploadInfo } from "@/components/campaigns/lead-upload";
+import { worldCampaigns } from "@/lib/derived";
 import { PageHeader } from "@/components/ui-bits/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,15 +27,30 @@ const inputCls = "w-full rounded-lg border border-foam bg-card px-3 py-2 text-sm
 const STEPS = [
   { key: "basic", label: "Basics", icon: Info, sub: "Name, agent & calling rules" },
   { key: "schema", label: "Lead Schema", icon: ListChecks, sub: "The columns each lead carries" },
-  { key: "leads", label: "Upload Leads", icon: UploadCloud, sub: "CSV, paste, or add later" },
   { key: "customer", label: "Customer Data", icon: Users2, sub: "What to collect on the call" },
   { key: "scoring", label: "Scoring", icon: Target, sub: "How leads are ranked" },
   { key: "flow", label: "Conversation", icon: GitBranch, sub: "What the agent says" },
+  { key: "voiceai", label: "Voice & AI", icon: Bot, sub: "Transcriber, LLM & speaking voice" },
   { key: "phone", label: "Phone & Outcomes", icon: Phone, sub: "Number, transfer & dispositions" },
   { key: "skills", label: "Agent Skills", icon: Wrench, sub: "Real-time tools the agent can use" },
   { key: "schedule", label: "Schedule", icon: CalendarClock, sub: "When it runs", badge: "new" },
   { key: "pauses", label: "Smart pauses", icon: ShieldAlert, sub: "Quiet hours & auto-pause", badge: "new" },
+  { key: "leads", label: "Upload Leads", icon: UploadCloud, sub: "CSV, paste, or add later" },
 ];
+
+// Voice & AI option sets (org defaults first, matching the provider stack)
+const LLM_OPTS = ["Use org default — Groq · Llama-3.3-70B", "Google · Gemini 2.5 Flash", "OpenAI · GPT-4o-mini"];
+const TTS_OPTS = ["Use org default — Cartesia · Sonic-3", "Sarvam · Bulbul v3", "ElevenLabs · Multilingual v2"];
+const VOICE_OPTS = ["Default voice", "Aria (warm, f)", "Meera (crisp, f)", "Kabir (calm, m)"];
+const PRESETS = ["No preset — use the settings below", "Crisp collections", "Warm sales", "Patient support"];
+const COUNTS_AS = ["Committed", "Positive", "Neutral", "Negative"];
+const countsTone: Record<string, string> = {
+  Committed: "border-success/30 bg-success/10 text-success",
+  Positive: "border-info/30 bg-info/10 text-info",
+  Neutral: "border-foam bg-oat/60 text-mocha",
+  Negative: "border-danger/30 bg-danger/10 text-danger",
+};
+const slugify = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "outcome";
 
 // real hover tooltip (not a native title=) — shows the explanation on hover/focus
 function Tip({ t }: { t: string }) {
@@ -92,6 +108,27 @@ export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
   const [warmT, setWarmT] = useState(scoreBands.warm);
   const [hotT, setHotT] = useState(scoreBands.hot);
   const [leadInfo, setLeadInfo] = useState<LeadUploadInfo>({ state: "empty", fileName: "", total: 0, valid: 0, invalid: 0 });
+  // custom in-call adjustments + custom outcomes (built-ins stay locked)
+  const [customSignals, setCustomSignals] = useState<{ label: string; delta: number }[]>([]);
+  const [outcomes, setOutcomes] = useState<{ name: string; code: string; countsAs: string; desc: string; endCall: boolean }[]>([]);
+  const [outcomeOpen, setOutcomeOpen] = useState(false);
+  const [oName, setOName] = useState(""); const [oCounts, setOCounts] = useState(COUNTS_AS[0]);
+  const [oDesc, setODesc] = useState(""); const [oEnd, setOEnd] = useState(false);
+  // voice & AI
+  const [llm, setLlm] = useState(LLM_OPTS[0]);
+  const [tts, setTts] = useState(TTS_OPTS[0]);
+  const [voice, setVoice] = useState(VOICE_OPTS[0]);
+  const [preset, setPreset] = useState(PRESETS[0]);
+  const [speed, setSpeed] = useState(1.2);
+  const [temp, setTemp] = useState(0.7);
+  const [transcriber, setTranscriber] = useState("Hindi");
+
+  const addOutcome = () => {
+    if (!oName.trim()) return;
+    setOutcomes((o) => [...o, { name: oName.trim(), code: slugify(oName), countsAs: oCounts, desc: oDesc.trim(), endCall: oEnd }]);
+    setOutcomeOpen(false); setOName(""); setOCounts(COUNTS_AS[0]); setODesc(""); setOEnd(false);
+    toast({ title: "Outcome added", body: `“${oName.trim()}” counts as ${oCounts}.`, severity: "success" });
+  };
   const [prompt, setPrompt] = useState("You are {agent_name} from {company}. Greet warmly, confirm the right person, state the benefit in one line, handle objections, and capture intent. Respect Do-Not-Call.");
   const [objs, setObjs] = useState<{ o: string; r: string }[]>([{ o: "not available right now", r: "what would be a good time to call you back?" }]);
   const [transferOn, setTransferOn] = useState(false);
@@ -146,6 +183,8 @@ export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
     { k: "Customer data", v: cdata.length ? `${cdata.length} field${cdata.length > 1 ? "s" : ""}` : "none", done: cdata.length > 0 },
     { k: "Scoring", v: `${warmT} / ${hotT}`, done: true },
     { k: "Objection handlers", v: `${objs.length}`, done: objs.length > 0 },
+    { k: "Voice & AI", v: preset === PRESETS[0] ? `${speed.toFixed(1)}× · t${temp.toFixed(1)}` : preset, done: true },
+    { k: "Custom outcomes", v: outcomes.length ? `${outcomes.length}` : "built-ins only", done: outcomes.length > 0 },
     { k: "Transfer", v: transferOn ? "On" : "Off", done: true },
     { k: "Agent skills", v: `${skills.filter((s) => s.on).length} on`, done: true },
     { k: "Schedule", v: schedLine, done: true },
@@ -157,19 +196,20 @@ export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
   // wizard to the matching page (via `before`) so the tour shows real content,
   // not just an overview. Triggered by the "Show me how" button (start-tour).
   const advTour: TourStep[] = [
-    { sel: '[data-tour="adv-steps"]', title: "Ten steps, one campaign", body: `${STEPS.map((s) => s.label).join(" · ")}. Green = done — jump to any step from this rail anytime, and hover any ⓘ for help as you go.`, before: () => setStep(0) },
+    { sel: '[data-tour="adv-steps"]', title: "Eleven steps, one campaign", body: `${STEPS.map((s) => s.label).join(" · ")}. Green = done — jump to any step from this rail anytime, and hover any ⓘ for help as you go.`, before: () => setStep(0) },
     { sel: '[data-tour="adv-form"]', title: "1 · Basics", body: "Name the campaign and its agent — the only required fields to advance. Language, greeting, calling rules and limits live here too.", before: () => setStep(0) },
     { sel: '[data-tour="adv-form"]', title: "2 · Lead Schema", body: "The columns each lead carries. Phone, Full Name and Email are automatic — add extras like monthly_income. One extra field unlocks Next.", before: () => setStep(1) },
-    { sel: '[data-tour="adv-form"]', title: "3 · Upload Leads", body: "Drop the CSV this campaign will dial — columns map to your schema by name, invalid phones are flagged before import. Optional: add leads later instead.", before: () => setStep(2) },
-    { sel: '[data-tour="adv-form"]', title: "4 · Customer Data", body: "Extra details the agent collects live on the call. Auto-prefixed ld_enrich_ and stored per call — needs the Customer Data skill on.", before: () => setStep(3) },
-    { sel: '[data-tour="adv-form"]', title: "5 · Scoring", body: "Set where Cold becomes Warm becomes Hot, weight your scoring fields, and review the locked in-call adjustments.", before: () => setStep(4) },
-    { sel: '[data-tour="adv-form"]', title: "6 · Conversation", body: "What the agent says — system prompt, greeting, the {variables} it can use, and your objection handlers.", before: () => setStep(5) },
-    { sel: '[data-tour="adv-form"]', title: "7 · Phone & Outcomes", body: "Pick the outbound number, switch on human transfer, and review the call dispositions the agent records.", before: () => setStep(6) },
+    { sel: '[data-tour="adv-form"]', title: "3 · Customer Data", body: "Extra details the agent collects live on the call. Auto-prefixed ld_enrich_ and stored per call — needs the Customer Data skill on.", before: () => setStep(2) },
+    { sel: '[data-tour="adv-form"]', title: "4 · Scoring", body: "Set where Cold becomes Warm becomes Hot, weight your scoring fields, review the locked in-call signals — and add your own custom adjustments.", before: () => setStep(3) },
+    { sel: '[data-tour="adv-form"]', title: "5 · Conversation", body: "What the agent says — system prompt, greeting, the {variables} it can use, and your objection handlers.", before: () => setStep(4) },
+    { sel: '[data-tour="adv-form"]', title: "6 · Voice & AI", body: "Transcriber language, the LLM brain, the speaking voice with preview, and call-behaviour presets with fine-tuning.", before: () => setStep(5) },
+    { sel: '[data-tour="adv-form"]', title: "7 · Phone & Outcomes", body: "Pick the outbound number, switch on human transfer, and define custom outcomes — each counts as a result that drives colour and follow-up.", before: () => setStep(6) },
     { sel: '[data-tour="adv-form"]', title: "8 · Agent Skills", body: "Real-time tools the agent can invoke mid-call. Core skills stay on; toggle the optional ones per campaign.", before: () => setStep(7) },
     { sel: '[data-tour="adv-form"]', title: "9 · Schedule", body: "Start now or pick a date, then choose the days and calling window — calls only ever dial inside it.", before: () => setStep(8) },
     { sel: '[data-tour="adv-form"]', title: "10 · Smart pauses", body: "Auto-pause during quiet hours, and let VoiceBrew step in if many customers report the same blocker.", before: () => setStep(9) },
-    { sel: '[data-tour="adv-next"]', title: "Save or create", body: "Save as Draft on any step — drafts live for 5 days. When every step looks good, Create Campaign here or from the summary panel.", before: () => setStep(9) },
-    { sel: '[data-tour="adv-summary"]', title: "Live summary", body: "This panel updates as you build and tracks your progress. Create the campaign from here anytime.", before: () => setStep(9) },
+    { sel: '[data-tour="adv-form"]', title: "11 · Upload Leads", body: "Last step: drop the CSV this campaign will dial — columns map to your schema by name, invalid phones are flagged before import. Or add leads later.", before: () => setStep(10) },
+    { sel: '[data-tour="adv-next"]', title: "Save or create", body: "Save as Draft on any step — drafts live for 5 days. When every step looks good, Create Campaign here or from the summary panel.", before: () => setStep(10) },
+    { sel: '[data-tour="adv-summary"]', title: "Live summary", body: "This panel updates as you build and tracks your progress. Create the campaign from here anytime.", before: () => setStep(10) },
   ];
 
   return (
@@ -208,7 +248,7 @@ export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
           {cur.key === "basic" && (
             <div className="space-y-6">
               <Group title="Identity" help="The campaign's name, who the AI says it is, and the language it speaks. Name and Agent are required; everything else inherits org defaults.">
-                <div className="space-y-1.5"><Lbl req tip="Naming convention: Product - Segment - Quarter. Appears in reports and the calls list.">Campaign Name</Lbl><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Home Loan — Salaried — Q1" className={inputCls} />{tried && !name.trim() && <p className="text-xs text-danger">Campaign name is required</p>}</div>
+                <div className="space-y-1.5"><Lbl req tip="Naming convention: Product - Segment - Quarter. Appears in reports and the calls list. Start typing for recent names.">Campaign Name</Lbl><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Home Loan — Salaried — Q1" list="vb-campaign-names" className={inputCls} /><datalist id="vb-campaign-names">{worldCampaigns.map((w) => <option key={w.id} value={w.name} />)}</datalist>{tried && !name.trim() && <p className="text-xs text-danger">Campaign name is required</p>}</div>
                 <div className="space-y-1.5"><Lbl tip="Internal note — never spoken on the call. Helps your team know what this campaign is for.">Description</Lbl><textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Brief description of the campaign" className={inputCls + " h-16 resize-none"} /></div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5"><Lbl req tip="The name the AI introduces itself with.">Agent Name</Lbl><Input value={agent} onChange={(e) => setAgent(e.target.value)} placeholder="e.g. Anjali" className={inputCls} />{tried && !agent.trim() && <p className="text-xs text-danger">Agent name is required</p>}</div>
@@ -317,7 +357,14 @@ export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
                 <div className="space-y-1.5">{inCallSignals.map((s) => (
                   <div key={s.key} className="flex items-center justify-between rounded-lg border border-foam bg-card px-3 py-1.5 text-sm"><span className="flex items-center gap-1.5 text-coffee"><Lock className="size-3 text-muted-foreground" /> {s.label}</span><span className={cn("font-data", s.delta >= 0 ? "text-success" : "text-danger")}>{s.delta > 0 ? "+" : ""}{s.delta}</span></div>
                 ))}</div>
-                <button onClick={() => toast({ title: "Add adjustment", body: "Define a custom in-call signal and its score delta.", severity: "info" })} className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-latte px-3 py-1.5 text-sm text-mocha transition-colors hover:border-caramel"><Plus className="size-4" /> Add custom adjustment</button>
+                {customSignals.map((s, i) => (
+                  <div key={i} className="flex items-center gap-2 rounded-lg border border-caramel/30 bg-card px-3 py-1.5">
+                    <Input value={s.label} placeholder="e.g. asked_for_whatsapp" onChange={(e) => setCustomSignals((c) => c.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} className={inputCls + " flex-1 font-data text-xs"} />
+                    <Input type="number" value={s.delta} onChange={(e) => setCustomSignals((c) => c.map((x, j) => (j === i ? { ...x, delta: +e.target.value } : x)))} className={inputCls + " w-20 text-right"} />
+                    <button onClick={() => setCustomSignals((c) => c.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-danger" aria-label="Remove adjustment"><Trash2 className="size-4" /></button>
+                  </div>
+                ))}
+                <button onClick={() => setCustomSignals((c) => [...c, { label: "", delta: 5 }])} className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-latte px-3 py-1.5 text-sm text-mocha transition-colors hover:border-caramel"><Plus className="size-4" /> Add custom adjustment</button>
               </More>
             </div>
           )}
@@ -371,6 +418,50 @@ export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
             </div>
           )}
 
+          {/* STEP: VOICE & AI */}
+          {cur.key === "voiceai" && (
+            <div className="space-y-6">
+              <Group title="Transcriber" help="Speech-to-text that hears the customer. Pick the language that matches how your customers actually speak.">
+                <div className="space-y-1.5">
+                  <Lbl req>Transcriber Language</Lbl>
+                  <select value={transcriber} onChange={(e) => setTranscriber(e.target.value)} className={inputCls + " max-w-sm"}>{langs.map((l) => <option key={l}>{l}</option>)}</select>
+                  <p className="text-xs text-muted-foreground">Campaign language is <span className="font-medium text-coffee">{lang}</span> — pick a transcriber language that matches.</p>
+                </div>
+              </Group>
+              <Group title="LLM — the agent's brain" help="Generates every agent response. Org default is tuned for Indian calling latency; override per campaign only if you have a reason.">
+                <select value={llm} onChange={(e) => setLlm(e.target.value)} className={inputCls + " max-w-md"}>{LLM_OPTS.map((o) => <option key={o}>{o}</option>)}</select>
+              </Group>
+              <Group title="Text-to-Speech — the speaking voice" help="The voice your customers hear. Preview before committing.">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5"><Lbl>TTS Provider</Lbl><select value={tts} onChange={(e) => setTts(e.target.value)} className={inputCls}>{TTS_OPTS.map((o) => <option key={o}>{o}</option>)}</select></div>
+                  <div className="space-y-1.5"><Lbl>Voice</Lbl>
+                    <div className="flex items-center gap-2">
+                      <select value={voice} onChange={(e) => setVoice(e.target.value)} className={inputCls + " flex-1"}>{VOICE_OPTS.map((o) => <option key={o}>{o}</option>)}</select>
+                      <Button size="sm" variant="outline" onClick={() => toast({ title: "Voice preview", body: `Playing a sample of ${voice} at ${speed.toFixed(1)}× speed.`, severity: "info" })} className="gap-1 border-foam text-mocha hover:text-coffee"><Play className="size-3.5" /> Preview</Button>
+                    </div>
+                  </div>
+                </div>
+              </Group>
+              <Group title="Call behaviour" help="Presets bundle voice, LLM, timing and toggles. Pick one, or fine-tune yourself below.">
+                <select value={preset} onChange={(e) => setPreset(e.target.value)} className={inputCls + " max-w-md"}>{PRESETS.map((o) => <option key={o}>{o}</option>)}</select>
+                <More label="Fine-tune voice, LLM & conversation settings">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <div className="flex justify-between text-xs text-mocha"><span>Speech speed</span><span className="font-data">{speed.toFixed(1)}×</span></div>
+                      <input type="range" min={0.8} max={1.5} step={0.1} value={speed} onChange={(e) => setSpeed(+e.target.value)} className="w-full accent-caramel" />
+                      <p className="text-[11px] text-muted-foreground">Best: 1.2–1.3× for natural Indian-market conversation.</p>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-xs text-mocha"><span>Creativity (temperature)</span><span className="font-data">{temp.toFixed(1)}</span></div>
+                      <input type="range" min={0} max={1} step={0.1} value={temp} onChange={(e) => setTemp(+e.target.value)} className="w-full accent-caramel" />
+                      <p className="text-[11px] text-muted-foreground">Lower = predictable script, higher = adaptive phrasing.</p>
+                    </div>
+                  </div>
+                </More>
+              </Group>
+            </div>
+          )}
+
           {/* STEP: PHONE & OUTCOMES */}
           {cur.key === "phone" && (
             <div className="space-y-6">
@@ -380,12 +471,59 @@ export function V6AdvancedWizard({ edit }: { edit?: EditCampaign }) {
                 <Toggle on={transferOn} set={() => setTransferOn((v) => !v)} />
               </div>
               {transferOn && <div className="space-y-1.5"><Lbl req>Transfer number</Lbl><Input placeholder="+91 …" className={inputCls + " max-w-sm"} /></div>}
-              <Group title="Call dispositions" sub="Built-ins are locked; add your own below." help="Outcomes the agent records at the end of every call. The seven built-ins are fixed; add campaign-specific labels for your own reporting.">
+              <Group title="Call dispositions" sub="Built-ins are locked; add your own below." help="Outcomes the agent records at the end of every call. The built-ins are fixed; add campaign-specific outcomes and pick which result they count as — that drives the colour, the counts and any follow-up.">
                 <div className="flex flex-wrap gap-2">
                   {dispositions.map((d) => <span key={d.key} className="inline-flex items-center gap-1.5 rounded-full border border-foam bg-card px-3 py-1.5 text-sm text-coffee"><Lock className="size-3 text-muted-foreground" /> {d.label}</span>)}
-                  <button onClick={() => toast({ title: "Add disposition", body: "Define a custom outcome.", severity: "info" })} className="rounded-full border border-dashed border-latte px-3 py-1.5 text-sm text-mocha hover:border-caramel">+ Add outcome</button>
                 </div>
+                {outcomes.length > 0 && (
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-mocha">Your custom outcomes</div>
+                    {outcomes.map((o, i) => (
+                      <div key={o.code} className="flex items-center gap-3 rounded-xl border border-foam bg-card px-3 py-2">
+                        <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", countsTone[o.countsAs])}>{o.countsAs}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium text-coffee">{o.name} {o.endCall && <span className="ml-1 rounded-full bg-oat px-1.5 py-0.5 text-[10px] text-mocha">ends call</span>}</div>
+                          <div className="font-data text-[11px] text-muted-foreground">{o.code}{o.desc ? ` · ${o.desc}` : ""}</div>
+                        </div>
+                        <button onClick={() => setOutcomes((x) => x.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-danger" aria-label={`Remove ${o.name}`}><Trash2 className="size-4" /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button onClick={() => setOutcomeOpen(true)} className="rounded-full border border-dashed border-latte px-3 py-1.5 text-sm text-mocha hover:border-caramel">+ Add outcome</button>
               </Group>
+
+              {/* add-outcome modal */}
+              {outcomeOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                  <div className="absolute inset-0 bg-espresso/30 backdrop-blur-[2px]" onClick={() => setOutcomeOpen(false)} />
+                  <div className="relative w-full max-w-md rounded-2xl border border-foam bg-porcelain p-5 shadow-card-lg">
+                    <div className="mb-1 flex items-center justify-between">
+                      <h3 className="font-serif text-lg font-semibold text-coffee">Add outcome</h3>
+                      <button onClick={() => setOutcomeOpen(false)} aria-label="Close" className="text-muted-foreground hover:text-coffee"><X className="size-4" /></button>
+                    </div>
+                    <p className="mb-4 text-xs text-muted-foreground">An outcome specific to this campaign that the agent can record.</p>
+                    <div className="space-y-3.5">
+                      <div className="space-y-1.5"><Lbl req>Name</Lbl><Input value={oName} onChange={(e) => setOName(e.target.value)} placeholder="e.g. Qualified" className={inputCls} autoFocus /></div>
+                      <div className="space-y-1.5"><Lbl tip="Created automatically from the name — used in exports and the API.">Code</Lbl>
+                        <div className={inputCls + " flex items-center gap-1.5 bg-oat/50 font-data text-xs text-mocha"}><Lock className="size-3" /> {oName.trim() ? slugify(oName) : "created from the name"}</div>
+                      </div>
+                      <div className="space-y-1.5"><Lbl req tip="Which result this outcome rolls up to — drives the colour, the counts and any follow-up.">Counts as</Lbl>
+                        <select value={oCounts} onChange={(e) => setOCounts(e.target.value)} className={inputCls}>{COUNTS_AS.map((r) => <option key={r}>{r}</option>)}</select>
+                      </div>
+                      <div className="space-y-1.5"><Lbl>Description (optional)</Lbl><Input value={oDesc} onChange={(e) => setODesc(e.target.value)} placeholder="What this outcome means." className={inputCls} /></div>
+                      <div className="flex items-center justify-between rounded-xl border border-foam bg-card px-3 py-2.5">
+                        <span className="text-sm text-coffee">End the call when the agent records this</span>
+                        <Toggle on={oEnd} set={() => setOEnd((v) => !v)} />
+                      </div>
+                    </div>
+                    <div className="mt-5 flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setOutcomeOpen(false)} className="border-foam text-mocha">Cancel</Button>
+                      <Button onClick={addOutcome} disabled={!oName.trim()} className="bg-brand text-brand-foreground hover:bg-brand-dark">Add</Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

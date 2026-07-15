@@ -5,7 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import {
   ChevronLeft, Play, Pause, Pencil, Info, ListChecks, Users2, Target, GitBranch, Bot, PhoneForwarded,
   Wand2, Tags, Gauge, UploadCloud, CheckCircle2, Phone, Globe,
+  Copy, BadgeCheck, FlaskConical, AlertTriangle, ChevronDown, Download, ShieldCheck,
 } from "lucide-react";
+import { LeadUpload, type LeadUploadInfo } from "@/components/campaigns/lead-upload";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui-bits/stat-card";
 import { StatusBadge } from "@/components/ui-bits/status-badge";
@@ -55,12 +57,41 @@ export function V6CampaignDetail() {
   const [status, setStatus] = useState<string>(c.status);
   const [sec, setSec] = useState("overview");
   const [skills, setSkills] = useState(seedSkills.map((s) => s.on));
-  const [leadState, setLeadState] = useState<"empty" | "done">(c.total_leads > 0 ? "done" : "empty");
+  const [testMode, setTestMode] = useState(false);
+  const [showWarn, setShowWarn] = useState(false);
+  const [leadInfo, setLeadInfo] = useState<LeadUploadInfo>({ state: c.total_leads > 0 ? "done" : "empty", fileName: "", total: c.total_leads, valid: c.total_leads, invalid: 0 });
 
   const activate = () => {
     const next = status === "active" ? "paused" : "active";
     setStatus(next);
     toast({ title: next === "active" ? "Campaign activated" : "Campaign paused", body: `“${c.name}” is now ${next}.`, severity: next === "active" ? "success" : "info" });
+  };
+  const complete = () => { setStatus("completed"); toast({ title: "Campaign completed", body: `“${c.name}” marked as completed — no further dialing.`, severity: "info" }); };
+  const clone = () => { toast({ title: "Campaign cloned", body: `“${c.name} (Copy)” created as a draft with the same configuration.`, severity: "success" }); router.push("/campaigns"); };
+
+  // review warnings, derived from real config gaps
+  const warnings = [
+    ...(leadInfo.valid === 0 ? [{ t: "No leads imported yet", d: "The campaign has nothing to dial. Upload a CSV in the Leads section." }] : []),
+    ...(!c.agent_name ? [{ t: "No agent name set", d: "The greeting falls back to a generic introduction — set one in Basic Info." }] : []),
+    ...(status === "draft" ? [{ t: "Campaign is still a draft", d: "Activate it once leads and configuration look right." }] : []),
+  ];
+
+  const imported = leadInfo.state === "done" ? Math.max(leadInfo.valid, c.total_leads) : c.total_leads;
+  // deterministic eligibility split over the imported pool
+  const dnc = imported > 0 ? Math.max(1, Math.round(imported * 0.05)) : 0;
+  const cooldown = imported > 0 ? Math.round(imported * 0.08) : 0;
+  const eligible = Math.max(0, imported - dnc - cooldown);
+
+  const downloadTemplate = () => {
+    const headers = defaultSchema.map((f) => f.key);
+    const sample = headers.map((k) => (k === "phone" ? "9115551310" : k === "full_name" ? "Rohit Sharma" : k === "email" ? "rohit@acme.in" : ""));
+    const blob = new Blob([headers.join(",") + "\n" + sample.join(",") + "\n"], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${c.name.replace(/\W+/g, "-").toLowerCase()}-leads-template.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast({ title: "Template downloaded", body: "CSV pre-filled with this campaign's schema — fill in the leads and re-upload.", severity: "success" });
   };
 
   return (
@@ -72,15 +103,58 @@ export function V6CampaignDetail() {
           <h1 className="font-serif text-3xl font-semibold tracking-tight text-coffee">{c.name}</h1>
           <StatusBadge value={status} />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" onClick={() => router.push(`/campaigns/${c.id}/edit`)} className="gap-1.5 border-foam text-mocha hover:text-coffee">
             <Pencil className="size-4" /> Edit
           </Button>
+          <Button variant="outline" onClick={clone} className="gap-1.5 border-foam text-mocha hover:text-coffee">
+            <Copy className="size-4" /> Clone
+          </Button>
+          {status !== "completed" && (
+            <Button variant="outline" onClick={complete} className="gap-1.5 border-foam text-mocha hover:text-coffee">
+              <BadgeCheck className="size-4" /> Complete
+            </Button>
+          )}
           <Button onClick={activate} className={cn("gap-1.5", status === "active" ? "bg-warning text-white hover:bg-warning/90" : "bg-brand text-brand-foreground hover:bg-brand-dark")}>
             {status === "active" ? <><Pause className="size-4" /> Pause</> : <><Play className="size-4" /> {status === "draft" ? "Activate" : "Resume"}</>}
           </Button>
         </div>
       </div>
+
+      {/* test mode — dial only test leads, real list stays untouched */}
+      <div className={cn("mb-3 flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-glass transition-colors",
+        testMode ? "border-steam/40 bg-steam/10" : "border-foam bg-porcelain")}>
+        <FlaskConical className={cn("size-4 shrink-0", testMode ? "text-steam" : "text-latte")} />
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold text-coffee">Test mode</div>
+          <div className="text-xs text-muted-foreground">While on, only leads you upload as test leads get dialed — with this campaign's real settings. Your real list stays paused and untouched.</div>
+        </div>
+        <button role="switch" aria-checked={testMode} onClick={() => { setTestMode((v) => !v); toast({ title: testMode ? "Test mode off" : "Test mode on", body: testMode ? "Back to the real lead list." : "Only test leads will be dialed.", severity: "info" }); }}
+          className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", testMode ? "bg-steam" : "bg-foam")}>
+          <span className={cn("absolute top-0.5 size-4 rounded-full bg-white shadow transition-all", testMode ? "left-[18px]" : "left-0.5")} />
+        </button>
+      </div>
+
+      {/* review warnings */}
+      {warnings.length > 0 && (
+        <div className="mb-3 rounded-2xl border border-warning/30 bg-warning/8 shadow-glass">
+          <div className="flex flex-wrap items-center gap-3 px-4 py-3">
+            <AlertTriangle className="size-4 shrink-0 text-warning" />
+            <span className="flex-1 text-sm font-medium text-coffee">{warnings.length} warning{warnings.length === 1 ? "" : "s"} to review</span>
+            <Button size="sm" variant="outline" onClick={() => router.push(`/campaigns/${c.id}/edit`)} className="border-foam text-mocha hover:text-coffee">Edit campaign</Button>
+            <button onClick={() => setShowWarn((v) => !v)} className="inline-flex items-center gap-1 text-xs font-medium text-mocha hover:text-coffee">
+              {showWarn ? "Hide" : "Show"} details <ChevronDown className={cn("size-3.5 transition-transform", showWarn && "rotate-180")} />
+            </button>
+          </div>
+          {showWarn && (
+            <ul className="space-y-1.5 border-t border-warning/20 px-4 py-3">
+              {warnings.map((w) => (
+                <li key={w.t} className="text-xs"><span className="font-semibold text-coffee">{w.t}.</span> <span className="text-muted-foreground">{w.d}</span></li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[210px_1fr]">
         {/* section nav */}
@@ -111,6 +185,53 @@ export function V6CampaignDetail() {
                 <Row k="Calling window" v={`${c.calling_start_time?.slice(0,5)} – ${c.calling_end_time?.slice(0,5)}`} />
                 <Row k="Languages" v={[c.primary_language, ...(c.secondary_languages||[])].join(", ")} />
               </Panel>
+
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <Panel title="Import summary" desc="Everything this campaign can dial came in through here.">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className="font-serif text-4xl font-semibold text-coffee tabular-nums">{imported}</div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">total leads imported</div>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={downloadTemplate} className="gap-1.5 border-foam text-mocha hover:text-coffee">
+                      <Download className="size-3.5" /> CSV template
+                    </Button>
+                  </div>
+                  <p className="mt-3 rounded-xl bg-oat/50 px-3 py-2 text-xs text-mocha">
+                    Not sure about the columns? The template is pre-filled with this campaign&apos;s schema — fill in the leads and every column maps automatically.
+                  </p>
+                  <Button size="sm" onClick={() => setSec("leads")} className="mt-3 w-full gap-1.5 bg-brand text-brand-foreground hover:bg-brand-dark">
+                    <UploadCloud className="size-4" /> Upload leads
+                  </Button>
+                </Panel>
+
+                <Panel title="Call eligibility" desc="What's actually dialable after compliance scrubs.">
+                  {imported === 0 ? (
+                    <div className="flex h-full flex-col items-center justify-center gap-2 py-6 text-center">
+                      <ShieldCheck className="size-5 text-latte" />
+                      <p className="text-sm text-muted-foreground">Import leads to see the eligibility breakdown.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {[
+                        { label: "Eligible to dial", n: eligible, color: "var(--color-success)" },
+                        { label: "DNC-blocked", n: dnc, color: "var(--color-danger)" },
+                        { label: "In retry cooldown", n: cooldown, color: "var(--color-warning)" },
+                      ].map((r) => (
+                        <div key={r.label} className="flex items-center gap-2.5">
+                          <span className="size-2 shrink-0 rounded-full" style={{ background: r.color }} />
+                          <span className="flex-1 text-sm text-coffee">{r.label}</span>
+                          <span className="font-data text-sm font-medium text-coffee tabular-nums">{r.n}</span>
+                        </div>
+                      ))}
+                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-foam">
+                        <div className="h-full rounded-full bg-gradient-to-r from-success/80 to-success" style={{ width: `${imported ? (eligible / imported) * 100 : 0}%` }} />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">{Math.round((eligible / Math.max(1, imported)) * 100)}% of imported leads clear DNC, frequency and calling-window checks.</p>
+                    </div>
+                  )}
+                </Panel>
+              </div>
             </div>
           )}
 
@@ -216,19 +337,15 @@ export function V6CampaignDetail() {
           )}
 
           {sec === "leads" && (
-            <Panel title="Leads" desc="Upload a CSV/XLSX — only phone is required.">
-              {leadState === "empty" ? (
-                <button onClick={() => { setLeadState("done"); toast({ title: "Leads imported", body: "2 leads imported successfully.", severity: "success" }); }} className="flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-latte bg-oat/30 px-6 py-10 text-center hover:border-caramel hover:bg-oat/50">
-                  <UploadCloud className="size-7 text-caramel" />
-                  <div className="text-sm font-medium text-coffee">Click to upload CSV / Excel</div>
-                  <div className="text-xs text-muted-foreground">Required: <span className="font-data">phone</span> · optional: full_name, email + custom</div>
-                </button>
-              ) : (
-                <div className="rounded-2xl border border-success/30 bg-success/8 p-5 text-center">
-                  <CheckCircle2 className="mx-auto size-6 text-success" />
-                  <div className="mt-2 text-sm font-semibold text-coffee">{Math.max(c.total_leads, 2)} leads loaded</div>
-                  <div className="text-xs text-muted-foreground">Activate the campaign to start calling them.</div>
-                </div>
+            <Panel title="Leads" desc="Upload the list this campaign dials — only phone is required.">
+              <div className="mb-3 flex justify-end">
+                <Button size="sm" variant="outline" onClick={downloadTemplate} className="gap-1.5 border-foam text-mocha hover:text-coffee">
+                  <Download className="size-3.5" /> CSV template (this campaign&apos;s schema)
+                </Button>
+              </div>
+              <LeadUpload onChange={setLeadInfo} note={testMode ? "Test mode is ON — this upload is treated as test leads." : undefined} />
+              {imported > 0 && leadInfo.state !== "done" && (
+                <p className="mt-3 text-center text-xs text-muted-foreground">{imported} lead{imported === 1 ? "" : "s"} already on this campaign — new uploads add to the pool.</p>
               )}
             </Panel>
           )}
