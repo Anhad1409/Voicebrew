@@ -48,9 +48,9 @@ const badgeTone: Record<string, string> = {
 };
 const AGENT_CFG: Cfg[] = [
   { icon: Phone, title: "Outbound Caller IDs", desc: "Caller-ID number pool — campaigns rotate round-robin.", badge: "REQUIRED", href: "/settings/phone-numbers" },
-  { icon: ListChecks, title: "Lead Schemas", desc: "Columns each lead carries; auto-mapped on upload.", badge: "DEFAULT" },
-  { icon: Target, title: "Scoring Configs", desc: "Per-field weights & hot/warm/cold thresholds.", badge: "DEFAULT" },
-  { icon: GitBranch, title: "Conversation Flows", desc: "The system prompt the agent runs on every call.", badge: "REQUIRED" },
+  { icon: ListChecks, title: "Lead Schemas", desc: "Reusable lead-schema templates imported by the wizard.", badge: "DEFAULT", href: "/settings/lead-schema-templates" },
+  { icon: Target, title: "Scoring Configs", desc: "Reusable weights, in-call adjustments & thresholds.", badge: "DEFAULT", href: "/settings/scoring-config-templates" },
+  { icon: GitBranch, title: "Conversation Flows", desc: "Reusable prompts, greetings & objection handlers.", badge: "REQUIRED", href: "/settings/conversation-flow-templates" },
   { icon: Wand2, title: "Agent Skills", desc: "Real-time tools the agent can call mid-call.", badge: "SEEDED", href: "/settings/skills" },
   { icon: Phone, title: "Human Agent Numbers", desc: "Transfer numbers — one per agent for warm hand-offs.", badge: "OPTIONAL", href: "/settings/agent-numbers" },
   { icon: FileText, title: "Documents", desc: "Upload PDFs/FAQs into the agent's knowledge base — with RAG retrieval testing.", badge: "OPTIONAL", href: "/settings/documents" },
@@ -58,10 +58,11 @@ const AGENT_CFG: Cfg[] = [
   { icon: LayoutTemplate, title: "Templates", desc: "Pre-built campaign templates by vertical — collections, surveys, sales.", badge: "OPTIONAL", href: "/settings/templates" },
 ];
 const CHANNELS: Cfg[] = [
-  { icon: BadgeCheck, title: "Truecaller Identity", desc: "Verified business caller-ID; fewer spam flags.", badge: "OPTIONAL" },
-  { icon: MousePointerClick, title: "Click-to-Call Widgets", desc: "Embeddable callback button for your site.", badge: "OPTIONAL" },
-  { icon: MessageSquare, title: "SMS / DLT", desc: "DLT-registered transactional SMS (India).", badge: "OPTIONAL" },
-  { icon: MessageCircle, title: "WhatsApp", desc: "WhatsApp messages via Business API.", badge: "OPTIONAL" },
+  { icon: BadgeCheck, title: "Truecaller Identity", desc: "Verified business caller-ID; fewer spam flags.", badge: "OPTIONAL", href: "/settings/truecaller" },
+  { icon: MousePointerClick, title: "Click-to-Call Widgets", desc: "Embeddable callback button for your site.", badge: "OPTIONAL", href: "/settings/widgets" },
+  { icon: MessageSquare, title: "SMS / DLT", desc: "DLT-registered transactional SMS (India).", badge: "OPTIONAL", href: "/settings/sms-dlt" },
+  { icon: MessageCircle, title: "WhatsApp", desc: "WhatsApp messages via Business API.", badge: "OPTIONAL", href: "/settings/whatsapp" },
+  { icon: MessageSquare, title: "Email Configuration", desc: "Providers (Resend/SendGrid/SMTP) + agent email templates.", badge: "OPTIONAL", href: "/settings/email" },
   { icon: RefreshCw, title: "CRM Sync", desc: "Two-way sync with LeadSquared, Salesforce, Zoho, HubSpot.", badge: "OPTIONAL" },
 ];
 const BILLING: Cfg[] = [
@@ -146,6 +147,13 @@ function SettingsGroup({ title, blurb, items }: { title: string; blurb: string; 
 export default function SettingsPage() {
   const [tab, setTab] = useState("Organization");
   const [provTab, setProvTab] = useState("Telephony");
+  const [orgTab, setOrgTab] = useState<"Basic Info" | "Website" | "Contact & KYB">("Basic Info");
+  const [keyProcs, setKeyProcs] = useState<string[]>(["lead_qualification"]);
+  const [newProc, setNewProc] = useState("");
+  const [members, setMembers] = useState(team.map((m2) => ({ ...m2, status: "active" as "active" | "pending", last: "23/6/2026" })));
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inv, setInv] = useState({ name: "", email: "", phone: "", dept: "", title: "", role: "Org Admin" });
+  const [compl, setCompl] = useState([true, true, true, true]);
   const o = organization as Record<string, string>;
 
   return (
@@ -170,7 +178,7 @@ export default function SettingsPage() {
             <div key={step.t} className={cn("flex items-center gap-2.5 rounded-xl border bg-card/70 px-3 py-2.5", step.state === "next" ? "border-caramel" : "border-foam")}>
               {step.state === "done" ? <CheckCircle2 className="size-4 shrink-0 text-success" /> : <span className={cn("flex size-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold", step.state === "next" ? "bg-caramel text-cream" : "bg-foam text-muted-foreground")}>{step.state === "next" ? "!" : ""}</span>}
               <span className={cn("flex-1 text-xs", step.state === "done" ? "text-muted-foreground line-through" : "text-coffee")}>{step.t}</span>
-              {step.state === "next" && <button onClick={() => toast({ title: "Organization", body: "Opening org profile…", severity: "info" })} className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-caramel">Start here <ArrowRight className="size-3" /></button>}
+              {step.state === "next" && <button onClick={() => setTab("Organization")} className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-caramel">Start here <ArrowRight className="size-3" /></button>}
               {step.state === "todo" && <button onClick={() => setTab("Providers")} className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-mocha">Configure <ArrowRight className="size-3" /></button>}
             </div>
           ))}
@@ -193,30 +201,122 @@ export default function SettingsPage() {
       <div data-tour="set-content" className="rounded-2xl border border-foam bg-porcelain p-6 shadow-glass">
         {tab === "Organization" && (
           <div className="space-y-5">
-            <h2 className="text-lg font-semibold text-coffee">Organization profile</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Organization name"><Input defaultValue={o.name} className={inputCls} /></Field>
-              <Field label="Billing email"><Input defaultValue={o.billing_email} className={inputCls} /></Field>
-              <Field label="Industry vertical"><Input defaultValue={titleCase(o.industry_vertical)} className={inputCls} /></Field>
-              <Field label="Plan"><Input defaultValue="Growth" disabled className={inputCls + " opacity-70"} /></Field>
-              <Field label="GST number"><Input placeholder="22AAAAA0000A1Z5" className={inputCls} /></Field>
-              <Field label="Primary contact"><Input defaultValue={o.primary_contact_name || currentUser.full_name} className={inputCls} /></Field>
+            <div>
+              <h2 className="text-lg font-semibold text-coffee">Organization Profile</h2>
+              <p className="text-sm text-muted-foreground">Manage your organization details and industry context.</p>
             </div>
-            <Button onClick={() => toast({ title: "Saved", body: "Organization profile updated.", severity: "success" })} className="bg-brand text-brand-foreground hover:bg-brand-dark">Save changes</Button>
+            <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-foam text-center text-sm font-medium">
+              {(["Basic Info", "Website", "Contact & KYB"] as const).map((t2) => (
+                <button key={t2} onClick={() => setOrgTab(t2)} className={cn("px-3 py-2.5 transition-colors", orgTab === t2 ? "bg-cream text-coffee" : "bg-porcelain text-mocha hover:text-coffee")}>{t2}</button>
+              ))}
+            </div>
+
+            {orgTab === "Basic Info" && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Organization name *"><Input defaultValue={o.name} className={inputCls} /></Field>
+                  <Field label="Billing email *"><Input defaultValue={o.billing_email} placeholder="billing@yourcompany.in" className={inputCls} /></Field>
+                  <Field label="Industry vertical *"><select defaultValue={titleCase(o.industry_vertical) || "Lending"} className={inputCls}><option>Lending</option><option>Banking</option><option>Insurance</option><option>Fintech</option><option>Other</option></select></Field>
+                  <Field label="Nature of business"><Input placeholder="e.g., Home loan origination, Property development" className={inputCls} /></Field>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-coffee">Key processes</label>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    {keyProcs.map((k2) => (
+                      <span key={k2} className="inline-flex items-center gap-1.5 rounded-full bg-oat px-2.5 py-1 font-data text-xs text-mocha">{k2}
+                        <button onClick={() => setKeyProcs((x) => x.filter((y) => y !== k2))} aria-label={`Remove ${k2}`} className="text-latte hover:text-danger">×</button>
+                      </span>
+                    ))}
+                    <input value={newProc} onChange={(e) => setNewProc(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && newProc.trim()) { setKeyProcs((x) => [...x, newProc.trim().toLowerCase().replace(/\s+/g, "_")]); setNewProc(""); } }}
+                      placeholder="Add a process (e.g., loan_disbursement) ⏎" className={inputCls + " max-w-xs"} />
+                  </div>
+                </div>
+              </>
+            )}
+            {orgTab === "Website" && (
+              <div className="grid gap-4">
+                <Field label="Website URL"><Input placeholder="https://www.yourcompany.in" className={inputCls + " font-data"} /></Field>
+                <Field label="About the business"><textarea placeholder="One paragraph the agent can use for context — products, geography, tone." className={inputCls + " h-24 resize-none"} /></Field>
+                <p className="rounded-xl bg-oat/50 px-3.5 py-2.5 text-xs text-mocha">We crawl the website to enrich agent context — product names, service areas and FAQs.</p>
+              </div>
+            )}
+            {orgTab === "Contact & KYB" && (
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Primary contact name *"><Input defaultValue={o.primary_contact_name || currentUser.full_name} className={inputCls} /></Field>
+                <Field label="Primary contact email *"><Input defaultValue={currentUser.email} className={inputCls} /></Field>
+                <Field label="Primary contact phone *"><Input placeholder="+91 85888 90832" className={inputCls + " font-data"} /></Field>
+                <Field label="GST number"><Input placeholder="22AAAAA0000A1Z5" className={inputCls + " font-data"} /></Field>
+                <Field label="Address line 1"><Input placeholder="Street address" className={inputCls} /></Field>
+                <Field label="Address line 2"><Input placeholder="Suite, floor, etc." className={inputCls} /></Field>
+                <Field label="City"><Input className={inputCls} /></Field>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="State"><Input className={inputCls} /></Field>
+                  <Field label="Pincode"><Input placeholder="110001" className={inputCls + " font-data"} /></Field>
+                </div>
+              </div>
+            )}
+            <Button onClick={() => toast({ title: "Saved", body: `${orgTab} updated.`, severity: "success" })} className="bg-brand text-brand-foreground hover:bg-brand-dark">Save Changes</Button>
           </div>
         )}
 
         {tab === "Team" && (
           <div>
-            <div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-semibold text-coffee">Team members</h2><Button size="sm" onClick={() => toast({ title: "Invite sent", body: "Invitation email queued.", severity: "success" })} className="gap-1.5 bg-brand text-brand-foreground hover:bg-brand-dark"><Plus className="size-4" /> Invite</Button></div>
-            <div className="overflow-hidden rounded-xl border border-foam">
-              <table className="w-full text-sm">
-                <thead><tr className="bg-oat/40 text-left text-xs text-mocha"><th className="px-4 py-2.5">Name</th><th className="px-4 py-2.5">Email</th><th className="px-4 py-2.5">Role</th></tr></thead>
-                <tbody className="divide-y divide-foam">
-                  {team.map((m) => <tr key={m.email}><td className="px-4 py-2.5 font-medium text-coffee">{m.name}</td><td className="px-4 py-2.5 text-muted-foreground">{m.email}</td><td className="px-4 py-2.5"><span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-mocha">{titleCase(m.role)}</span></td></tr>)}
-                </tbody>
-              </table>
+            <div className="mb-3 flex items-center justify-between">
+              <div><h2 className="text-lg font-semibold text-coffee">Team Members</h2><p className="text-sm text-muted-foreground">Manage users in your organization</p></div>
+              <Button size="sm" onClick={() => setInviteOpen(true)} className="gap-1.5 bg-brand text-brand-foreground hover:bg-brand-dark"><Plus className="size-4" /> Invite User</Button>
             </div>
+            <div className="mb-4">
+              <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{members.length} of 5 users used</span><span className="rounded-full bg-oat px-2 py-0.5 font-medium text-mocha">Starter Plan</span></div>
+              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-foam"><div className="h-full rounded-full bg-coffee" style={{ width: `${(members.length / 5) * 100}%` }} /></div>
+            </div>
+            <ul className="divide-y divide-foam rounded-xl border border-foam">
+              {members.map((m, i) => (
+                <li key={m.email} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-coffee">{m.name}</div>
+                    <div className="truncate text-xs text-muted-foreground">{m.email}{m.status === "active" ? ` · Last login: ${m.last}` : " · Never logged in"}</div>
+                  </div>
+                  <select value={titleCase(m.role)} onChange={(e) => { setMembers((x) => x.map((y, j) => (j === i ? { ...y, role: e.target.value.toLowerCase().replace(/ /g, "_") } : y))); toast({ title: "Role updated", body: `${m.name} is now ${e.target.value}.`, severity: "info" }); }}
+                    className="rounded-full border border-foam bg-porcelain px-2.5 py-1.5 text-xs font-medium text-mocha outline-none focus:border-caramel">
+                    <option>Org Admin</option><option>Super Admin</option><option>Manager</option><option>Agent</option>
+                  </select>
+                  {m.status === "active"
+                    ? <span className="rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">● Active</span>
+                    : <>
+                        <span className="rounded-full bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning">Pending</span>
+                        <button onClick={() => toast({ title: "Invitation resent", body: `A fresh OTP email went to ${m.email}.`, severity: "success" })} className="text-xs font-semibold text-caramel hover:underline">Resend</button>
+                      </>}
+                  <button onClick={() => { setMembers((x) => x.filter((_, j) => j !== i)); toast({ title: "User deactivated", body: `${m.name} no longer has access.`, severity: "warning" }); }} className="text-xs font-semibold text-danger/80 hover:text-danger">Deactivate</button>
+                </li>
+              ))}
+            </ul>
+
+            {inviteOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-espresso/30 backdrop-blur-[2px]" onClick={() => setInviteOpen(false)} />
+                <div className="relative w-full max-w-md rounded-2xl border border-foam bg-porcelain p-5 shadow-card-lg">
+                  <h3 className="flex items-center gap-2 font-serif text-lg font-semibold text-coffee"><Users className="size-4 text-caramel" /> Invite User</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">Invite a user to this organization. They&apos;ll receive an email with an OTP to set up their account.</p>
+                  <div className="mt-4 grid gap-3">
+                    <Field label="Full Name *"><Input value={inv.name} onChange={(e) => setInv({ ...inv, name: e.target.value })} placeholder="Rajesh Kumar" className={inputCls} /></Field>
+                    <Field label="Email *"><Input value={inv.email} onChange={(e) => setInv({ ...inv, email: e.target.value })} placeholder="rajesh@company.com" className={inputCls} /></Field>
+                    <Field label="Phone Number"><Input value={inv.phone} onChange={(e) => setInv({ ...inv, phone: e.target.value })} placeholder="+91 98765 43210" className={inputCls + " font-data"} /></Field>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="Department"><Input value={inv.dept} onChange={(e) => setInv({ ...inv, dept: e.target.value })} placeholder="Sales" className={inputCls} /></Field>
+                      <Field label="Job Title"><Input value={inv.title} onChange={(e) => setInv({ ...inv, title: e.target.value })} placeholder="Sales Head" className={inputCls} /></Field>
+                    </div>
+                    <Field label="Role *"><select value={inv.role} onChange={(e) => setInv({ ...inv, role: e.target.value })} className={inputCls}><option>Org Admin</option><option>Manager</option><option>Agent</option></select></Field>
+                  </div>
+                  <div className="mt-5 flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setInviteOpen(false)} className="border-foam text-mocha">Cancel</Button>
+                    <Button disabled={!inv.name.trim() || !/.+@.+/.test(inv.email)}
+                      onClick={() => { setMembers((x) => [...x, { name: inv.name.trim(), email: inv.email.trim(), role: inv.role.toLowerCase().replace(/ /g, "_"), status: "pending", last: "—" }]); setInviteOpen(false); setInv({ name: "", email: "", phone: "", dept: "", title: "", role: "Org Admin" }); toast({ title: "Invitation sent", body: "They'll receive an email with an OTP to set up their account.", severity: "success" }); }}
+                      className="bg-brand text-brand-foreground hover:bg-brand-dark">Send Invitation</Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -250,12 +350,21 @@ export default function SettingsPage() {
         {tab === "Compliance" && (
           <div className="space-y-3">
             <h2 className="mb-1 text-lg font-semibold text-coffee">Compliance defaults</h2>
-            {[["DNC / DND scrubbing", "Skip Do-Not-Call numbers on every dial", true], ["Calling-window enforcement", "Only dial within TRAI/RBI permitted hours", true], ["Consent & recording disclosure", "Play the consent prompt at call start", true], ["PII masking in recordings", "Redact names, numbers & account data in saved audio", true]].map(([t, d, on]) => (
-              <div key={t as string} className="flex items-center justify-between rounded-xl border border-foam bg-card p-4">
+            {[["DNC / DND scrubbing", "Skip Do-Not-Call numbers on every dial"], ["Calling-window enforcement", "Only dial within TRAI/RBI permitted hours"], ["AI disclosure", "Require AI disclosure in the conversation"], ["Recording consent", "Require recording consent before proceeding"]].map(([t, d], i) => (
+              <div key={t} className="flex items-center justify-between rounded-xl border border-foam bg-card p-4">
                 <div><div className="text-sm font-medium text-coffee">{t}</div><div className="text-xs text-muted-foreground">{d}</div></div>
-                <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", on ? "bg-success/12 text-success" : "bg-foam text-muted-foreground")}>{on ? "On" : "Off"}</span>
+                <button role="switch" aria-checked={compl[i]}
+                  onClick={() => { setCompl((x) => x.map((v, j) => (j === i ? !v : v))); toast({ title: `${t} ${compl[i] ? "disabled" : "enabled"}`, body: compl[i] ? "Campaigns no longer enforce this check." : "Enforced on every call from now on.", severity: compl[i] ? "warning" : "success" }); }}
+                  className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", compl[i] ? "bg-success" : "bg-foam")}>
+                  <span className={cn("absolute top-0.5 size-4 rounded-full bg-white shadow transition-all", compl[i] ? "left-[18px]" : "left-0.5")} />
+                </button>
               </div>
             ))}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 rounded-xl bg-oat/50 px-4 py-2.5 font-data text-[11px] text-mocha">
+              <span>🕘 Calling hours: <b className="text-coffee">09:00 – 21:00 IST</b></span>
+              <span>📞 Max calls/day per lead: <b className="text-coffee">3</b></span>
+              <span>⏱ Caller number cooldown: <b className="text-coffee">15s</b></span>
+            </div>
             <Link href="/compliance" className="inline-flex items-center gap-1 pt-1 text-sm font-medium text-caramel">Open compliance dashboard →</Link>
           </div>
         )}
