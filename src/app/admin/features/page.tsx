@@ -10,6 +10,7 @@ import Link from "next/link";
 import { ChevronLeft, SlidersHorizontal } from "lucide-react";
 import { SectionCard } from "@/components/v7/kit";
 import { toast } from "@/components/notifications/toaster";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const monoLabel = "font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-mocha";
@@ -99,12 +100,22 @@ export default function FeatureManagementPage() {
         Disabled features are hidden for org users — Blostem staff always see every item.
       </p>
 
-      <div className="mt-5 flex items-center gap-2.5">
+      <div className="mt-5 flex flex-wrap items-center gap-2.5">
         <span className={monoLabel}>Organization</span>
         <select value={org} onChange={(e) => setOrg(e.target.value)}
           className="h-9 max-w-full rounded-full border border-foam bg-porcelain px-3.5 text-[13px] text-coffee shadow-glass outline-none focus:border-caramel">
           {ORGS.map((o) => <option key={o}>{o}</option>)}
         </select>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <button onClick={() => { setOverrides((prev) => { const n = { ...prev }; SECTIONS.forEach((sec) => sec.features.forEach((f) => { n[`${org}::${f.name}`] = true; })); return n; }); toast({ title: "All features enabled", body: `Every section is now visible for ${org}.`, severity: "success" }); }}
+            className="rounded-full border border-foam bg-porcelain px-3 py-1.5 text-xs font-medium text-mocha shadow-glass hover:border-caramel hover:text-coffee">Enable all</button>
+          <button onClick={() => { setOverrides((prev) => { const n = { ...prev }; SECTIONS.forEach((sec) => sec.features.forEach((f) => { if (f.name !== "Dashboard") n[`${org}::${f.name}`] = false; })); return n; }); toast({ title: "All features disabled", body: `Org users of ${org} now see only the Dashboard (locked).`, severity: "warning" }); }}
+            className="rounded-full border border-foam bg-porcelain px-3 py-1.5 text-xs font-medium text-mocha shadow-glass hover:border-caramel hover:text-coffee">Disable all</button>
+          <button onClick={() => { setOverrides((prev) => { const n = { ...prev }; Object.keys(n).forEach((k) => { if (k.startsWith(`${org}::`)) delete n[k]; }); return n; }); toast({ title: "Reset", body: `${org} is back to platform defaults.`, severity: "info" }); }}
+            className="rounded-full border border-foam bg-porcelain px-3 py-1.5 text-xs font-medium text-mocha shadow-glass hover:border-caramel hover:text-coffee">Reset</button>
+          <Button size="sm" onClick={() => toast({ title: "Saved", body: `Feature visibility for ${org} updated — takes effect on the org's next page load.`, severity: "success" })}
+            className="bg-brand text-brand-foreground shadow-cta hover:bg-brand-dark">Save changes</Button>
+        </div>
       </div>
 
       <div className="mt-5 space-y-4">
@@ -129,10 +140,14 @@ export default function FeatureManagementPage() {
                         </div>
                         <p className="mt-0.5 text-xs text-muted-foreground">{f.desc}</p>
                       </div>
-                      <button role="switch" aria-checked={on} aria-label={`Toggle ${f.name}`} onClick={() => toggle(f.name)}
-                        className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", on ? "bg-success" : "bg-foam")}>
-                        <span className={cn("absolute top-0.5 size-4 rounded-full bg-white shadow transition-all", on ? "left-[18px]" : "left-0.5")} />
-                      </button>
+                      {f.name === "Dashboard" ? (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-oat/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-mocha">🔒 Locked</span>
+                      ) : (
+                        <button role="switch" aria-checked={on} aria-label={`Toggle ${f.name}`} onClick={() => toggle(f.name)}
+                          className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", on ? "bg-success" : "bg-foam")}>
+                          <span className={cn("absolute top-0.5 size-4 rounded-full bg-white shadow transition-all", on ? "left-[18px]" : "left-0.5")} />
+                        </button>
+                      )}
                     </div>
                   );
                 })}

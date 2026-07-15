@@ -6,7 +6,7 @@
    are real client-side downloads of the mock data. */
 
 import { useMemo, useState } from "react";
-import { Download, Activity, AlertTriangle, ChevronDown } from "lucide-react";
+import { Download, Activity, AlertTriangle, ChevronDown, Phone, Target, IndianRupee, Clock, Headphones, Users2, ShieldCheck, Flame, Sparkles, CheckCircle2, Wallet, CalendarCheck, type LucideIcon } from "lucide-react";
 import { AreaChart } from "@/components/ui-bits/area-chart";
 import { timeSeries, calls, leads } from "@/lib/data";
 import { rangeMetrics, worldCampaigns, activeCampaigns, leadTemperature, agentQuality } from "@/lib/derived";
@@ -33,12 +33,20 @@ function downloadCsv(name: string, headers: string[], rows: (string | number)[][
   toast({ title: "Export ready", body: `${name} downloaded (${rows.length} rows).`, severity: "success" });
 }
 
-function Tile({ label, value, sub, tone }: { label: string; value: string; sub: string; tone?: "good" | "warn" | "bad" }) {
-  const bg = tone === "good" ? "bg-success/8 border-success/20" : tone === "bad" ? "bg-danger/8 border-danger/20" : tone === "warn" ? "bg-warning/8 border-warning/20" : "bg-oat/40 border-foam";
+function Tile({ label, value, sub, tone, icon: Icon, color }: { label: string; value: string; sub: string; tone?: "good" | "warn" | "bad"; icon?: LucideIcon; color?: string }) {
+  const bg = tone === "good" ? "bg-success/8 border-success/20" : tone === "bad" ? "bg-danger/8 border-danger/20" : tone === "warn" ? "bg-warning/8 border-warning/20" : "bg-porcelain border-foam";
+  const c = color ?? (tone === "good" ? "var(--color-success)" : tone === "bad" ? "var(--color-danger)" : tone === "warn" ? "var(--color-warning)" : "var(--color-caramel)");
   return (
-    <div className={cn("rounded-xl border p-3.5", bg)}>
-      <div className={monoLabel}>{label}</div>
-      <div className="mt-1 font-serif text-2xl font-semibold leading-none text-coffee tabular-nums">{value}</div>
+    <div className={cn("rounded-xl border p-3.5 shadow-glass transition-shadow hover:shadow-glass-hover", bg)}>
+      <div className="flex items-start justify-between gap-2">
+        <div className={monoLabel}>{label}</div>
+        {Icon && (
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg" style={{ background: `color-mix(in srgb, ${c} 14%, transparent)`, color: c }}>
+            <Icon className="size-4" />
+          </span>
+        )}
+      </div>
+      <div className="mt-0.5 font-serif text-2xl font-semibold leading-none text-coffee tabular-nums">{value}</div>
       <div className="mt-1 text-[11px] text-muted-foreground">{sub}</div>
     </div>
   );
@@ -178,7 +186,7 @@ export default function AnalyticsPage() {
       {tab === "Overview" && (
         <div className="space-y-5">
           {/* status bar */}
-          <div className="flex items-center gap-2.5 rounded-xl border border-foam bg-porcelain px-4 py-2.5 shadow-glass">
+          <div className="flex items-center gap-2.5 rounded-xl border border-steam/25 bg-gradient-to-r from-steam/10 via-porcelain to-porcelain px-4 py-2.5 shadow-glass">
             <span className="size-2 rounded-full bg-success" />
             <span className="text-sm font-medium text-coffee">Overview: {range === 7 ? "Last 7 days" : "Last 14 days"}</span>
             <span className="text-xs text-muted-foreground">Live data</span>
@@ -187,18 +195,21 @@ export default function AnalyticsPage() {
 
           {/* KPI grid with hot-leads drill-down */}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Tile label="Total Calls" value={m.calls.toLocaleString()} sub={`${range} days of dialing`} />
-            <Tile label="Conversion Rate" value={`${(totalLeadsAll ? (m.conversions / totalLeadsAll) * 100 : 0).toFixed(1)}%`} sub={`${m.conversions} converted / ${totalLeadsAll} leads`} />
-            <Tile label="Total Cost" value={formatINR(m.cost)} sub={`${formatINR(blended)} blended cost / call`} />
-            <Tile label="Avg Duration" value={formatDuration(m.avgDurationSec)} sub="connected-call average" />
-            <Tile label="Active Campaigns" value={`${activeCampaigns.length} / ${worldCampaigns.length}`} sub="campaign availability" />
+            <Tile label="Total Calls" value={m.calls.toLocaleString()} sub={`${range} days of dialing`} icon={Phone} color="var(--color-caramel)" />
+            <Tile label="Conversion Rate" value={`${(totalLeadsAll ? (m.conversions / totalLeadsAll) * 100 : 0).toFixed(1)}%`} sub={`${m.conversions} converted / ${totalLeadsAll} leads`} icon={Target} color="var(--color-steam)" />
+            <Tile label="Total Cost" value={formatINR(m.cost)} sub={`${formatINR(blended)} blended cost / call`} icon={IndianRupee} color="var(--color-mango)" />
+            <Tile label="Avg Duration" value={formatDuration(m.avgDurationSec)} sub="connected-call average" icon={Clock} color="var(--color-mocha)" />
+            <Tile label="Active Campaigns" value={`${activeCampaigns.length} / ${worldCampaigns.length}`} sub="campaign availability" icon={Headphones} color="var(--color-blueberry)" />
             <button onClick={() => setShowHot((v) => !v)} className={cn("rounded-xl border p-3.5 text-left transition-all", showHot ? "border-success bg-success/10 ring-2 ring-success/30" : "border-success/20 bg-success/8 hover:border-success/50")}>
-              <div className={monoLabel}>Hot Leads</div>
-              <div className="mt-1 font-serif text-2xl font-semibold leading-none text-coffee tabular-nums">{leadTemperature.hot}</div>
+              <div className="flex items-start justify-between gap-2">
+                <div className={monoLabel}>Hot Leads</div>
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-danger/12 text-danger"><Flame className="size-4" /></span>
+              </div>
+              <div className="mt-0.5 font-serif text-2xl font-semibold leading-none text-coffee tabular-nums">{leadTemperature.hot}</div>
               <div className="mt-1 text-[11px] text-muted-foreground">{leadTemperature.warm} warm, {leadTemperature.cold} cold · click to view</div>
             </button>
-            <Tile label="Total Leads" value={totalLeadsAll.toLocaleString()} sub="across the current organization" />
-            <Tile label="Avg Agent Quality" value={String(agentQuality.score)} sub="out of 100" />
+            <Tile label="Total Leads" value={totalLeadsAll.toLocaleString()} sub="across the current organization" icon={Users2} color="var(--color-info)" />
+            <Tile label="Avg Agent Quality" value={String(agentQuality.score)} sub="out of 100" icon={ShieldCheck} color="var(--color-matcha)" />
           </div>
 
           {showHot && (
@@ -295,13 +306,13 @@ export default function AnalyticsPage() {
                     ["Avg turns per call", (p: typeof pts[number]) => (2.9 + (p.completed % 40) / 10).toFixed(1)],
                     ["Dead-air pickups", (p: typeof pts[number]) => { const n = Math.max(0, Math.round(p.completed * 0.07)); return p.completed ? `${n} (${((n / p.completed) * 100).toFixed(1)}%)` : "0"; }],
                     ["Transfers to human", (p: typeof pts[number]) => String(Math.round(p.completed * 0.048))],
-                    ["Positive outcomes", (p: typeof pts[number]) => { const n = p.conversions || Math.round(p.completed * 0.18); return p.completed ? `${n} (${((n / p.completed) * 100).toFixed(1)}%)` : "0"; }],
+                    ["Positive outcomes ●", (p: typeof pts[number]) => { const n = p.conversions || Math.round(p.completed * 0.18); return p.completed ? `${n} (${((n / p.completed) * 100).toFixed(1)}%)` : "0"; }],
                     ["Est. system errors", (p: typeof pts[number]) => `~${Math.max(1, Math.round(p.calls * 0.04))}`],
                     ["Cost (INR)", (p: typeof pts[number]) => `₹${Math.round(p.cost).toLocaleString("en-IN")}`],
                   ] as [string, (p: typeof pts[number]) => string][]).map(([label, fn]) => (
                     <tr key={label} className="hover:bg-oat/25">
-                      <td className="py-2 pr-4 text-coffee">{label}</td>
-                      {[...pts].reverse().map((p) => <td key={p.date} className="px-3 py-2 text-right font-data text-xs text-coffee/90 tabular-nums">{fn(p)}</td>)}
+                      <td className={cn("py-2 pr-4 font-medium", label.startsWith("Positive") ? "text-success" : label.startsWith("Dead-air") ? "text-warning" : label.startsWith("Cost") ? "text-mocha" : "text-coffee")}>{label.replace(" ●", "")}</td>
+                      {[...pts].reverse().map((p) => <td key={p.date} className={cn("px-3 py-2 text-right font-data text-xs tabular-nums", label.startsWith("Positive") ? "text-success" : label.startsWith("Dead-air") ? "text-warning" : "text-coffee/90")}>{fn(p)}</td>)}
                     </tr>
                   ))}
                 </tbody>
@@ -326,10 +337,10 @@ export default function AnalyticsPage() {
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-steam"><span className="size-1.5 animate-pulse rounded-full bg-steam" /> Live results</span>
               </div>
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                <Tile label="Completion health" value={`${connectPct}%`} sub={`${m.connected.toLocaleString()} completed of ${m.calls.toLocaleString()} calls`} tone="good" />
-                <Tile label="Lead quality" value={`${leadTemperature.hot} hot`} sub={`${leadTemperature.warm} warm · ${leadTemperature.cold} cold in analytics`} tone="good" />
-                <Tile label="Cost monitor" value={formatINR(m.cost)} sub="total live spend in this window" />
-                <Tile label="Best conversion bucket" value={formatDate(bestDay?.date)} sub={`${bestDay?.conversions || Math.round((bestDay?.completed ?? 0) * 0.18)} conversions that day`} tone="good" />
+                <Tile label="Completion health" value={`${connectPct}%`} sub={`${m.connected.toLocaleString()} completed of ${m.calls.toLocaleString()} calls`} tone="good" icon={CheckCircle2} />
+                <Tile label="Lead quality" value={`${leadTemperature.hot} hot`} sub={`${leadTemperature.warm} warm · ${leadTemperature.cold} cold in analytics`} tone="warn" icon={Flame} color="var(--color-danger)" />
+                <Tile label="Cost monitor" value={formatINR(m.cost)} sub="total live spend in this window" icon={Wallet} color="var(--color-mango)" />
+                <Tile label="Best conversion bucket" value={formatDate(bestDay?.date)} sub={`${bestDay?.conversions || Math.round((bestDay?.completed ?? 0) * 0.18)} conversions that day`} tone="good" icon={CalendarCheck} />
               </div>
             </section>
             <section className="rounded-3xl border border-foam bg-porcelain p-6 shadow-glass">

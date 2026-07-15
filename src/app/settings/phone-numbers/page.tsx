@@ -19,11 +19,16 @@ const SEED: PoolNumber[] = [
 
 export default function PhoneNumbersPage() {
   const [pool, setPool] = useState(SEED);
+  const [modal, setModal] = useState(false);
+  const [newNum, setNewNum] = useState("");
+  const [provider, setProvider] = useState("plivo");
+  const [series140, setSeries140] = useState(false);
 
   const addNumber = () => {
-    const next = `+91 80353 ${String(10000 + Math.floor((pool.length * 7919) % 90000)).slice(0, 5)}`;
-    setPool((p) => [...p, { num: next, provider: "plivo", usedToday: 0, limit: 200, on: true }]);
-    toast({ title: "Number added", body: `${next} joined the pool — campaigns rotate through it from the next call.`, severity: "success" });
+    if (!/\d{10}/.test(newNum.replace(/\D/g, ""))) { toast({ title: "Check the number", body: "Enter the full number your telephony account owns.", severity: "warning" }); return; }
+    setPool((p) => [...p, { num: newNum, provider, usedToday: 0, limit: 200, on: true }]);
+    setModal(false); setNewNum(""); setSeries140(false);
+    toast({ title: "Number added", body: `${newNum} joined the pool${series140 ? " on the 140 telemarketing series" : ""} — campaigns rotate through it from the next call.`, severity: "success" });
   };
 
   return (
@@ -38,7 +43,7 @@ export default function PhoneNumbersPage() {
             A campaign can use all of these, or a chosen subset. Call-volume limits (concurrency / daily) are set on the campaign, not the number.
           </p>
         </div>
-        <Button onClick={addNumber} className="gap-1.5 bg-brand text-brand-foreground shadow-cta hover:bg-brand-dark"><Plus className="size-4" /> Add number</Button>
+        <Button onClick={() => setModal(true)} className="gap-1.5 bg-brand text-brand-foreground shadow-cta hover:bg-brand-dark"><Plus className="size-4" /> Add number</Button>
       </div>
 
       <section className="rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
@@ -83,6 +88,43 @@ export default function PhoneNumbersPage() {
           )}
         </ul>
       </section>
+
+      {modal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-espresso/30 backdrop-blur-[2px]" onClick={() => setModal(false)} />
+          <div className="relative w-full max-w-md rounded-2xl border border-foam bg-porcelain p-5 shadow-card-lg">
+            <h3 className="flex items-center gap-2 font-serif text-lg font-semibold text-coffee"><Phone className="size-4 text-caramel" /> Add an outbound number</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Register a number your telephony account owns. It joins this org&apos;s caller-ID pool and becomes available to campaigns.</p>
+            <div className="mt-4 space-y-3.5">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-coffee">Phone number <span className="text-danger">*</span></label>
+                <input value={newNum} onChange={(e) => setNewNum(e.target.value)} placeholder="+91 80 3531 2770" autoFocus
+                  className="w-full rounded-xl border border-foam bg-cream px-3.5 py-2.5 font-data text-sm text-coffee outline-none focus:border-caramel" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-coffee">Provider <span className="text-danger">*</span></label>
+                <select value={provider} onChange={(e) => setProvider(e.target.value)} className="w-full rounded-xl border border-foam bg-cream px-3.5 py-2.5 text-sm text-coffee outline-none focus:border-caramel">
+                  <option>plivo</option><option>exotel</option><option>smartflo</option>
+                </select>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-foam bg-card px-3.5 py-3">
+                <div>
+                  <div className="text-sm font-medium text-coffee">140-series number</div>
+                  <div className="text-xs text-muted-foreground">TRAI telemarketing series (DND + 9 AM–9 PM window enforced).</div>
+                </div>
+                <button role="switch" aria-checked={series140} onClick={() => setSeries140((v) => !v)}
+                  className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", series140 ? "bg-steam" : "bg-foam")}>
+                  <span className={cn("absolute top-0.5 size-4 rounded-full bg-white shadow transition-all", series140 ? "left-[18px]" : "left-0.5")} />
+                </button>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setModal(false)} className="border-foam text-mocha">Cancel</Button>
+              <Button onClick={addNumber} className="bg-brand text-brand-foreground hover:bg-brand-dark">Add number</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

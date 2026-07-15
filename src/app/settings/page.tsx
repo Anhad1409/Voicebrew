@@ -51,11 +51,11 @@ const AGENT_CFG: Cfg[] = [
   { icon: ListChecks, title: "Lead Schemas", desc: "Columns each lead carries; auto-mapped on upload.", badge: "DEFAULT" },
   { icon: Target, title: "Scoring Configs", desc: "Per-field weights & hot/warm/cold thresholds.", badge: "DEFAULT" },
   { icon: GitBranch, title: "Conversation Flows", desc: "The system prompt the agent runs on every call.", badge: "REQUIRED" },
-  { icon: Wand2, title: "Agent Skills", desc: "Real-time tools the agent can call mid-call.", badge: "SEEDED" },
-  { icon: Phone, title: "Human Agent Numbers", desc: "Transfer numbers — one per agent for warm hand-offs.", badge: "OPTIONAL" },
-  { icon: FileText, title: "Documents", desc: "Upload PDFs/FAQs into the agent's knowledge base.", badge: "OPTIONAL" },
-  { icon: Gauge, title: "Call Quality", desc: "Noise suppression, VAD, latency budgets.", badge: "DEFAULT" },
-  { icon: LayoutTemplate, title: "Templates", desc: "55 pre-built scripts across 10 verticals.", badge: "OPTIONAL" },
+  { icon: Wand2, title: "Agent Skills", desc: "Real-time tools the agent can call mid-call.", badge: "SEEDED", href: "/settings/skills" },
+  { icon: Phone, title: "Human Agent Numbers", desc: "Transfer numbers — one per agent for warm hand-offs.", badge: "OPTIONAL", href: "/settings/agent-numbers" },
+  { icon: FileText, title: "Documents", desc: "Upload PDFs/FAQs into the agent's knowledge base — with RAG retrieval testing.", badge: "OPTIONAL", href: "/settings/documents" },
+  { icon: Gauge, title: "Call Quality", desc: "System presets + custom duration/pacing/LLM bundles.", badge: "DEFAULT", href: "/settings/call-quality" },
+  { icon: LayoutTemplate, title: "Templates", desc: "Pre-built campaign templates by vertical — collections, surveys, sales.", badge: "OPTIONAL", href: "/settings/templates" },
 ];
 const CHANNELS: Cfg[] = [
   { icon: BadgeCheck, title: "Truecaller Identity", desc: "Verified business caller-ID; fewer spam flags.", badge: "OPTIONAL" },
