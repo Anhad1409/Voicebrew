@@ -18,9 +18,9 @@ const DEFAULT_STEPS = [
   { t: "Track it in analytics", d: "Delivery and outcomes land in Post-call Analysis automatically." },
 ];
 
-export function ChannelPage({ icon, title, blurb, fields, extras, connectLabel = "Connect", steps }: {
+export function ChannelPage({ icon, title, blurb, fields, extras, connectLabel = "Connect", steps, tint = "var(--color-steam)" }: {
   icon: LucideIcon; title: string; blurb: string; fields: ChannelField[]; extras?: React.ReactNode; connectLabel?: string;
-  steps?: { t: string; d: string }[];
+  steps?: { t: string; d: string }[]; tint?: string;
 }) {
   const [connected, setConnected] = useState(false);
   const [vals, setVals] = useState<string[]>(fields.map(() => ""));
@@ -34,19 +34,19 @@ export function ChannelPage({ icon, title, blurb, fields, extras, connectLabel =
   };
 
   return (
-    <SettingsShell icon={icon} title={title} blurb={blurb}
+    <SettingsShell icon={icon} title={title} blurb={blurb} tint={tint}
       status={
         <span className={cn("rounded-full border px-2.5 py-0.5 text-[11px] font-medium", connected ? "border-success/25 bg-success/10 text-success" : "border-foam bg-oat/70 text-mocha")}>
           {connected ? "● Connected" : "Not connected"}
         </span>
       }
-      aside={<><HowItWorks steps={steps ?? DEFAULT_STEPS} />
+      aside={<><HowItWorks steps={steps ?? DEFAULT_STEPS} tint={tint} />
         <p className="rounded-2xl border border-foam bg-oat/40 px-4 py-3 text-[11.5px] leading-relaxed text-mocha">
           Credentials are stored encrypted and scoped to this organization — disconnect any time and campaigns skip the channel.
         </p></>}
     >
       <section className="rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
-        <h2 className="font-serif text-[17px] font-semibold text-coffee">Connection</h2>
+        <h2 className="flex items-center gap-2 font-serif text-[17px] font-semibold text-coffee"><span className="size-2 rounded-full" style={{ background: tint }} /> Connection</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {fields.map((f, i) => (
             <div key={f.label} className={fields.length % 2 && i === fields.length - 1 ? "sm:col-span-2" : ""}>

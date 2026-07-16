@@ -19,6 +19,10 @@ const TABS = [
   { key: "Compliance", icon: ShieldCheck },
   { key: "API Keys", icon: KeyRound },
 ];
+const QUICK_TINT: Record<string, string> = {
+  Organization: "var(--color-caramel)", Team: "var(--color-info)", Providers: "var(--color-steam)",
+  Compliance: "var(--color-matcha)", "API Keys": "var(--color-mango)",
+};
 const QUICK_DESC: Record<string, string> = {
   Organization: "Profile, industry & website context",
   Team: "Users, roles & plan usage",
@@ -48,33 +52,33 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return <div className="space-y-1.5"><label className="text-sm font-medium text-coffee">{label}</label>{children}</div>;
 }
 
-type Cfg = { icon: LucideIcon; title: string; desc: string; badge?: string; href?: string };
+type Cfg = { icon: LucideIcon; title: string; desc: string; badge?: string; href?: string; color?: string };
 const badgeTone: Record<string, string> = {
   REQUIRED: "bg-danger/12 text-danger", OPTIONAL: "bg-foam text-mocha",
   DEFAULT: "bg-success/12 text-success", SEEDED: "bg-caramel/15 text-caramel",
 };
 const AGENT_CFG: Cfg[] = [
-  { icon: Phone, title: "Outbound Caller IDs", desc: "Caller-ID number pool — campaigns rotate round-robin.", badge: "REQUIRED", href: "/settings/phone-numbers" },
-  { icon: ListChecks, title: "Lead Schemas", desc: "Reusable lead-schema templates imported by the wizard.", badge: "DEFAULT", href: "/settings/lead-schema-templates" },
-  { icon: Target, title: "Scoring Configs", desc: "Reusable weights, in-call adjustments & thresholds.", badge: "DEFAULT", href: "/settings/scoring-config-templates" },
-  { icon: GitBranch, title: "Conversation Flows", desc: "Reusable prompts, greetings & objection handlers.", badge: "REQUIRED", href: "/settings/conversation-flow-templates" },
-  { icon: Wand2, title: "Agent Skills", desc: "Real-time tools the agent can call mid-call.", badge: "SEEDED", href: "/settings/skills" },
-  { icon: Phone, title: "Human Agent Numbers", desc: "Transfer numbers — one per agent for warm hand-offs.", badge: "OPTIONAL", href: "/settings/agent-numbers" },
-  { icon: FileText, title: "Documents", desc: "Upload PDFs/FAQs into the agent's knowledge base — with RAG retrieval testing.", badge: "OPTIONAL", href: "/settings/documents" },
-  { icon: Gauge, title: "Call Quality", desc: "System presets + custom duration/pacing/LLM bundles.", badge: "DEFAULT", href: "/settings/call-quality" },
-  { icon: LayoutTemplate, title: "Templates", desc: "Pre-built campaign templates by vertical — collections, surveys, sales.", badge: "OPTIONAL", href: "/settings/templates" },
+  { icon: Phone, title: "Outbound Caller IDs", desc: "Caller-ID number pool — campaigns rotate round-robin.", badge: "REQUIRED", color: "var(--color-caramel)", href: "/settings/phone-numbers" },
+  { icon: ListChecks, title: "Lead Schemas", desc: "Reusable lead-schema templates imported by the wizard.", badge: "DEFAULT", color: "var(--color-info)", href: "/settings/lead-schema-templates" },
+  { icon: Target, title: "Scoring Configs", desc: "Reusable weights, in-call adjustments & thresholds.", badge: "DEFAULT", color: "var(--color-steam)", href: "/settings/scoring-config-templates" },
+  { icon: GitBranch, title: "Conversation Flows", desc: "Reusable prompts, greetings & objection handlers.", badge: "REQUIRED", color: "var(--color-matcha)", href: "/settings/conversation-flow-templates" },
+  { icon: Wand2, title: "Agent Skills", desc: "Real-time tools the agent can call mid-call.", badge: "SEEDED", color: "var(--color-blueberry)", href: "/settings/skills" },
+  { icon: Phone, title: "Human Agent Numbers", desc: "Transfer numbers — one per agent for warm hand-offs.", badge: "OPTIONAL", color: "var(--color-info)", href: "/settings/agent-numbers" },
+  { icon: FileText, title: "Documents", desc: "Upload PDFs/FAQs into the agent's knowledge base — with RAG retrieval testing.", badge: "OPTIONAL", color: "var(--color-danger)", href: "/settings/documents" },
+  { icon: Gauge, title: "Call Quality", desc: "System presets + custom duration/pacing/LLM bundles.", badge: "DEFAULT", color: "var(--color-mango)", href: "/settings/call-quality" },
+  { icon: LayoutTemplate, title: "Templates", desc: "Pre-built campaign templates by vertical — collections, surveys, sales.", badge: "OPTIONAL", color: "var(--color-matcha)", href: "/settings/templates" },
 ];
 const CHANNELS: Cfg[] = [
-  { icon: BadgeCheck, title: "Truecaller Identity", desc: "Verified business caller-ID; fewer spam flags.", badge: "OPTIONAL", href: "/settings/truecaller" },
-  { icon: MousePointerClick, title: "Click-to-Call Widgets", desc: "Embeddable callback button for your site.", badge: "OPTIONAL", href: "/settings/widgets" },
-  { icon: MessageSquare, title: "SMS / DLT", desc: "DLT-registered transactional SMS (India).", badge: "OPTIONAL", href: "/settings/sms-dlt" },
-  { icon: MessageCircle, title: "WhatsApp", desc: "WhatsApp messages via Business API.", badge: "OPTIONAL", href: "/settings/whatsapp" },
-  { icon: MessageSquare, title: "Email Configuration", desc: "Providers (Resend/SendGrid/SMTP) + agent email templates.", badge: "OPTIONAL", href: "/settings/email" },
-  { icon: RefreshCw, title: "CRM Sync", desc: "Two-way sync with LeadSquared, Salesforce, Zoho, HubSpot.", badge: "OPTIONAL" },
+  { icon: BadgeCheck, title: "Truecaller Identity", desc: "Verified business caller-ID; fewer spam flags.", badge: "OPTIONAL", color: "var(--color-info)", href: "/settings/truecaller" },
+  { icon: MousePointerClick, title: "Click-to-Call Widgets", desc: "Embeddable callback button for your site.", badge: "OPTIONAL", color: "var(--color-matcha)", href: "/settings/widgets" },
+  { icon: MessageSquare, title: "SMS / DLT", desc: "DLT-registered transactional SMS (India).", badge: "OPTIONAL", color: "var(--color-steam)", href: "/settings/sms-dlt" },
+  { icon: MessageCircle, title: "WhatsApp", desc: "WhatsApp messages via Business API.", badge: "OPTIONAL", color: "var(--color-success)", href: "/settings/whatsapp" },
+  { icon: MessageSquare, title: "Email Configuration", desc: "Providers (Resend/SendGrid/SMTP) + agent email templates.", badge: "OPTIONAL", color: "var(--color-steam)", href: "/settings/email" },
+  { icon: RefreshCw, title: "CRM Sync", desc: "Two-way sync with LeadSquared, Salesforce, Zoho, HubSpot.", badge: "OPTIONAL", color: "var(--color-blueberry)" },
 ];
 const BILLING: Cfg[] = [
-  { icon: Wallet, title: "Billing & Wallet", desc: "Buy channels or top up minutes; view history.", badge: "REQUIRED", href: "/settings/billing" },
-  { icon: BarChart3, title: "Usage & Metering", desc: "Volume, minutes & per-provider cost breakdown.", badge: "OPTIONAL", href: "/settings/usage" },
+  { icon: Wallet, title: "Billing & Wallet", desc: "Buy channels or top up minutes; view history.", badge: "REQUIRED", color: "var(--color-mango)", href: "/settings/billing" },
+  { icon: BarChart3, title: "Usage & Metering", desc: "Volume, minutes & per-provider cost breakdown.", badge: "OPTIONAL", color: "var(--color-mocha)", href: "/settings/usage" },
 ];
 
 function SettingsGroup({ title, blurb, items }: { title: string; blurb: string; items: Cfg[] }) {
@@ -94,7 +98,7 @@ function SettingsGroup({ title, blurb, items }: { title: string; blurb: string; 
           const inner = (
             <>
               <div className="flex items-start justify-between">
-                <span className="flex size-9 items-center justify-center rounded-xl bg-secondary text-brand transition-transform group-hover:scale-105"><Icon className="size-4" /></span>
+                <span className="flex size-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105" style={{ background: `color-mix(in srgb, ${c.color ?? "var(--color-caramel)"} 13%, var(--color-cream))`, color: c.color ?? "var(--color-caramel)" }}><Icon className="size-4" /></span>
                 {c.badge && <span className={cn("rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide", badgeTone[c.badge])}>{c.badge}</span>}
               </div>
               <div className="mt-2.5 flex items-center gap-1 text-sm font-semibold text-coffee">{c.title}<ChevronRight className="size-3.5 text-caramel opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" /></div>
@@ -114,7 +118,7 @@ function SettingsGroup({ title, blurb, items }: { title: string; blurb: string; 
           <div className="fixed inset-0 z-50 bg-espresso/30 backdrop-blur-[2px]" onClick={() => setOpen(null)} />
           <aside className="fixed inset-y-0 right-0 z-50 flex w-[420px] max-w-[94vw] flex-col border-l border-foam bg-porcelain shadow-card-lg">
             <div className="flex items-center gap-3 border-b border-foam px-5 py-4">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-secondary text-brand"><open.icon className="size-4" /></span>
+              <span className="flex size-9 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${open.color ?? "var(--color-caramel)"} 13%, var(--color-cream))`, color: open.color ?? "var(--color-caramel)" }}><open.icon className="size-4" /></span>
               <div className="min-w-0 flex-1">
                 <div className="font-serif text-lg font-semibold text-coffee">{open.title}</div>
                 <div className="truncate text-xs text-muted-foreground">{open.desc}</div>
@@ -202,7 +206,7 @@ export default function SettingsPage() {
           const Icon = t.icon; const active = tab === t.key;
           return (
             <button key={t.key} onClick={() => setTab(t.key)} className={cn("group rounded-2xl border p-3.5 text-left shadow-glass transition-all", active ? "border-caramel bg-caramel/8 ring-1 ring-caramel/25" : "border-foam bg-porcelain hover:-translate-y-0.5 hover:border-latte hover:shadow-glass-hover")}>
-              <span className={cn("flex size-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105", active ? "bg-caramel text-cream" : "bg-secondary text-brand")}><Icon className="size-4" /></span>
+              <span className="flex size-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105" style={active ? { background: QUICK_TINT[t.key], color: "var(--color-cream)" } : { background: `color-mix(in srgb, ${QUICK_TINT[t.key]} 13%, var(--color-cream))`, color: QUICK_TINT[t.key] }}><Icon className="size-4" /></span>
               <div className="mt-2.5 text-sm font-semibold text-coffee">{t.key}</div>
               <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">{QUICK_DESC[t.key]}</div>
             </button>

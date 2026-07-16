@@ -100,7 +100,7 @@ export default function DocumentsPage() {
       {/* retrieval testing */}
       <section className="mt-6 rounded-2xl border border-foam bg-porcelain p-6 shadow-glass">
         <div className="flex flex-wrap items-center gap-3">
-          <FlaskConical className="size-5 text-caramel" />
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-steam/12 text-steam"><FlaskConical className="size-5" /></span>
           <div className="min-w-0 flex-1">
             <h2 className="font-serif text-xl font-semibold text-coffee">Retrieval Testing</h2>
             <p className="text-sm text-muted-foreground">Inspect what the RAG pipeline retrieves before the LLM answers — verify chunking, embeddings, vector search, and reranking.</p>

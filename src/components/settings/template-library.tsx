@@ -13,8 +13,8 @@ import { SettingsShell, HowItWorks } from "@/components/settings/settings-shell"
 
 export type SeedTpl = { name: string; desc: string; meta: string; system?: boolean };
 
-export function TemplateLibrary({ icon: Icon, title, blurb, noun, seed, createBody }: {
-  icon: LucideIcon; title: string; blurb: string; noun: string; seed: SeedTpl[]; createBody: string;
+export function TemplateLibrary({ icon: Icon, title, blurb, noun, seed, createBody, tint = "var(--color-caramel)" }: {
+  icon: LucideIcon; title: string; blurb: string; noun: string; seed: SeedTpl[]; createBody: string; tint?: string;
 }) {
   const [tpls, setTpls] = useState<SeedTpl[]>(seed);
   const [creating, setCreating] = useState(false);
@@ -30,9 +30,9 @@ export function TemplateLibrary({ icon: Icon, title, blurb, noun, seed, createBo
   };
 
   return (
-    <SettingsShell icon={Icon} title={title} blurb={blurb}
+    <SettingsShell icon={Icon} title={title} blurb={blurb} tint={tint}
       actions={<Button onClick={() => setCreating(true)} className="gap-1.5 bg-brand text-brand-foreground shadow-cta hover:bg-brand-dark"><Plus className="size-4" /> Create template</Button>}
-      aside={<HowItWorks title="Import safety" steps={[
+      aside={<HowItWorks title="Import safety" tint={tint} steps={[
         { t: "Pick a template in the wizard", d: "The matching step offers a one-click import." },
         { t: "Cross-checked before import", d: "Keys that don't match the campaign's lead schema are dropped — nothing imports silently broken." },
         { t: "Edit freely after import", d: "Imports copy the template; the library original stays untouched." },
@@ -42,7 +42,7 @@ export function TemplateLibrary({ icon: Icon, title, blurb, noun, seed, createBo
       <div className="grid grid-cols-3 gap-3">
         {[{ n: tpls.length, l: "Templates" }, { n: systemN, l: "System" }, { n: tpls.length - systemN, l: "Custom" }].map((k) => (
           <div key={k.l} className="rounded-2xl border border-foam bg-porcelain px-4 py-3 shadow-glass">
-            <div className="font-serif text-2xl font-semibold leading-none text-coffee tabular-nums">{k.n}</div>
+            <div className="font-serif text-2xl font-semibold leading-none tabular-nums" style={{ color: k.l === "Templates" ? "var(--color-coffee)" : tint }}>{k.n}</div>
             <div className="mt-1 font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-mocha">{k.l}</div>
           </div>
         ))}
@@ -69,7 +69,7 @@ export function TemplateLibrary({ icon: Icon, title, blurb, noun, seed, createBo
             <div key={t.name + i} className="group flex flex-col rounded-2xl border border-foam bg-porcelain p-4 shadow-glass transition-all hover:-translate-y-0.5 hover:shadow-glass-hover">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-caramel/12 text-caramel"><Icon className="size-4" /></span>
+                  <span className="grid size-9 shrink-0 place-items-center rounded-xl" style={{ background: `color-mix(in srgb, ${tint} 13%, var(--color-cream))`, color: tint }}><Icon className="size-4" /></span>
                   <h3 className="text-sm font-semibold leading-snug text-coffee">{t.name}</h3>
                 </div>
                 {t.system

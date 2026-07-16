@@ -38,10 +38,10 @@ export default function EmailConfigPage() {
   };
 
   return (
-    <SettingsShell icon={Mail} title="Email Configuration"
+    <SettingsShell icon={Mail} tint="var(--color-steam)" title="Email Configuration"
       blurb="Connect one or more email providers (Resend, SendGrid, or any SMTP host) for outbound email."
       status={providers.length > 0 ? <span className="rounded-full border border-success/25 bg-success/10 px-2.5 py-0.5 text-[11px] font-medium text-success">● {providers.length} provider{providers.length === 1 ? "" : "s"} live</span> : undefined}
-      aside={<HowItWorks steps={[
+      aside={<HowItWorks tint="var(--color-steam)" steps={[
         { t: "Connect a provider", d: "Verify the from-address your domain sends as." },
         { t: "Write templates", d: "Pre-approved emails with {placeholders} — the agent can never freestyle." },
         { t: "Attach in the wizard", d: "Campaigns pick templates in the Email & SMS step." },

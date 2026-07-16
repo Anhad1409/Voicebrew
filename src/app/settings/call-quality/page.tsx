@@ -27,10 +27,14 @@ export default function CallQualityPage() {
     toast({ title: "Config created", body: `Custom config ${n} added — cloned from Standard 60s.`, severity: "success" });
   };
 
+  const presetTint: Record<string, string> = {
+    "Extended 120s": "var(--color-blueberry)", "Premium 5min": "var(--color-mango)",
+    "Quick 30s": "var(--color-steam)", "Standard 60s": "var(--color-caramel)",
+  };
   const Card = ({ p, onDelete }: { p: Preset; onDelete?: () => void }) => (
     <div className="rounded-2xl border border-foam bg-porcelain p-4 shadow-glass">
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-serif text-lg font-semibold text-coffee">{p.name}</h3>
+        <h3 className="flex items-center gap-2 font-serif text-lg font-semibold text-coffee"><span className="size-2.5 rounded-full" style={{ background: presetTint[p.name] ?? "var(--color-caramel)" }} /> {p.name}</h3>
         {p.system
           ? <span className="inline-flex items-center gap-1 rounded-full bg-oat/80 px-2 py-0.5 text-[10px] font-medium text-mocha"><Lock className="size-3" /> System</span>
           : <button onClick={onDelete} aria-label={`Delete ${p.name}`} className="text-latte hover:text-danger"><Trash2 className="size-4" /></button>}

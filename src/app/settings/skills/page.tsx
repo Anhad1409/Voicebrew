@@ -45,11 +45,16 @@ export default function SkillsPage() {
   const cats = [...new Set(skills.map((s) => s.cat))];
   const shown = tab === "Activated" ? skills.filter((s) => s.on) : skills;
 
+  const catTint: Record<string, string> = {
+    "Conversation control": "var(--color-caramel)",
+    "Financial data": "var(--color-mango)",
+    "Lead intelligence": "var(--color-blueberry)",
+  };
   const SkillCard = ({ s }: { s: Skill }) => (
     <div className="relative rounded-2xl border border-foam bg-porcelain p-4 shadow-glass">
       <span className="absolute right-3 top-3 text-latte">{s.builtin ? <Lock className="size-3.5" /> : <Star className="size-3.5 text-caramel" />}</span>
       <div className="flex items-center gap-2.5">
-        <span className="grid size-9 place-items-center rounded-xl bg-secondary text-brand"><MessageSquare className="size-4" /></span>
+        <span className="grid size-9 place-items-center rounded-xl" style={{ background: `color-mix(in srgb, ${catTint[s.cat] ?? "var(--color-caramel)"} 13%, var(--color-cream))`, color: catTint[s.cat] ?? "var(--color-caramel)" }}><MessageSquare className="size-4" /></span>
         <div>
           <div className="text-sm font-semibold text-coffee">{s.name}</div>
           <div className="text-xs text-muted-foreground">{s.cat}</div>
@@ -79,15 +84,15 @@ export default function SkillsPage() {
 
       <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-5">
         {[
-          { icon: Zap, n: stats.available, l: "Available skills" },
-          { icon: Wrench, n: stats.activated, l: "Activated skills" },
-          { icon: Star, n: stats.core, l: "Core skills" },
-          { icon: Layers, n: stats.dynamic, l: "Dynamic skills" },
-          { icon: KeyRound, n: 0, l: "Credentialed skills" },
+          { icon: Zap, n: stats.available, l: "Available skills", c: "var(--color-caramel)" },
+          { icon: Wrench, n: stats.activated, l: "Activated skills", c: "var(--color-steam)" },
+          { icon: Star, n: stats.core, l: "Core skills", c: "var(--color-mango)" },
+          { icon: Layers, n: stats.dynamic, l: "Dynamic skills", c: "var(--color-blueberry)" },
+          { icon: KeyRound, n: 0, l: "Credentialed skills", c: "var(--color-matcha)" },
         ].map((k) => (
           <div key={k.l} className="rounded-2xl border border-foam bg-porcelain p-4 shadow-glass">
             <div className="flex items-center gap-3">
-              <span className="grid size-9 place-items-center rounded-xl bg-caramel/12 text-caramel"><k.icon className="size-4" /></span>
+              <span className="grid size-9 place-items-center rounded-xl" style={{ background: `color-mix(in srgb, ${k.c} 13%, var(--color-cream))`, color: k.c }}><k.icon className="size-4" /></span>
               <div><div className="font-serif text-2xl font-semibold leading-none text-coffee tabular-nums">{k.n}</div><div className="mt-1 text-xs text-muted-foreground">{k.l}</div></div>
             </div>
           </div>

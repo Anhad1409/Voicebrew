@@ -9,7 +9,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { ChevronLeft } from "lucide-react";
 
-export function SettingsShell({ icon: Icon, title, blurb, status, actions, aside, children, wide = false }: {
+export function SettingsShell({ icon: Icon, title, blurb, status, actions, aside, children, wide = false, tint = "var(--color-caramel)" }: {
   icon: LucideIcon;
   title: string;
   blurb: React.ReactNode;
@@ -18,6 +18,7 @@ export function SettingsShell({ icon: Icon, title, blurb, status, actions, aside
   aside?: React.ReactNode; // right rail (How it works, tips) — fills sparse pages
   children: React.ReactNode;
   wide?: boolean;
+  tint?: string; // page accent — any palette token
 }) {
   return (
     <div className={`mx-auto ${wide ? "max-w-7xl" : "max-w-6xl"}`}>
@@ -25,11 +26,15 @@ export function SettingsShell({ icon: Icon, title, blurb, status, actions, aside
         <ChevronLeft className="size-4" /> Settings
       </Link>
 
-      {/* header band — same gradient family as the v7 banners, quieter */}
+      {/* header band — same gradient family as the v7 banners, quieter, with a page-accent wash */}
       <div className="relative mb-5 overflow-hidden rounded-2xl border border-foam px-5 py-4 shadow-glass"
         style={{ background: "linear-gradient(115deg, #fffdf9 0%, #f9efdd 70%, #f4e6cd 100%)" }}>
+        <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-1/2 opacity-[0.16]"
+          style={{ background: `radial-gradient(360px 130px at 92% 30%, ${tint}, transparent 70%)` }} />
+        <div aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: tint }} />
         <div className="relative flex flex-wrap items-center gap-4">
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-porcelain text-caramel shadow-glass"><Icon className="size-5" /></span>
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl shadow-glass"
+            style={{ background: `color-mix(in srgb, ${tint} 14%, var(--color-porcelain))`, color: tint }}><Icon className="size-5" /></span>
           <div className="min-w-[220px] flex-1">
             <h1 className="flex flex-wrap items-center gap-2.5 font-serif text-[22px] font-semibold leading-tight tracking-tight text-coffee">
               {title} {status}
@@ -53,14 +58,15 @@ export function SettingsShell({ icon: Icon, title, blurb, status, actions, aside
 }
 
 /** Right-rail card: numbered steps — gives sparse pages purpose, not padding. */
-export function HowItWorks({ title = "How it works", steps }: { title?: string; steps: { t: string; d: string }[] }) {
+export function HowItWorks({ title = "How it works", steps, tint = "var(--color-caramel)" }: { title?: string; steps: { t: string; d: string }[]; tint?: string }) {
   return (
     <aside className="rounded-2xl border border-foam bg-porcelain p-4 shadow-glass">
       <h2 className="font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-mocha">{title}</h2>
       <ol className="mt-3 space-y-3">
         {steps.map((s, i) => (
           <li key={s.t} className="flex gap-2.5">
-            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-oat font-serif text-[12px] font-semibold text-caramel">{i + 1}</span>
+            <span className="grid size-6 shrink-0 place-items-center rounded-full font-serif text-[12px] font-semibold"
+              style={{ background: `color-mix(in srgb, ${tint} 14%, var(--color-oat))`, color: tint }}>{i + 1}</span>
             <div>
               <div className="text-[13px] font-medium leading-tight text-coffee">{s.t}</div>
               <div className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">{s.d}</div>

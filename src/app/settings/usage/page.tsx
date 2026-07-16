@@ -26,10 +26,10 @@ export default function UsagePage() {
   }, [scale]);
 
   const KPIS = [
-    { icon: Phone, label: "Total Calls", value: totals.calls.toLocaleString("en-IN"), sub: "in this period" },
-    { icon: Clock, label: "Total Minutes", value: totals.minutes.toLocaleString("en-IN"), sub: "ceil per call" },
-    { icon: TrendingUp, label: "Amount Charged", value: formatINR(totals.charged), sub: "debited from wallet" },
-    { icon: ActivitySquare, label: "COGS", value: formatINR(totals.cogs), sub: "internal cost (admin)" },
+    { icon: Phone, label: "Total Calls", value: totals.calls.toLocaleString("en-IN"), sub: "in this period", c: "var(--color-caramel)" },
+    { icon: Clock, label: "Total Minutes", value: totals.minutes.toLocaleString("en-IN"), sub: "ceil per call", c: "var(--color-steam)" },
+    { icon: TrendingUp, label: "Amount Charged", value: formatINR(totals.charged), sub: "debited from wallet", c: "var(--color-mango)" },
+    { icon: ActivitySquare, label: "COGS", value: formatINR(totals.cogs), sub: "internal cost (admin)", c: "var(--color-mocha)" },
   ];
 
   const bars = [
@@ -59,7 +59,7 @@ export default function UsagePage() {
       <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {KPIS.map((k) => (
           <div key={k.label} className="rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
-            <div className="flex items-center gap-2"><k.icon className="size-4 text-caramel" /><span className={monoLabel}>{k.label}</span></div>
+            <div className="flex items-center gap-2"><span className="grid size-7 place-items-center rounded-lg" style={{ background: `color-mix(in srgb, ${k.c} 13%, var(--color-cream))`, color: k.c }}><k.icon className="size-3.5" /></span><span className={monoLabel}>{k.label}</span></div>
             <div className="mt-2 font-serif text-[26px] font-semibold leading-none text-coffee tabular-nums">{k.value}</div>
             <div className="mt-1.5 text-[11px] text-muted-foreground">{k.sub}</div>
           </div>

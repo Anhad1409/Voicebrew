@@ -4,7 +4,7 @@ import { ChannelPage } from "@/components/settings/channel-page";
 
 export default function SmsDltPage() {
   return (
-    <ChannelPage icon={MessageSquare} title="SMS / DLT Config"
+    <ChannelPage icon={MessageSquare} tint="var(--color-steam)" title="SMS / DLT Config"
       blurb="DLT-registered SMS for India — service messages ride the 160-series, promotional the 140-series. Templates must be DLT-approved before the agent can send them."
       connectLabel="Save DLT config"
       fields={[

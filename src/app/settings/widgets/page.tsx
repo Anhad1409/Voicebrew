@@ -6,7 +6,7 @@ import { toast } from "@/components/notifications/toaster";
 export default function WidgetsPage() {
   const snippet = `<script src="https://vox.blostem.info/widget.js" data-org="demo-org" data-campaign="callback" async></script>`;
   return (
-    <ChannelPage icon={MousePointerClick} title="Click-to-Call Widgets"
+    <ChannelPage icon={MousePointerClick} tint="var(--color-matcha)" title="Click-to-Call Widgets"
       blurb="An embeddable callback button for your website — visitors leave a number, your AI agent calls them back within seconds."
       connectLabel="Generate widget"
       fields={[
