@@ -6,7 +6,7 @@
    are real client-side downloads of the mock data. */
 
 import { useMemo, useState } from "react";
-import { Download, Activity, AlertTriangle, ChevronDown, Phone, Target, IndianRupee, Clock, Headphones, Users2, ShieldCheck, Flame, Sparkles, CheckCircle2, Wallet, CalendarCheck, type LucideIcon } from "lucide-react";
+import { Download, Activity, AlertTriangle, ChevronDown, Phone, Target, IndianRupee, Clock, Headphones, Users2, ShieldCheck, Flame, Sparkles, CheckCircle2, Wallet, CalendarCheck, Zap, type LucideIcon } from "lucide-react";
 import { AreaChart } from "@/components/ui-bits/area-chart";
 import { timeSeries, calls, leads } from "@/lib/data";
 import { rangeMetrics, worldCampaigns, activeCampaigns, leadTemperature, agentQuality } from "@/lib/derived";
@@ -136,7 +136,8 @@ export default function AnalyticsPage() {
     }));
     const totalN = rows.reduce((a, b) => a + b.n, 0) || 1;
     const min = rows.reduce((a, b) => (b.n < a.n ? b : a), rows[0]);
-    return { rows, totalN, min, max: Math.max(...rows.map((r) => r.n), 1) };
+    const peak = rows.reduce((a, b) => (b.n > a.n ? b : a), rows[0]);
+    return { rows, totalN, min, peak, max: Math.max(...rows.map((r) => r.n), 1) };
   }, [m]);
 
   const exportBtns = (
@@ -319,9 +320,39 @@ export default function AnalyticsPage() {
               <div className="text-xs font-semibold text-coffee">Definitions</div>
               <div className="mt-1 grid gap-1 text-[11px] text-muted-foreground sm:grid-cols-2">
                 <span>• <b className="text-coffee">Reached</b> = Completed + Busy + No Answer</span>
-                <span>• Total call time includes ring time on busy/no-answer calls</span>
-                <span>• Dead-air pickup = connected call with &gt;4s of initial silence</span>
-                <span>• Est. system errors are inferred from provider webhooks</span>
+                <span>• <b className="text-coffee">Total call time</b> includes ring time on busy/no-answer calls</span>
+                <span>• <b className="text-coffee">Dead-air pickups</b> = Silent pickup + No greeting response</span>
+                <span>• <b className="text-coffee">Positive outcomes</b> = Hot lead + Transfer + Callback</span>
+                <span className="sm:col-span-2">• <b className="text-coffee">System errors</b> = Failed calls, pipeline stalls, provider errors, watchdog failures, blank API key issues, answer URL failures</span>
+              </div>
+            </div>
+          </section>
+
+          {/* responsiveness & latency */}
+          <section className="rounded-3xl border border-foam bg-porcelain p-6 shadow-glass">
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <Zap className="size-5 text-caramel" />
+              <h2 className="font-serif text-xl font-semibold text-coffee">Responsiveness and Latency</h2>
+              <span className="ml-auto rounded-full border border-warning/30 bg-warning/10 px-2.5 py-1 text-[11px] font-medium text-warning">Watch</span>
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.3fr_1fr]">
+              <div className="rounded-2xl bg-cream/60 p-4">
+                <p className="text-sm font-medium text-coffee">System responsiveness is mostly healthy but should be monitored.</p>
+                <ul className="mt-3 space-y-2 text-sm text-coffee/90">
+                  <li className="flex gap-2.5"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-success" /> Average turn latency: <b>0–1,839 ms</b></li>
+                  <li className="flex gap-2.5"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-success" /> 95th percentile latency: <b>~0–6,400 ms</b></li>
+                </ul>
+                <p className="mt-3 text-sm text-coffee/90">{Math.max(3, Math.round(m.calls * 0.52 * 0.033))} calls had 4–7 second pauses; the outlier rate remains limited.</p>
+                <div className="mt-4 border-t border-foam pt-3">
+                  <div className="text-sm font-semibold text-coffee">Conclusion</div>
+                  <p className="mt-1 text-[13px] text-muted-foreground">Latency is not the primary constraint yet, but it should stay on the watch list. Conversation design and scripting quality remain the main area to inspect.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 self-start">
+                <Tile label="Measured calls" value={Math.round(m.calls * 0.52).toLocaleString()} sub={`${range} reporting days`} tone="good" icon={Activity} color="var(--color-steam)" />
+                <Tile label="Average latency" value="704 ms" sub="mean turn latency" icon={Zap} color="var(--color-caramel)" />
+                <Tile label="P95 latency" value="~1,581 ms" sub="95th percentile turn latency" tone="warn" icon={Clock} />
+                <Tile label="4–7s pauses" value={String(Math.max(3, Math.round(m.calls * 0.52 * 0.033)))} sub="3.3% of measured calls" tone="good" icon={AlertTriangle} color="var(--color-mango)" />
               </div>
             </div>
           </section>
@@ -357,6 +388,73 @@ export default function AnalyticsPage() {
               )}
             </section>
           </div>
+
+          {/* answered call time decay */}
+          <section className="rounded-3xl border border-foam bg-porcelain p-6 shadow-glass">
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <Clock className="size-5 text-caramel" />
+              <h2 className="font-serif text-xl font-semibold text-coffee">Answered Call Time Decay</h2>
+              <span className="ml-auto font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-mocha">Peak answered window</span>
+            </div>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-[300px_1fr]">
+              {/* max/min callout panel — dark steam-espresso glaze */}
+              <div className="flex flex-col justify-center gap-6 rounded-2xl p-6 text-cream"
+                style={{ background: "linear-gradient(165deg, color-mix(in srgb, var(--color-steam) 32%, var(--color-espresso)) 0%, color-mix(in srgb, var(--color-steam) 12%, var(--color-espresso)) 100%)" }}>
+                <div>
+                  <div className="font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-cream/60">Maximum answered calls</div>
+                  <div className="mt-1 font-serif text-3xl font-semibold">{hourly.peak.win}</div>
+                  <div className="mt-1 text-sm font-medium">{hourly.peak.n} answered call{hourly.peak.n === 1 ? "" : "s"}</div>
+                  <div className="text-xs text-cream/60">{((hourly.peak.n / hourly.totalN) * 100).toFixed(1)}% of answered calls in this view.</div>
+                </div>
+                <div className="border-t border-cream/15 pt-5">
+                  <div className="font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-cream/60">Minimum answered calls</div>
+                  <div className="mt-1 font-serif text-3xl font-semibold">{hourly.min.win}</div>
+                  <div className="mt-1 text-sm font-medium">{hourly.min.n} answered call{hourly.min.n === 1 ? "" : "s"}</div>
+                  <div className="text-xs text-cream/60">{((hourly.min.n / hourly.totalN) * 100).toFixed(1)}% of answered calls in this view.</div>
+                </div>
+              </div>
+              {/* hour bars — peak amber, min steam, rest quiet */}
+              <div className="space-y-2 self-center">
+                {hourly.rows.map((r) => {
+                  const isPeak = r.win === hourly.peak.win, isMin = r.win === hourly.min.win && !isPeak;
+                  return (
+                    <div key={r.win} className="flex items-center gap-3">
+                      <span className="w-28 shrink-0 font-data text-xs text-mocha">{r.win}</span>
+                      <div className="h-3 flex-1 overflow-hidden rounded-full bg-foam/80">
+                        <div className={cn("h-full rounded-full transition-all", isPeak ? "bg-gradient-to-r from-mango/80 to-mango" : isMin ? "bg-gradient-to-r from-steam/70 to-steam" : "bg-latte/40")}
+                          style={{ width: `${(r.n / hourly.max) * 100}%` }} />
+                      </div>
+                      <span className="w-12 shrink-0 text-right font-data text-xs font-semibold text-coffee tabular-nums">{r.n}</span>
+                      <span className="w-14 shrink-0 text-right font-data text-[11px] text-muted-foreground tabular-nums">{((r.n / hourly.totalN) * 100).toFixed(1)}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
+          {/* call activity */}
+          <section className="rounded-3xl border border-foam bg-porcelain p-6 shadow-glass">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Activity className="size-5 text-caramel" />
+                <h2 className="font-serif text-xl font-semibold text-coffee">Call Activity</h2>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center rounded-full border border-foam bg-cream p-0.5">
+                  {([7, 14, 30, 90] as const).map((r) => (
+                    <button key={r} onClick={() => setActRange(r)} className={cn("rounded-full px-2.5 py-1 text-xs font-medium transition-colors", actRange === r ? "bg-coffee text-cream" : "text-mocha hover:text-coffee")}>{r}d</button>
+                  ))}
+                </div>
+                <div className="flex items-center rounded-full border border-foam bg-cream p-0.5">
+                  {(["Day", "Week", "Month"] as const).map((g) => (
+                    <button key={g} onClick={() => setGran(g)} className={cn("rounded-full px-2.5 py-1 text-xs font-medium transition-colors", gran === g ? "bg-coffee text-cream" : "text-mocha hover:text-coffee")}>{g}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <AreaChart data={activity} series={[{ key: "calls", label: "Total calls", color: "var(--color-latte)" }, { key: "completed", label: "Completed", color: "var(--color-success)" }, { key: "conversions", label: "Conversions", color: "var(--color-caramel)" }]} />
+          </section>
         </div>
       )}
 
