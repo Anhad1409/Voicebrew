@@ -4,7 +4,7 @@ import { ChannelPage } from "@/components/settings/channel-page";
 
 export default function WhatsAppPage() {
   return (
-    <ChannelPage icon={MessageCircle} tint="var(--color-success)" title="WhatsApp"
+    <ChannelPage icon={MessageCircle} tint="var(--color-steam)" title="WhatsApp"
       blurb="Gupshup WhatsApp Business API — session messages during calls ('sending you the link on WhatsApp') and template messages for follow-ups."
       connectLabel="Connect WABA"
       fields={[

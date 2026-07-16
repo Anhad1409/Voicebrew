@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/notifications/toaster";
 import { cn } from "@/lib/utils";
 import { SettingsShell, HowItWorks } from "@/components/settings/settings-shell";
+import { SectionRule } from "@/components/settings/glaze";
 
 export type ChannelField = { label: string; placeholder: string; mono?: boolean; hint?: string };
 
@@ -46,7 +47,7 @@ export function ChannelPage({ icon, title, blurb, fields, extras, connectLabel =
         </p></>}
     >
       <section className="rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
-        <h2 className="flex items-center gap-2 font-serif text-[17px] font-semibold text-coffee"><span className="size-2 rounded-full" style={{ background: tint }} /> Connection</h2>
+        <SectionRule tint={tint}>Connection</SectionRule>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {fields.map((f, i) => (
             <div key={f.label} className={fields.length % 2 && i === fields.length - 1 ? "sm:col-span-2" : ""}>

@@ -10,6 +10,7 @@ import { ChevronLeft, FileText, Globe, UploadCloud, Search, FlaskConical, Trash2
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/notifications/toaster";
 import { cn } from "@/lib/utils";
+import { GlazedTile, ACCENT } from "@/components/settings/glaze";
 
 const monoLabel = "font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-mocha";
 
@@ -48,7 +49,7 @@ export default function DocumentsPage() {
       <Link href="/settings" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-coffee"><ChevronLeft className="size-4" /> Back to Settings</Link>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2.5 font-serif text-3xl font-semibold tracking-tight text-coffee"><FileText className="size-6 text-caramel" /> Documents</h1>
+          <h1 className="flex items-center gap-3 font-serif text-3xl font-semibold tracking-tight text-coffee"><GlazedTile icon={FileText} tint={ACCENT.ai} size="lg" /> Documents</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">The agent&apos;s knowledge base — uploaded docs are chunked, embedded and searchable mid-call via the Search Knowledge Base skill.</p>
         </div>
         <div className="flex gap-2">
@@ -70,7 +71,7 @@ export default function DocumentsPage() {
           <div key={d.file} className="rounded-2xl border border-foam bg-porcelain p-4 shadow-glass">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2.5">
-                <span className="grid size-9 place-items-center rounded-xl bg-danger/10 text-danger"><FileText className="size-4" /></span>
+                <GlazedTile icon={FileText} tint="var(--color-danger)" />
                 <div>
                   <div className="text-sm font-semibold text-coffee">{d.name}</div>
                   <div className="font-data text-[11px] text-muted-foreground">{d.file}</div>
@@ -100,7 +101,7 @@ export default function DocumentsPage() {
       {/* retrieval testing */}
       <section className="mt-6 rounded-2xl border border-foam bg-porcelain p-6 shadow-glass">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-steam/12 text-steam"><FlaskConical className="size-5" /></span>
+          <GlazedTile icon={FlaskConical} tint={ACCENT.comms} size="lg" />
           <div className="min-w-0 flex-1">
             <h2 className="font-serif text-xl font-semibold text-coffee">Retrieval Testing</h2>
             <p className="text-sm text-muted-foreground">Inspect what the RAG pipeline retrieves before the LLM answers — verify chunking, embeddings, vector search, and reranking.</p>

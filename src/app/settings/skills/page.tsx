@@ -9,6 +9,7 @@ import { ChevronLeft, Layers, Zap, Star, Wrench, KeyRound, Lock, MessageSquare, 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/notifications/toaster";
 import { cn } from "@/lib/utils";
+import { GlazedTile, ACCENT } from "@/components/settings/glaze";
 
 const monoLabel = "font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-mocha";
 
@@ -54,7 +55,7 @@ export default function SkillsPage() {
     <div className="relative rounded-2xl border border-foam bg-porcelain p-4 shadow-glass">
       <span className="absolute right-3 top-3 text-latte">{s.builtin ? <Lock className="size-3.5" /> : <Star className="size-3.5 text-caramel" />}</span>
       <div className="flex items-center gap-2.5">
-        <span className="grid size-9 place-items-center rounded-xl" style={{ background: `color-mix(in srgb, ${catTint[s.cat] ?? "var(--color-caramel)"} 13%, var(--color-cream))`, color: catTint[s.cat] ?? "var(--color-caramel)" }}><MessageSquare className="size-4" /></span>
+        <GlazedTile icon={MessageSquare} tint={catTint[s.cat] ?? ACCENT.core} />
         <div>
           <div className="text-sm font-semibold text-coffee">{s.name}</div>
           <div className="text-xs text-muted-foreground">{s.cat}</div>
@@ -79,7 +80,7 @@ export default function SkillsPage() {
   return (
     <div className="mx-auto max-w-7xl">
       <Link href="/settings" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-coffee"><ChevronLeft className="size-4" /> Back to Settings</Link>
-      <h1 className="flex items-center gap-2.5 font-serif text-3xl font-semibold tracking-tight text-coffee"><Layers className="size-6 text-caramel" /> Agent Skills</h1>
+      <h1 className="flex items-center gap-3 font-serif text-3xl font-semibold tracking-tight text-coffee"><GlazedTile icon={Layers} tint={ACCENT.ai} size="lg" /> Agent Skills</h1>
       <p className="mt-1.5 text-sm text-muted-foreground">Real-time tools the agent can invoke mid-call. Campaign wizards toggle these per campaign; this page manages the org catalog.</p>
 
       <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-5">
@@ -92,7 +93,7 @@ export default function SkillsPage() {
         ].map((k) => (
           <div key={k.l} className="rounded-2xl border border-foam bg-porcelain p-4 shadow-glass">
             <div className="flex items-center gap-3">
-              <span className="grid size-9 place-items-center rounded-xl" style={{ background: `color-mix(in srgb, ${k.c} 13%, var(--color-cream))`, color: k.c }}><k.icon className="size-4" /></span>
+              <GlazedTile icon={k.icon} tint={k.c} />
               <div><div className="font-serif text-2xl font-semibold leading-none text-coffee tabular-nums">{k.n}</div><div className="mt-1 text-xs text-muted-foreground">{k.l}</div></div>
             </div>
           </div>

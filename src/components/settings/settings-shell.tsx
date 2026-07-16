@@ -8,6 +8,7 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { ChevronLeft } from "lucide-react";
+import { GlazedTile } from "@/components/settings/glaze";
 
 export function SettingsShell({ icon: Icon, title, blurb, status, actions, aside, children, wide = false, tint = "var(--color-caramel)" }: {
   icon: LucideIcon;
@@ -29,12 +30,13 @@ export function SettingsShell({ icon: Icon, title, blurb, status, actions, aside
       {/* header band — same gradient family as the v7 banners, quieter, with a page-accent wash */}
       <div className="relative mb-5 overflow-hidden rounded-2xl border border-foam px-5 py-4 shadow-glass"
         style={{ background: "linear-gradient(115deg, #fffdf9 0%, #f9efdd 70%, #f4e6cd 100%)" }}>
-        <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-1/2 opacity-[0.16]"
-          style={{ background: `radial-gradient(360px 130px at 92% 30%, ${tint}, transparent 70%)` }} />
-        <div aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: tint }} />
+        {/* ghosted page icon — the watermark treatment from the v7 banners, page-specific */}
+        <Icon aria-hidden className="pointer-events-none absolute -bottom-7 right-4 size-32 -rotate-[10deg]"
+          style={{ color: tint, opacity: 0.08 }} strokeWidth={1.1} />
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px"
+          style={{ background: `linear-gradient(90deg, transparent, color-mix(in srgb, ${tint} 45%, transparent) 30%, transparent 75%)` }} />
         <div className="relative flex flex-wrap items-center gap-4">
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl shadow-glass"
-            style={{ background: `color-mix(in srgb, ${tint} 14%, var(--color-porcelain))`, color: tint }}><Icon className="size-5" /></span>
+          <GlazedTile icon={Icon} tint={tint} size="lg" />
           <div className="min-w-[220px] flex-1">
             <h1 className="flex flex-wrap items-center gap-2.5 font-serif text-[22px] font-semibold leading-tight tracking-tight text-coffee">
               {title} {status}
@@ -66,7 +68,12 @@ export function HowItWorks({ title = "How it works", steps, tint = "var(--color-
         {steps.map((s, i) => (
           <li key={s.t} className="flex gap-2.5">
             <span className="grid size-6 shrink-0 place-items-center rounded-full font-serif text-[12px] font-semibold"
-              style={{ background: `color-mix(in srgb, ${tint} 14%, var(--color-oat))`, color: tint }}>{i + 1}</span>
+              style={{
+                background: `linear-gradient(150deg, color-mix(in srgb, ${tint} 14%, #fffdf9), color-mix(in srgb, ${tint} 32%, #f4e9d8))`,
+                border: `1px solid color-mix(in srgb, ${tint} 28%, var(--color-foam))`,
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,.6)",
+                color: `color-mix(in srgb, ${tint} 62%, var(--color-espresso))`,
+              }}>{i + 1}</span>
             <div>
               <div className="text-[13px] font-medium leading-tight text-coffee">{s.t}</div>
               <div className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">{s.d}</div>

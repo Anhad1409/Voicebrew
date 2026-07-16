@@ -25,10 +25,10 @@ export default function AgentNumbersPage() {
   };
 
   return (
-    <SettingsShell icon={PhoneForwarded} tint="var(--color-info)" title="Human Agent Numbers"
+    <SettingsShell icon={PhoneForwarded} tint="var(--color-steam)" title="Human Agent Numbers"
       blurb="The phone numbers the bot transfers calls to. Add your agents' numbers here, then assign one to each agent when you invite them."
       actions={<Button onClick={() => setAdding(true)} className="gap-1.5 bg-brand text-brand-foreground shadow-cta hover:bg-brand-dark"><Plus className="size-4" /> Add number</Button>}
-      aside={<HowItWorks title="How transfers work" tint="var(--color-info)" steps={[
+      aside={<HowItWorks title="How transfers work" tint="var(--color-steam)" steps={[
         { t: "Register an agent's line", d: "Any mobile or landline your team answers." },
         { t: "Assign it on invite", d: "Each teammate gets exactly one line — only active, unassigned numbers can be handed to a new agent." },
         { t: "The bot warm-transfers", d: "Mid-call, 'Transfer Call to Agent' rings this number and bridges the customer." },

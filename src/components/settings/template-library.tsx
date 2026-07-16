@@ -10,6 +10,7 @@ import { Plus, Trash2, Lock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/notifications/toaster";
 import { SettingsShell, HowItWorks } from "@/components/settings/settings-shell";
+import { GlazedTile } from "@/components/settings/glaze";
 
 export type SeedTpl = { name: string; desc: string; meta: string; system?: boolean };
 
@@ -69,7 +70,7 @@ export function TemplateLibrary({ icon: Icon, title, blurb, noun, seed, createBo
             <div key={t.name + i} className="group flex flex-col rounded-2xl border border-foam bg-porcelain p-4 shadow-glass transition-all hover:-translate-y-0.5 hover:shadow-glass-hover">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-xl" style={{ background: `color-mix(in srgb, ${tint} 13%, var(--color-cream))`, color: tint }}><Icon className="size-4" /></span>
+                  <GlazedTile icon={Icon} tint={tint} />
                   <h3 className="text-sm font-semibold leading-snug text-coffee">{t.name}</h3>
                 </div>
                 {t.system

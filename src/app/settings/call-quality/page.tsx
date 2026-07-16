@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ChevronLeft, SlidersHorizontal, Lock, Plus, Clock, Volume2, Thermometer, Braces, MessageSquare, AudioLines, BookOpen, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/notifications/toaster";
+import { GlazedTile, ACCENT } from "@/components/settings/glaze";
 
 const monoLabel = "font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-mocha";
 
@@ -27,14 +28,18 @@ export default function CallQualityPage() {
     toast({ title: "Config created", body: `Custom config ${n} added — cloned from Standard 60s.`, severity: "success" });
   };
 
+  // roast ramp — call length as roast depth (light → dark), pure café language
   const presetTint: Record<string, string> = {
-    "Extended 120s": "var(--color-blueberry)", "Premium 5min": "var(--color-mango)",
-    "Quick 30s": "var(--color-steam)", "Standard 60s": "var(--color-caramel)",
+    "Quick 30s": "var(--color-latte)", "Standard 60s": "var(--color-caramel)",
+    "Extended 120s": "var(--color-mocha)", "Premium 5min": "var(--color-coffee)",
   };
   const Card = ({ p, onDelete }: { p: Preset; onDelete?: () => void }) => (
     <div className="rounded-2xl border border-foam bg-porcelain p-4 shadow-glass">
       <div className="flex items-start justify-between gap-2">
-        <h3 className="flex items-center gap-2 font-serif text-lg font-semibold text-coffee"><span className="size-2.5 rounded-full" style={{ background: presetTint[p.name] ?? "var(--color-caramel)" }} /> {p.name}</h3>
+        <div className="flex items-center gap-2.5">
+          <GlazedTile icon={Clock} tint={presetTint[p.name] ?? ACCENT.core} size="sm" />
+          <h3 className="font-serif text-lg font-semibold text-coffee">{p.name}</h3>
+        </div>
         {p.system
           ? <span className="inline-flex items-center gap-1 rounded-full bg-oat/80 px-2 py-0.5 text-[10px] font-medium text-mocha"><Lock className="size-3" /> System</span>
           : <button onClick={onDelete} aria-label={`Delete ${p.name}`} className="text-latte hover:text-danger"><Trash2 className="size-4" /></button>}
@@ -58,7 +63,7 @@ export default function CallQualityPage() {
       <Link href="/settings" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-coffee"><ChevronLeft className="size-4" /> Back to Settings</Link>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2.5 font-serif text-3xl font-semibold tracking-tight text-coffee"><SlidersHorizontal className="size-6 text-caramel" /> Call Quality Configs</h1>
+          <h1 className="flex items-center gap-3 font-serif text-3xl font-semibold tracking-tight text-coffee"><GlazedTile icon={SlidersHorizontal} tint={ACCENT.core} size="lg" /> Call Quality Configs</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">Reusable bundles of duration, pacing, LLM and voice knobs — pick one in the campaign wizard&apos;s Voice &amp; AI step.</p>
         </div>
         <Button variant="outline" onClick={() => toast({ title: "Guide", body: "Start from the preset closest to your call length, then tune speed and tokens.", severity: "info" })} className="gap-1.5 border-foam text-mocha hover:text-coffee"><BookOpen className="size-4" /> Guide</Button>

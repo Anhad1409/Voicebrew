@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/components/notifications/toaster";
 import { cn } from "@/lib/utils";
 import { organization, currentUser } from "@/lib/data";
+import { GlazedTile, ACCENT } from "@/components/settings/glaze";
 import { titleCase } from "@/lib/format";
 
 const TABS = [
@@ -81,13 +82,13 @@ const BILLING: Cfg[] = [
   { icon: BarChart3, title: "Usage & Metering", desc: "Volume, minutes & per-provider cost breakdown.", badge: "OPTIONAL", color: "var(--color-mocha)", href: "/settings/usage" },
 ];
 
-function SettingsGroup({ title, blurb, items }: { title: string; blurb: string; items: Cfg[] }) {
+function SettingsGroup({ title, blurb, items, accent = ACCENT.core }: { title: string; blurb: string; items: Cfg[]; accent?: string }) {
   const [open, setOpen] = useState<Cfg | null>(null);
   const [enabled, setEnabled] = useState(true);
   return (
     <section className="mt-6">
       <div className="flex items-center gap-2.5">
-        <span className="size-2 rounded-full bg-caramel" />
+        <span className="size-2 rounded-full" style={{ background: accent, boxShadow: `0 0 0 3px color-mix(in srgb, ${accent} 18%, transparent)` }} />
         <h2 className="font-serif text-lg font-semibold text-coffee">{title}</h2>
         <span className="rounded-full bg-oat px-2 py-0.5 font-[family-name:var(--font-data)] text-[10px] text-mocha tabular-nums">{items.length}</span>
       </div>
@@ -98,7 +99,7 @@ function SettingsGroup({ title, blurb, items }: { title: string; blurb: string; 
           const inner = (
             <>
               <div className="flex items-start justify-between">
-                <span className="flex size-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105" style={{ background: `color-mix(in srgb, ${c.color ?? "var(--color-caramel)"} 13%, var(--color-cream))`, color: c.color ?? "var(--color-caramel)" }}><Icon className="size-4" /></span>
+                <GlazedTile icon={Icon} tint={accent} className="transition-transform group-hover:scale-105" />
                 {c.badge && <span className={cn("rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide", badgeTone[c.badge])}>{c.badge}</span>}
               </div>
               <div className="mt-2.5 flex items-center gap-1 text-sm font-semibold text-coffee">{c.title}<ChevronRight className="size-3.5 text-caramel opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" /></div>
@@ -118,7 +119,7 @@ function SettingsGroup({ title, blurb, items }: { title: string; blurb: string; 
           <div className="fixed inset-0 z-50 bg-espresso/30 backdrop-blur-[2px]" onClick={() => setOpen(null)} />
           <aside className="fixed inset-y-0 right-0 z-50 flex w-[420px] max-w-[94vw] flex-col border-l border-foam bg-porcelain shadow-card-lg">
             <div className="flex items-center gap-3 border-b border-foam px-5 py-4">
-              <span className="flex size-9 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${open.color ?? "var(--color-caramel)"} 13%, var(--color-cream))`, color: open.color ?? "var(--color-caramel)" }}><open.icon className="size-4" /></span>
+              <GlazedTile icon={open.icon} tint={accent} />
               <div className="min-w-0 flex-1">
                 <div className="font-serif text-lg font-semibold text-coffee">{open.title}</div>
                 <div className="truncate text-xs text-muted-foreground">{open.desc}</div>
@@ -206,7 +207,7 @@ export default function SettingsPage() {
           const Icon = t.icon; const active = tab === t.key;
           return (
             <button key={t.key} onClick={() => setTab(t.key)} className={cn("group rounded-2xl border p-3.5 text-left shadow-glass transition-all", active ? "border-caramel bg-caramel/8 ring-1 ring-caramel/25" : "border-foam bg-porcelain hover:-translate-y-0.5 hover:border-latte hover:shadow-glass-hover")}>
-              <span className="flex size-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105" style={active ? { background: QUICK_TINT[t.key], color: "var(--color-cream)" } : { background: `color-mix(in srgb, ${QUICK_TINT[t.key]} 13%, var(--color-cream))`, color: QUICK_TINT[t.key] }}><Icon className="size-4" /></span>
+              <GlazedTile icon={Icon} tint={ACCENT.core} active={active} className="transition-transform group-hover:scale-105" />
               <div className="mt-2.5 text-sm font-semibold text-coffee">{t.key}</div>
               <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">{QUICK_DESC[t.key]}</div>
             </button>
@@ -409,9 +410,9 @@ export default function SettingsPage() {
         )}
       </div>
 
-      <SettingsGroup title="Agent Configuration" blurb="How your AI agent thinks, talks and what it knows." items={AGENT_CFG} />
-      <SettingsGroup title="Channels & Integrations" blurb="Optional — SMS, WhatsApp, branded caller-ID and CRM sync." items={CHANNELS} />
-      <SettingsGroup title="Billing & Usage" blurb="Fund channels or minutes, and track spend." items={BILLING} />
+      <SettingsGroup title="Agent Configuration" blurb="How your AI agent thinks, talks and what it knows." items={AGENT_CFG} accent={ACCENT.core} />
+      <SettingsGroup title="Channels & Integrations" blurb="Optional — SMS, WhatsApp, branded caller-ID and CRM sync." items={CHANNELS} accent={ACCENT.comms} />
+      <SettingsGroup title="Billing & Usage" blurb="Fund channels or minutes, and track spend." items={BILLING} accent={ACCENT.money} />
     </div>
   );
 }

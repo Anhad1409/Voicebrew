@@ -9,6 +9,7 @@ import { ChevronLeft, BarChart3, Phone, Clock, TrendingUp, ActivitySquare, Rotat
 import { timeSeries } from "@/lib/data";
 import { formatINR } from "@/lib/format";
 import { toast } from "@/components/notifications/toaster";
+import { GlazedTile, ACCENT } from "@/components/settings/glaze";
 
 const monoLabel = "font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-mocha";
 const PERIODS = ["2026-07", "2026-06", "2026-05"];
@@ -42,7 +43,7 @@ export default function UsagePage() {
     <div className="mx-auto max-w-5xl">
       <Link href="/settings" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-coffee"><ChevronLeft className="size-4" /> Back to Settings</Link>
 
-      <h1 className="flex items-center gap-2.5 font-serif text-3xl font-semibold tracking-tight text-coffee"><BarChart3 className="size-6 text-caramel" /> Usage &amp; Metering</h1>
+      <h1 className="flex items-center gap-3 font-serif text-3xl font-semibold tracking-tight text-coffee"><GlazedTile icon={BarChart3} tint={ACCENT.money} size="lg" /> Usage &amp; Metering</h1>
       <p className="mt-1.5 text-sm text-muted-foreground">Per-period call volume, minutes, and cost breakdown.</p>
 
       <div className="mt-5 flex items-center gap-2">
@@ -59,7 +60,7 @@ export default function UsagePage() {
       <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {KPIS.map((k) => (
           <div key={k.label} className="rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
-            <div className="flex items-center gap-2"><span className="grid size-7 place-items-center rounded-lg" style={{ background: `color-mix(in srgb, ${k.c} 13%, var(--color-cream))`, color: k.c }}><k.icon className="size-3.5" /></span><span className={monoLabel}>{k.label}</span></div>
+            <div className="flex items-center gap-2"><GlazedTile icon={k.icon} tint={k.c} size="sm" /><span className={monoLabel}>{k.label}</span></div>
             <div className="mt-2 font-serif text-[26px] font-semibold leading-none text-coffee tabular-nums">{k.value}</div>
             <div className="mt-1.5 text-[11px] text-muted-foreground">{k.sub}</div>
           </div>

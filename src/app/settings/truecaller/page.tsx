@@ -4,7 +4,7 @@ import { ChannelPage } from "@/components/settings/channel-page";
 
 export default function TruecallerPage() {
   return (
-    <ChannelPage icon={BadgeCheck} tint="var(--color-info)" title="Truecaller Identity"
+    <ChannelPage icon={BadgeCheck} tint="var(--color-steam)" title="Truecaller Identity"
       blurb="Verified business caller ID — your brand name, logo and category on the call screen. Fewer spam flags, higher pickup."
       connectLabel="Submit for verification"
       fields={[
