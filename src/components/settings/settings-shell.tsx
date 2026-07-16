@@ -8,7 +8,7 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { ChevronLeft } from "lucide-react";
-import { GlazedTile } from "@/components/settings/glaze";
+import { GlazedTile, BeanScatter } from "@/components/settings/glaze";
 
 export function SettingsShell({ icon: Icon, title, blurb, status, actions, aside, children, wide = false, tint = "var(--color-caramel)" }: {
   icon: LucideIcon;
@@ -33,6 +33,7 @@ export function SettingsShell({ icon: Icon, title, blurb, status, actions, aside
         {/* ghosted page icon — the watermark treatment from the v7 banners, page-specific */}
         <Icon aria-hidden className="pointer-events-none absolute -bottom-7 right-4 size-32 -rotate-[10deg]"
           style={{ color: tint, opacity: 0.08 }} strokeWidth={1.1} />
+        <BeanScatter tint={tint} className="right-40 top-4 hidden sm:block" />
         <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px"
           style={{ background: `linear-gradient(90deg, transparent, color-mix(in srgb, ${tint} 45%, transparent) 30%, transparent 75%)` }} />
         <div className="relative flex flex-wrap items-center gap-4">

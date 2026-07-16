@@ -1,5 +1,6 @@
 "use client";
 
+import { GlazedTile } from "@/components/settings/glaze";
 import { Fragment, useState } from "react";
 import { ShieldCheck, PhoneOff, FileCheck2, Clock, EyeOff, Download, Search, ChevronDown } from "lucide-react";
 import { PageHeader } from "@/components/ui-bits/page-header";
@@ -93,7 +94,7 @@ export default function CompliancePage() {
         <div className="space-y-3">
           {toggles.map(([t, d, on]) => (
             <div key={t} className="flex items-center justify-between rounded-xl border border-foam bg-porcelain p-4 shadow-glass">
-              <div className="flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-xl bg-success/12 text-success"><ShieldCheck className="size-4" /></span><div><div className="text-sm font-medium text-coffee">{t}</div><div className="text-xs text-muted-foreground">{d}</div></div></div>
+              <div className="flex items-center gap-3"><GlazedTile icon={ShieldCheck} tint="var(--color-success)" /><div><div className="text-sm font-medium text-coffee">{t}</div><div className="text-xs text-muted-foreground">{d}</div></div></div>
               <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", on ? "bg-success/12 text-success" : "bg-foam text-muted-foreground")}>{on ? "On" : "Off"}</span>
             </div>
           ))}

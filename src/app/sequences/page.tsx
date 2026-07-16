@@ -188,7 +188,7 @@ export default function SequencesPage() {
                   return (
                     <Fragment key={i}>
                       <span className="flex shrink-0 items-center gap-1.5 rounded-lg border border-foam bg-cream/60 px-2.5 py-1.5 text-xs font-medium text-coffee">
-                        <Icon className="size-3.5 text-caramel" /> {CHANNELS[st.channel].label}
+                        <Icon className="size-3.5" style={{ color: st.channel === "call" ? "var(--color-caramel)" : st.channel === "email" ? "var(--color-blueberry)" : "var(--color-steam)" }} /> {CHANNELS[st.channel].label}
                       </span>
                       {i < s.steps.length - 1 &&
                         (st.waitDays > 0 ? (

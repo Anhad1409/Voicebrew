@@ -14,6 +14,7 @@ import { formatDuration, formatINR, formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/notifications/toaster";
 import { cn } from "@/lib/utils";
+import { GlazedTile } from "@/components/settings/glaze";
 
 const SUBTABS = ["Overview", "Call Performance", "Providers", "Live", "Campaigns"];
 const monoLabel = "font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-mocha";
@@ -40,11 +41,7 @@ function Tile({ label, value, sub, tone, icon: Icon, color }: { label: string; v
     <div className={cn("rounded-xl border p-3.5 shadow-glass transition-shadow hover:shadow-glass-hover", bg)}>
       <div className="flex items-start justify-between gap-2">
         <div className={monoLabel}>{label}</div>
-        {Icon && (
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg" style={{ background: `color-mix(in srgb, ${c} 14%, transparent)`, color: c }}>
-            <Icon className="size-4" />
-          </span>
-        )}
+        {Icon && <GlazedTile icon={Icon} tint={c} size="sm" />}
       </div>
       <div className="mt-0.5 font-serif text-2xl font-semibold leading-none text-coffee tabular-nums">{value}</div>
       <div className="mt-1 text-[11px] text-muted-foreground">{sub}</div>
@@ -203,7 +200,7 @@ export default function AnalyticsPage() {
             <button onClick={() => setShowHot((v) => !v)} className={cn("rounded-xl border p-3.5 text-left transition-all", showHot ? "border-success bg-success/10 ring-2 ring-success/30" : "border-success/20 bg-success/8 hover:border-success/50")}>
               <div className="flex items-start justify-between gap-2">
                 <div className={monoLabel}>Hot Leads</div>
-                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-danger/12 text-danger"><Flame className="size-4" /></span>
+                <GlazedTile icon={Flame} tint="var(--color-danger)" size="sm" />
               </div>
               <div className="mt-0.5 font-serif text-2xl font-semibold leading-none text-coffee tabular-nums">{leadTemperature.hot}</div>
               <div className="mt-1 text-[11px] text-muted-foreground">{leadTemperature.warm} warm, {leadTemperature.cold} cold · click to view</div>

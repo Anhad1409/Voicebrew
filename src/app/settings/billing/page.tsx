@@ -7,6 +7,7 @@ import { StatCard } from "@/components/ui-bits/stat-card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/notifications/toaster";
 import { cn } from "@/lib/utils";
+import { GlazedTile } from "@/components/settings/glaze";
 import { CHANNELS } from "@/lib/channel-mock";
 import { wallet, walletHistory, topupPacks, walletState } from "@/lib/wallet-mock";
 import { formatINR } from "@/lib/format";
@@ -39,14 +40,14 @@ export default function BillingPage() {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* channel model */}
           <div className="rounded-2xl border border-foam bg-porcelain p-5 shadow-glass">
-            <div className="flex items-center gap-2"><span className="flex size-8 items-center justify-center rounded-xl bg-caramel/15 text-caramel"><Zap className="size-4" /></span><h3 className="font-serif text-lg font-semibold text-coffee">Channel purchase</h3></div>
+            <div className="flex items-center gap-2"><GlazedTile icon={Zap} tint="var(--color-caramel)" size="sm" /><h3 className="font-serif text-lg font-semibold text-coffee">Channel purchase</h3></div>
             <p className="mt-2 text-sm text-muted-foreground">Buy channels for flat, predictable cost. Each channel runs one live call at a time.</p>
             <div className="mt-3 flex items-baseline gap-1"><span className="font-serif text-3xl font-semibold text-coffee">{CHANNELS}</span><span className="text-sm text-muted-foreground">channels · {formatINR(channelRate)}/mo each</span></div>
             <Button onClick={() => toast({ title: "Channels", body: "Opening channel plan…", severity: "info" })} className="mt-4 gap-1.5 bg-brand text-brand-foreground hover:bg-brand-dark"><Plus className="size-4" /> Add channels</Button>
           </div>
           {/* minute model */}
           <div className={cn("rounded-2xl border p-5 shadow-glass", st === "healthy" ? "border-foam bg-porcelain" : st === "low" ? "border-warning/40 bg-warning/5" : "border-danger/40 bg-danger/5")}>
-            <div className="flex items-center gap-2"><span className="flex size-8 items-center justify-center rounded-xl bg-caramel/15 text-caramel"><Clock className="size-4" /></span><h3 className="font-serif text-lg font-semibold text-coffee">Minute balance</h3></div>
+            <div className="flex items-center gap-2"><GlazedTile icon={Clock} tint="var(--color-mango)" size="sm" /><h3 className="font-serif text-lg font-semibold text-coffee">Minute balance</h3></div>
             <p className="mt-2 text-sm text-muted-foreground">Pay-as-you-go from a prepaid minute wallet at {formatINR(wallet.ratePerMin)}/min.</p>
             <div className="mt-3 flex items-baseline gap-1"><span className={cn("font-serif text-3xl font-semibold", stColor)}>{bal.toLocaleString("en-IN")}</span><span className="text-sm text-muted-foreground">minutes left</span></div>
             <Button onClick={() => setTab("Minutes")} className="mt-4 gap-1.5 bg-brand text-brand-foreground hover:bg-brand-dark"><Plus className="size-4" /> Top up</Button>

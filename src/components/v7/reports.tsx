@@ -12,6 +12,7 @@ import { toast } from "@/components/notifications/toaster";
 import { MiniSpark } from "@/components/ui-bits/mini-spark";
 import { Button } from "@/components/ui/button";
 import { V7Banner, monoLabel, rowStagger, rowItem } from "./kit";
+import { GlazedTile } from "@/components/settings/glaze";
 
 const icons: Record<string, LucideIcon> = {
   phone: Phone, megaphone: Megaphone, filter: Filter, sparkles: Sparkles,
@@ -45,10 +46,7 @@ export function V7Reports() {
             <motion.div key={r.id} variants={rowItem}
               className="group relative flex flex-col overflow-hidden rounded-2xl border border-foam bg-porcelain p-5 shadow-glass transition-all hover:-translate-y-0.5 hover:shadow-glass-hover">
               <div className="flex items-start justify-between">
-                <span className="flex size-11 items-center justify-center rounded-xl shadow-glass transition-transform group-hover:scale-105"
-                  style={{ background: `color-mix(in srgb, ${color} 15%, var(--color-cream))`, color }}>
-                  <Icon className="size-5" />
-                </span>
+                <GlazedTile icon={Icon} tint={color} size="lg" className="transition-transform group-hover:scale-105" />
                 <span className="rounded-full border px-2 py-0.5 text-[11px] font-medium"
                   style={{ color, borderColor: `color-mix(in srgb, ${color} 30%, transparent)`, background: `color-mix(in srgb, ${color} 8%, transparent)` }}>
                   {r.cat}
