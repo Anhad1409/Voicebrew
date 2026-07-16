@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Headphones, MessageSquareText, PhoneForwarded, Radio, Activity } from "lucide-react";
+import { Headphones, MessageSquareText, PhoneForwarded, Radio, Activity, History, UserRound } from "lucide-react";
 import { V7Banner, Chip, SectionCard, Meter, Equalizer, InitialBean, monoLabel, rowStagger, rowItem } from "@/components/v7/kit";
 import { GlazedTile } from "@/components/settings/glaze";
 import { useSharedCapacity } from "@/lib/capacity-store";
@@ -20,6 +20,37 @@ type LiveCall = { id: string; lead: string; phone: string; campaign: string; age
 const NAMES = ["Rohit Sharma", "Anita Desai", "Karan Mehta", "Meera Nair", "Sumit Tripathy", "Pankaj Singh", "Dipti Yadav", "Hitesha Kumar"];
 const POOL = ["+91 80353 41719", "+91 80353 12770"];
 
+const TABS = ["Active Calls", "My Sessions", "History"] as const;
+type Tab = (typeof TABS)[number];
+
+type Session = { id: string; mode: "Listen" | "Whisper" | "Barge"; started: string; ended: string; reason: "call_ended" | "supervisor_ended" | "supervisor_disconnected"; mine?: boolean; lead?: string; campaign?: string; durS: number };
+const HISTORY: Session[] = Array.from({ length: 14 }, (_, i) => {
+  const modes: Session["mode"][] = ["Listen", "Listen", "Listen", "Barge", "Listen", "Whisper", "Listen"];
+  const reasons: Session["reason"][] = ["call_ended", "supervisor_ended", "supervisor_disconnected"];
+  const day = 15 - Math.floor(i / 3);
+  const hh = 18 - (i % 9);
+  const durS = 45 + ((i * 97) % 260);
+  const mm = (i * 13) % 50;
+  const endM = mm + Math.ceil(durS / 60);
+  return {
+    id: ((i + 3) * 2654435761 % 0xffffffff).toString(16).padStart(8, "0"),
+    mode: modes[i % modes.length],
+    started: `${String(day).padStart(2, "0")}/07/2026, ${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String((i * 29) % 60).padStart(2, "0")}`,
+    ended: `${String(day).padStart(2, "0")}/07/2026, ${String(hh).padStart(2, "0")}:${String(endM % 60).padStart(2, "0")}:${String((i * 41) % 60).padStart(2, "0")}`,
+    reason: reasons[i % reasons.length],
+    mine: i % 3 !== 1,
+    lead: NAMES[(i * 3) % NAMES.length],
+    campaign: i % 2 ? "IOB : Mobile Banking Activation (Clone)" : "Outreach campaign",
+    durS,
+  };
+});
+const modeTone: Record<Session["mode"], string> = {
+  Listen: "bg-success/12 text-success border-success/25",
+  Whisper: "bg-warning/12 text-warning border-warning/25",
+  Barge: "bg-info/10 text-info border-info/25",
+};
+const fmtDur = (s: number) => `${Math.floor(s / 60)}m ${s % 60}s`;
+
 const stageMeta: Record<Stage, { label: string; pill: string; dot: string }> = {
   ringing: { label: "Ringing", pill: "bg-info/10 text-info border-info/25", dot: "var(--color-info)" },
   talking: { label: "Talking", pill: "bg-success/12 text-success border-success/25", dot: "var(--color-success)" },
@@ -31,6 +62,7 @@ const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "
 export default function CallMonitorPage() {
   const active = useSharedCapacity();
   const m = useMemo(() => rangeMetrics(7), []);
+  const [tab, setTab] = useState<Tab>("Active Calls");
   const [stage, setStage] = useState<Stage | "all">("all");
   const [tick, setTick] = useState(0);
 
@@ -83,6 +115,19 @@ export default function CallMonitorPage() {
         ]}
       />
 
+      <div className="mb-4 flex flex-wrap gap-2">
+        {TABS.map((t) => (
+          <button key={t} onClick={() => setTab(t)}
+            className={cn("flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition-all",
+              tab === t ? "border-caramel bg-brand text-brand-foreground shadow-cta" : "border-foam bg-porcelain text-mocha shadow-glass hover:border-latte hover:text-coffee")}>
+            {t === "Active Calls" ? <Radio className="size-3.5" /> : t === "My Sessions" ? <UserRound className="size-3.5" /> : <History className="size-3.5" />}
+            {t}
+            {t === "Active Calls" && <span className={cn("rounded-full px-1.5 text-[10px] tabular-nums", tab === t ? "bg-porcelain/25" : "bg-oat")}>{calls.length}</span>}
+          </button>
+        ))}
+      </div>
+
+      {tab === "Active Calls" && (<>
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Chip active={stage === "all"} onClick={() => setStage("all")} dot="var(--color-caramel)" count={calls.length}>All</Chip>
         {(Object.keys(stageMeta) as Stage[]).map((s) => (
@@ -154,6 +199,59 @@ export default function CallMonitorPage() {
           </div>
         )}
       </SectionCard>
+      </>)}
+
+      {tab === "My Sessions" && (
+        <SectionCard title="My monitoring sessions" count={`${HISTORY.filter((h) => h.mine).length} sessions`}
+          help="Sessions you personally ran — every listen, whisper and barge is attributed and logged.">
+          <motion.ul variants={rowStagger} initial="hidden" animate="show">
+            {HISTORY.filter((h) => h.mine).map((h) => (
+              <motion.li key={h.id} variants={rowItem}
+                className="grid grid-cols-1 gap-2 border-b border-foam/70 px-4 py-2.5 last:border-b-0 hover:bg-oat/40 lg:grid-cols-[minmax(0,1.8fr)_110px_minmax(0,1.4fr)_100px_minmax(0,1fr)] lg:items-center lg:gap-3">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <InitialBean name={h.lead ?? "?"} band="warm" />
+                  <div className="min-w-0">
+                    <div className="truncate font-medium text-coffee">{h.lead}</div>
+                    <div className="truncate font-[family-name:var(--font-data)] text-[11px] text-latte">call {h.id.slice(0, 8)}…</div>
+                  </div>
+                </div>
+                <div><span className={cn("inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium", modeTone[h.mode])}>{h.mode}</span></div>
+                <div className="truncate text-[13px] text-mocha">{h.campaign}</div>
+                <div className="font-[family-name:var(--font-data)] text-[13px] font-semibold text-coffee tabular-nums">{fmtDur(h.durS)}</div>
+                <div className="text-right font-[family-name:var(--font-data)] text-[11px] text-latte">{h.started}</div>
+              </motion.li>
+            ))}
+          </motion.ul>
+        </SectionCard>
+      )}
+
+      {tab === "History" && (
+        <SectionCard title="Monitoring history" count={`${HISTORY.length} sessions`}
+          help="Every supervisor session across the org — mode, timing, and how it ended. Kept for compliance.">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-sm">
+              <thead>
+                <tr className={cn("border-b border-foam bg-cream/60 text-left", monoLabel)}>
+                  <th className="px-4 py-2 font-medium">Call ID</th><th className="px-4 py-2 font-medium">Mode</th>
+                  <th className="px-4 py-2 font-medium">Started</th><th className="px-4 py-2 font-medium">Ended</th>
+                  <th className="px-4 py-2 font-medium">Reason</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-foam/70">
+                {HISTORY.map((h) => (
+                  <tr key={h.id} className="hover:bg-oat/30">
+                    <td className="px-4 py-2.5 font-data text-xs text-coffee">{h.id.slice(0, 8)}…</td>
+                    <td className="px-4 py-2.5"><span className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium", modeTone[h.mode])}>{h.mode}</span></td>
+                    <td className="px-4 py-2.5 font-data text-xs text-mocha">{h.started}</td>
+                    <td className="px-4 py-2.5 font-data text-xs text-mocha">{h.ended}</td>
+                    <td className="px-4 py-2.5 font-data text-xs text-muted-foreground">{h.reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      )}
     </div>
   );
 }
