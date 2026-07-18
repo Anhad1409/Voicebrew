@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { MicOff, ShieldCheck, Languages, Clock3, Sparkles, CheckCircle2, UserCheck, Flame, CalendarClock } from "lucide-react";
 import NumberFlow from "@number-flow/react";
-import { Beans } from "../Beans";
+import { Backdrop, LiveCallCard } from "@/components/auth/v2-kit";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { useLiveCapacity } from "@/lib/use-live-capacity";
 import { CHANNELS, baselineActive } from "@/lib/channel-mock";
@@ -24,82 +24,6 @@ const mono = "font-[family-name:var(--font-data)]";
 const inputCls =
   "h-12 w-full rounded-xl border border-foam bg-cream px-3.5 text-[15px] text-coffee outline-none transition-[border-color,box-shadow] duration-150 focus:border-caramel focus:shadow-[0_0_0_3px_rgba(184,118,61,0.22)]";
 const labelCls = `${mono} mb-1.5 block text-[11px] uppercase tracking-[0.14em] text-mocha`;
-
-/* the live call — one agent line per language, typed out on loop */
-const CALL_LINES: [string, string][] = [
-  ["Hinglish", "Namaste! Aapki EMI kal due hai — main madad ke liye yahan hoon."],
-  ["English", "Hello! Your KYC is pending — it takes two minutes, shall we do it now?"],
-  ["Hindi", "नमस्ते! आपकी किश्त कल देय है — मैं मदद के लिए यहाँ हूँ।"],
-  ["Tamil", "Vanakkam! Ungal EMI naalai due aagum — naan udhavalaam."],
-  ["Marathi", "Namaskar! Tumchi EMI udya due aahe — mi madat karto."],
-];
-
-function LiveCallCard() {
-  const reduce = useReducedMotion();
-  const [li, setLi] = useState(0);
-  const [chars, setChars] = useState(0);
-  useEffect(() => {
-    if (reduce) { setChars(CALL_LINES[0][1].length); return; }
-    const id = setInterval(() => {
-      setChars((c) => {
-        if (c < CALL_LINES[li][1].length) return c + 1;
-        return c; // hold; advance handled below
-      });
-    }, 38);
-    return () => clearInterval(id);
-  }, [li, reduce]);
-  useEffect(() => {
-    if (reduce) return;
-    if (chars >= CALL_LINES[li][1].length) {
-      const t = setTimeout(() => { setLi((v) => (v + 1) % CALL_LINES.length); setChars(0); }, 1600);
-      return () => clearTimeout(t);
-    }
-  }, [chars, li, reduce]);
-  const speaking = chars < CALL_LINES[li][1].length;
-  return (
-    <div className="rounded-2xl border border-foam bg-porcelain/90 p-4 shadow-glass backdrop-blur-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="relative flex size-2">
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-steam opacity-60" />
-            <span className="relative inline-flex size-2 rounded-full bg-steam" />
-          </span>
-          <span className={`${mono} text-[10px] uppercase tracking-[0.14em] text-mocha`}>Live — a VoiceBrew agent on a call</span>
-        </div>
-        <span className={`${mono} text-[10px] uppercase tracking-[0.1em] text-latte`}>sample</span>
-      </div>
-      {/* language chips — the speaking one lights up */}
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {CALL_LINES.map(([lang], i) => (
-          <span key={lang} className={cn(`${mono} rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide transition-colors duration-300`,
-            i === li ? "border-caramel bg-brand text-brand-foreground" : "border-foam bg-cream text-latte")}>
-            {lang}
-          </span>
-        ))}
-      </div>
-      {/* the spoken line */}
-      <div className="mt-3 min-h-[64px] rounded-xl bg-oat/50 px-3.5 py-2.5">
-        <p className="text-[13.5px] leading-relaxed text-coffee">
-          {CALL_LINES[li][1].slice(0, chars)}
-          {speaking && !reduce && <span className="ml-0.5 inline-block h-[13px] w-[2px] animate-pulse bg-caramel align-middle" />}
-        </p>
-      </div>
-      {/* speaking waveform — fixed height, transform-only animation */}
-      <div className="mt-3 flex h-6 items-center gap-[3px]">
-        {Array.from({ length: 32 }).map((_, i) => (
-          <span key={i} className="w-[3px] flex-1 rounded-full"
-            style={{
-              background: i % 4 === 0 ? "var(--color-steam)" : "var(--color-caramel)",
-              height: "100%", transformOrigin: "center", opacity: 0.8,
-              animation: reduce || !speaking ? undefined : `v2eq ${620 + (i % 5) * 120}ms ease-in-out ${(i % 7) * 70}ms infinite`,
-              transform: speaking ? undefined : "scaleY(0.2)", transition: "transform .4s",
-            }} />
-        ))}
-        <style>{`@keyframes v2eq{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}`}</style>
-      </div>
-    </div>
-  );
-}
 
 /* the listening strip under the email field — the quirk, made legible */
 function ListenStrip({ email, mode }: { email: string; mode: "idle" | "listening" | "muted" }) {
@@ -132,33 +56,6 @@ function ListenStrip({ email, mode }: { email: string; mode: "idle" | "listening
           </motion.span>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-/* ---------- ambient backdrop: color halos + steam ribbons + beans ---------- */
-function Backdrop() {
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      {/* color halos */}
-      <div className="absolute -top-32 left-[8%] size-[420px] rounded-full opacity-25 blur-3xl" style={{ background: "radial-gradient(circle, var(--color-caramel), transparent 70%)" }} />
-      <div className="absolute right-[-6%] top-[18%] size-[460px] rounded-full opacity-20 blur-3xl" style={{ background: "radial-gradient(circle, var(--color-steam), transparent 70%)" }} />
-      <div className="absolute bottom-[-12%] left-[30%] size-[400px] rounded-full opacity-15 blur-3xl" style={{ background: "radial-gradient(circle, var(--color-mango), transparent 70%)" }} />
-      <div className="absolute bottom-[22%] left-[-6%] size-[300px] rounded-full opacity-15 blur-3xl" style={{ background: "radial-gradient(circle, var(--color-blueberry), transparent 70%)" }} />
-      {/* steam ribbons flowing across */}
-      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1440 900" preserveAspectRatio="none" fill="none">
-        <defs>
-          <linearGradient id="v2rib" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor="var(--color-caramel)" />
-            <stop offset="0.55" stopColor="var(--color-mango)" />
-            <stop offset="1" stopColor="var(--color-steam)" />
-          </linearGradient>
-        </defs>
-        <path d="M-80 640 C 280 500, 540 780, 900 580 S 1380 430, 1540 500" stroke="url(#v2rib)" strokeWidth="70" strokeLinecap="round" opacity="0.06" />
-        <path d="M-80 660 C 300 520, 560 800, 920 600 S 1380 450, 1540 520" stroke="url(#v2rib)" strokeWidth="2.5" opacity="0.28" />
-        <path d="M-60 170 C 340 260, 700 90, 1080 200 S 1440 240, 1540 190" stroke="url(#v2rib)" strokeWidth="2" opacity="0.16" />
-      </svg>
-      <Beans />
     </div>
   );
 }
@@ -354,7 +251,7 @@ export default function LoginV2Page() {
               <div>
                 <div className="flex h-[20px] items-center justify-between">
                   <label htmlFor="v2-pass" className={`${labelCls} mb-0`}>Password</label>
-                  <button type="button" onClick={() => router.push("/forgot")} className="text-[12px] font-medium text-caramel underline-offset-4 hover:underline">
+                  <button type="button" onClick={() => router.push("/forgot/v2")} className="text-[12px] font-medium text-caramel underline-offset-4 hover:underline">
                     Forgot?
                   </button>
                 </div>
@@ -409,14 +306,14 @@ export default function LoginV2Page() {
               </button>
 
               <div className="text-center">
-                <button type="button" onClick={() => router.push("/login")} className="text-[13px] text-mocha underline-offset-4 hover:underline">
+                <button type="button" onClick={() => router.push("/magic/v2")} className="text-[13px] text-mocha underline-offset-4 hover:underline">
                   no password? get a sign-in link by email <span className="text-steam">✳</span>
                 </button>
               </div>
 
               <div className="border-t border-foam pt-4 text-center">
                 <span className="text-[13px] text-mocha">New to VoiceBrew? </span>
-                <button type="button" onClick={() => router.push("/signup")} className="text-[13px] font-semibold text-caramel underline-offset-4 hover:underline">
+                <button type="button" onClick={() => router.push("/signup/v2")} className="text-[13px] font-semibold text-caramel underline-offset-4 hover:underline">
                   Create a free account →
                 </button>
                 <p className={`${mono} mt-1.5 text-[10px] uppercase tracking-[0.1em] text-latte`}>50 free sips ≈ 6 minutes of AI calls · no card</p>

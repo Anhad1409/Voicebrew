@@ -1,6 +1,10 @@
 "use client";
 
-/* /welcome — "YOUR TAB, PRINTING". 4-step chip wizard where every answer
+/* /welcome/v2 — "YOUR TAB, PRINTING", in the v2 visual language.
+   Same beloved paystub receipt + grant + sample call — richer chrome:
+   accent halos, steam ribbons, gradient progress.
+   Original v1 comment follows.
+   /welcome — 4-step chip wizard where every answer
    prints as a receipt line item; ends in THE OPENING BALANCE (50 sips on
    the house, wax-stamped with your TABLE No.) → THE POUR wipe → /dashboard.
    V3: questions read plainly first — the café metaphor is garnish (eyebrows,
@@ -15,10 +19,10 @@ import { VoiceBrewMark } from "@/components/layout/voicebrew-logo";
 import {
   ROLES, VERTICALS, LANGS, VOLUMES, GREETINGS, STEP_LABELS, GRANT, readback,
   BREWS, PROMO_BREWS, DIRECTIONS, DLT_STATUS, PERSONAS, WINDOWS, type RLine,
-} from "./wizard";
+} from "../wizard";
 import { getProfile, setProfile, ensureTableNo, grantOpeningBalance } from "@/lib/tab-mock";
-import { Beans } from "../login/Beans";
-import { Ticker } from "../login/Ticker";
+import { Backdrop } from "@/components/auth/v2-kit";
+import { Ticker } from "../../login/Ticker";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const mono = "font-[family-name:var(--font-data)]";
@@ -249,15 +253,15 @@ export default function WelcomePage() {
         setName(p.name || ""); setPourOnly(true); setStep(3);
         return;
       }
-      if (!p.name) { router.replace("/signup"); return; }
+      if (!p.name) { router.replace("/signup/v2"); return; }
       setName(p.name);
-      const saved = Number(sessionStorage.getItem("vb-wizard-step") || "0");
+      const saved = Number(sessionStorage.getItem("vb-wizard-step-v2") || "0");
       if (saved > 0 && saved < 4) setStep(saved);
     } catch {}
     return () => timeouts.current.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  useEffect(() => { try { sessionStorage.setItem("vb-wizard-step", String(step)); } catch {} }, [step]);
+  useEffect(() => { try { sessionStorage.setItem("vb-wizard-step-v2", String(step)); } catch {} }, [step]);
 
   const print = useCallback((label: string, value: string, tone?: RLine["tone"]) =>
     setLines((ls) => [...ls.filter((x) => x.label !== label), { label, value, tone }]), []);
@@ -273,7 +277,7 @@ export default function WelcomePage() {
     requestAnimationFrame(() => requestAnimationFrame(() => { el.style.transform = "scale(40)"; }));
     setTimeout(() => {
       grantOpeningBalance();
-      try { sessionStorage.setItem("vb-just-granted", "1"); sessionStorage.removeItem("vb-wizard-step"); } catch {}
+      try { sessionStorage.setItem("vb-just-granted", "1"); sessionStorage.removeItem("vb-wizard-step-v2"); } catch {}
       router.push("/dashboard");
     }, reduce ? 180 : 400);
     setTimeout(() => { el.style.transition = "opacity 250ms"; el.style.opacity = "0"; }, reduce ? 420 : 700);
@@ -497,7 +501,7 @@ export default function WelcomePage() {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-cream" style={{ backgroundImage: "radial-gradient(1100px 560px at 80% -10%, #f9ead2 0%, transparent 58%), radial-gradient(820px 460px at 2% 102%, #f1e3d2 0%, transparent 60%)" }}>
+    <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-cream" style={{ backgroundImage: "radial-gradient(1200px 620px at 78% -12%, #f9ead2 0%, transparent 58%), radial-gradient(900px 500px at 0% 104%, #f1e3d2 0%, transparent 60%), radial-gradient(560px 380px at 96% 88%, rgba(79,176,165,0.08) 0%, transparent 70%)" }}>
       {/* ===== header — dashboard topbar treatment ===== */}
       <div className="shrink-0 border-b border-foam bg-porcelain/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-[1080px] items-center justify-between px-6 py-3.5">
@@ -518,13 +522,13 @@ export default function WelcomePage() {
         </div>
         {/* progress rule */}
         <div className="h-[3px] w-full bg-foam">
-          <motion.div className="h-full rounded-r-full bg-brand"
+          <motion.div className="h-full rounded-r-full" style={{ background: "linear-gradient(90deg, var(--color-caramel), var(--color-mango) 55%, var(--color-steam))" }}
             initial={false} animate={{ width: `${phase === "grant" ? 100 : ((step + 1) / 4) * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 24 }} />
         </div>
       </div>
 
       <div className="relative flex-1">
-        <Beans />
+        <Backdrop />
         <div className="mx-auto grid max-w-[1080px] gap-8 px-6 py-10 lg:grid-cols-[1fr_380px]">
           {/* STEP PANEL — porcelain card */}
           <div>
