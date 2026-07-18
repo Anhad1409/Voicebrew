@@ -61,11 +61,13 @@ function ListenStrip({ email, mode }: { email: string; mode: "idle" | "listening
 }
 
 /* ---------- floating outcome chips: the product, popping around the story ---------- */
+// positions are relative to the LEFT story column, so the chips can float
+// over the story's whitespace but can never reach the auth card.
 const CHIPS = [
-  { icon: CheckCircle2, tint: "var(--color-matcha)", title: "EMI reminder — paid", sub: "auto-logged to CRM", pos: "right-[2%] top-[16%]", delay: 1.1, bob: 5.6 },
-  { icon: Flame, tint: "var(--color-mango)", title: "Lead scored 82 · hot", sub: "handed to sales", pos: "left-[44%] top-[30%]", delay: 1.35, bob: 6.4 },
-  { icon: UserCheck, tint: "var(--color-steam)", title: "KYC verified", sub: "in 2 min on-call", pos: "left-[1%] top-[70%]", delay: 1.6, bob: 7 },
-  { icon: CalendarClock, tint: "var(--color-blueberry)", title: "Callback booked", sub: "tomorrow · 11:00", pos: "right-[30%] bottom-[7%]", delay: 1.85, bob: 6 },
+  { icon: CheckCircle2, tint: "var(--color-matcha)", title: "EMI reminder — paid", sub: "auto-logged to CRM", pos: "-top-3 -right-2", delay: 1.1, bob: 5.6 },
+  { icon: Flame, tint: "var(--color-mango)", title: "Lead scored 82 · hot", sub: "handed to sales", pos: "top-[34%] -right-16", delay: 1.35, bob: 6.4 },
+  { icon: UserCheck, tint: "var(--color-steam)", title: "KYC verified", sub: "in 2 min on-call", pos: "bottom-[21%] -left-12", delay: 1.6, bob: 7 },
+  { icon: CalendarClock, tint: "var(--color-blueberry)", title: "Callback booked", sub: "tomorrow · 11:00", pos: "-bottom-9 right-[4%]", delay: 1.85, bob: 6 },
 ];
 function FloatChips() {
   const reduce = useReducedMotion();
@@ -140,7 +142,6 @@ export default function LoginV2Page() {
     <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-cream"
       style={{ backgroundImage: "radial-gradient(1200px 620px at 78% -12%, #f9ead2 0%, transparent 58%), radial-gradient(900px 500px at 0% 104%, #f1e3d2 0%, transparent 60%), radial-gradient(560px 380px at 96% 88%, rgba(79,176,165,0.08) 0%, transparent 70%)" }}>
       <Backdrop />
-      <FloatChips />
       {/* header */}
       <header className="relative z-[1] mx-auto flex w-full max-w-6xl shrink-0 items-center justify-end px-6 pt-6">
         <div className="flex items-center gap-2.5">
@@ -160,7 +161,8 @@ export default function LoginV2Page() {
 
       <main className="relative z-[1] mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-6 py-10 lg:grid-cols-[1.05fr_1fr]">
         {/* ===== LEFT — the story ===== */}
-        <motion.section variants={stack} initial="hidden" animate="show" className="max-w-xl">
+        <motion.section variants={stack} initial="hidden" animate="show" className="relative max-w-xl">
+          <FloatChips />
           <motion.div variants={rows} className="flex items-center gap-5 sm:gap-6">
             <BrandMark animated className="w-32 shrink-0 sm:w-40" />
             <div>
