@@ -86,7 +86,7 @@ export default function VerifyPage() {
 
         <button onClick={verify} aria-disabled={!done}
           className="mt-6 h-12 w-full rounded-xl bg-brand font-serif text-[16px] font-semibold text-brand-foreground shadow-cta transition-colors hover:bg-brand-dark aria-disabled:cursor-not-allowed aria-disabled:opacity-50">
-          {checking ? "Checking…" : "Take my seat"}
+          {checking ? "Checking…" : "Confirm — take my seat"}
         </button>
 
         <div className="mt-4 text-[13px] text-mocha">
@@ -98,7 +98,7 @@ export default function VerifyPage() {
           )}
         </div>
         <button onClick={() => router.push("/signup")} className="mt-3 text-[12px] text-latte underline-offset-4 hover:underline">
-          Wrong email? Back to the counter
+          Wrong email? Go back and edit it
         </button>
       </JourneyCard>
     </JourneyShell>

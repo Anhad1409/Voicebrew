@@ -1,31 +1,34 @@
-// OPEN A TAB wizard — chip data, greetings, grant timeline. Spec §3–4.
+// OPEN A TAB wizard — chip data, greetings, grant timeline.
+// V3: 4 steps, zero repeated questions. The café language is garnish —
+// every question reads plainly first; the metaphor lives in eyebrows,
+// the receipt, and the animations. Enrichment questions that used to
+// pad the wizard (team size, current setup, launch timeline, CRM) are
+// captured later in-product where they have context.
 
 export const ROLES = ["Founder", "Ops / Collections lead", "Developer", "Marketing", "Other"];
-export const TEAM = ["Just me", "2–10", "11–50", "51+"];
-export const USE_CASES = ["EMI reminders", "Collections", "KYC verification", "Loan onboarding", "Lead qualification", "Something else"];
 export const VERTICALS = ["NBFC", "Bank", "Fintech", "Insurance", "Edtech", "Healthcare", "Other"];
 export const LANGS = ["Hinglish", "Hindi", "English", "Tamil", "Telugu", "Marathi", "Bengali"];
 export const VOLUMES = ["Just exploring", "<1k", "1k–10k", "10k–100k", "100k+"];
 
-// THE ORDER — what they'll use the tool for + campaigns they'll run (multi-select)
-export const GOALS = ["Collect payments on time", "Verify customers (KYC)", "Win new customers", "Remind & notify", "Support callbacks", "Run surveys"];
-export const CAMPAIGN_KINDS = ["Payment reminders", "Collections follow-ups", "KYC / verification", "Lead qualification", "Promotional offers", "Surveys & feedback", "Missed-call callbacks"];
-export const PROMO_KINDS = new Set(["Lead qualification", "Promotional offers"]);
+// THE ORDER — asked exactly once. This one multi-select replaces the old
+// use-case / goals / campaign-kinds triple-ask (three phrasings, one answer).
+export const BREWS = [
+  "Payment & EMI reminders",
+  "Collections follow-ups",
+  "KYC / verification",
+  "Customer onboarding",
+  "Lead qualification",
+  "Promotional offers",
+  "Surveys & feedback",
+  "Missed-call callbacks",
+];
+// promotional → 140-series + DLT · service/transactional → 160-series (silent routing)
+export const PROMO_BREWS = new Set(["Lead qualification", "Promotional offers"]);
 
-// FIELDS V2 (ONBOARDING-FIELDS-V2.md) — 7 evidence-backed additions
-export const SETUPS = ["Tele-caller team", "Auto-dialer / IVR", "Another AI voice tool", "WhatsApp & SMS only", "Not calling yet"];
 export const DIRECTIONS = ["Outbound campaigns", "Inbound answering", "Both ways"];
 export const DLT_STATUS = ["DLT-registered already", "Registration in progress", "DLT? Tell me more"];
-export const TIMELINES = ["This week", "This month", "This quarter", "Just tasting"];
 export const PERSONAS = ["Warm & friendly (Hindi-first)", "Polite & formal (English)", "Firm but fair (collections)", "Upbeat seller (Hinglish)", "Surprise me"];
 export const WINDOWS = ["Mornings (9–12)", "Afternoons (12–4)", "Evenings (4–8)", "You pick — keep me TRAI-safe"];
-export const CRMS = ["LeadSquared", "Zoho", "Salesforce", "HubSpot", "Excel / Sheets", "Our own LMS-LOS", "Nowhere yet"];
-
-// promotional → 140-series · service/transactional → 160-series (silent routing)
-export const PATH_OF: Record<string, "promo" | "service"> = {
-  "EMI reminders": "service", Collections: "service", "KYC verification": "service",
-  "Loan onboarding": "service", "Lead qualification": "promo", "Something else": "promo",
-};
 
 export const GREETINGS: Record<string, string> = {
   Hinglish: "Namaste! Aapki EMI kal due hai — main madad ke liye yahan hoon.",
@@ -37,7 +40,7 @@ export const GREETINGS: Record<string, string> = {
   Bengali: "Nomoshkar! Apnar EMI kal due ache.",
 };
 
-export const STEP_LABELS = ["NAME ON THE TAB", "PICK YOUR BLEND", "THE ORDER", "CHOOSE THE ROAST", "TRAIN YOUR BARISTA", "THE FIRST POUR"];
+export const STEP_LABELS = ["THE HOUSE", "THE ORDER", "THE VOICE", "THE FIRST POUR"];
 
 export const GRANT = { SCROLL: 0, STAMP: 400, POUR: 900, SUB: 2600, WIPE: 3400, SKIP_AFTER: 300 } as const;
 

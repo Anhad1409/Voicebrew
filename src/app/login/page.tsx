@@ -283,7 +283,7 @@ export default function LoginPage() {
                             <svg width="12" height="12" viewBox="0 0 18 18"><path d="M4.5 6 h8 l-1 6.5 a1.5 1.5 0 0 1 -1.5 1.2 h-3 a1.5 1.5 0 0 1 -1.5 -1.2 Z" fill="none" stroke="#6b4423" strokeWidth="1.4" /></svg>
                           </motion.span>
                         </span>
-                        <span className="text-[13px] text-mocha">Keep my cup warm</span>
+                        <span className="text-[13px] text-mocha">Remember me <span className="text-latte">· keeps the cup warm</span></span>
                       </button>
                       <button type="button" onClick={() => router.push("/forgot")} className="text-[13px] font-medium text-caramel underline-offset-4 hover:underline">
                         Forgot password?
@@ -304,7 +304,7 @@ export default function LoginPage() {
                               <span className="ml-1.5">Brewing…</span>
                             </motion.span>
                           ) : (
-                            <motion.span key="label" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>Start the pour</motion.span>
+                            <motion.span key="label" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>Sign in — start the pour</motion.span>
                           )}
                         </AnimatePresence>
                       </motion.button>
@@ -331,7 +331,7 @@ export default function LoginPage() {
                     </motion.div>
                     <motion.div variants={rows} className="text-center">
                       <button type="button" onClick={() => setFace("magic")} className="text-[13px] text-mocha underline-offset-4 hover:underline">
-                        or get a magic bean <span className="text-steam">✳</span> link
+                        no password? get a sign-in link by email <span className="text-steam">✳</span>
                       </button>
                     </motion.div>
                     <motion.div variants={rows} className="border-t border-foam pt-4 text-center">
@@ -339,7 +339,7 @@ export default function LoginPage() {
                       <button type="button"
                         onClick={() => { try { sessionStorage.setItem("vb-card-flip", "1"); } catch {} router.push("/signup"); }}
                         className="text-[13px] font-semibold text-caramel underline-offset-4 hover:underline">
-                        Open a tab →
+                        Create a free account →
                       </button>
                     </motion.div>
                   </motion.div>

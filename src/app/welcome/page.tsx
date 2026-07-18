@@ -3,7 +3,8 @@
 /* /welcome — "YOUR TAB, PRINTING". 4-step chip wizard where every answer
    prints as a receipt line item; ends in THE OPENING BALANCE (50 sips on
    the house, wax-stamped with your TABLE No.) → THE POUR wipe → /dashboard.
-   Spec: ONBOARDING-DESIGN-SPEC.md §3–4. */
+   V3: questions read plainly first — the café metaphor is garnish (eyebrows,
+   receipt, animations), never the carrier of meaning. */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,9 +13,8 @@ import NumberFlow from "@number-flow/react";
 import { Check, Phone } from "lucide-react";
 import { VoiceBrewMark } from "@/components/layout/voicebrew-logo";
 import {
-  ROLES, TEAM, USE_CASES, VERTICALS, LANGS, VOLUMES, PATH_OF, GREETINGS,
-  STEP_LABELS, GRANT, readback, GOALS, CAMPAIGN_KINDS, PROMO_KINDS,
-  SETUPS, DIRECTIONS, DLT_STATUS, TIMELINES, PERSONAS, WINDOWS, CRMS, type RLine,
+  ROLES, VERTICALS, LANGS, VOLUMES, GREETINGS, STEP_LABELS, GRANT, readback,
+  BREWS, PROMO_BREWS, DIRECTIONS, DLT_STATUS, PERSONAS, WINDOWS, type RLine,
 } from "./wizard";
 import { getProfile, setProfile, ensureTableNo, grantOpeningBalance } from "@/lib/tab-mock";
 import { Beans } from "../login/Beans";
@@ -88,7 +88,7 @@ function BrewBar() {
 
 /* ---------- mini cup progress token ---------- */
 function CupToken({ quarter }: { quarter: number }) {
-  const fill = Math.min(1, quarter / 6);
+  const fill = Math.min(1, quarter / 4);
   return (
     <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden>
       <path d="M8 12 h24 l-3.4 22 a4 4 0 0 1 -4 3.4 h-9.2 a4 4 0 0 1 -4 -3.4 Z" fill="#fffdf9" stroke="#d3b78f" strokeWidth="1.5" />
@@ -215,21 +215,14 @@ export default function WelcomePage() {
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
   const [role, setRole] = useState("");
-  const [team, setTeam] = useState("");
-  const [useCase, setUseCase] = useState("");
   const [vertical, setVertical] = useState("");
-  const [goals, setGoals] = useState<string[]>([]);
-  const [kinds, setKinds] = useState<string[]>([]);
-  // fields v2 (ONBOARDING-FIELDS-V2.md)
-  const [setup, setSetup] = useState("");
+  const [brews, setBrews] = useState<string[]>([]); // the one what-will-you-brew question
   const [direction, setDirection] = useState("");
   const [dlt, setDlt] = useState("");
-  const [timeline, setTimeline] = useState("");
+  const [volume, setVolume] = useState("");
   const [persona, setPersona] = useState("");
   const [window_, setWindow_] = useState("");
-  const [crm, setCrm] = useState("");
   const [langs, setLangs] = useState<string[]>([]);
-  const [volume, setVolume] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const [verified, setVerified] = useState(false);
@@ -253,13 +246,13 @@ export default function WelcomePage() {
       if (localStorage.getItem("vb-onboarded")) {
         // already granted: allow "pour later" users back in for step 4 only
         if (p.phoneVerified) { router.replace("/dashboard"); return; }
-        setName(p.name || ""); setPourOnly(true); setStep(5);
+        setName(p.name || ""); setPourOnly(true); setStep(3);
         return;
       }
       if (!p.name) { router.replace("/signup"); return; }
       setName(p.name);
       const saved = Number(sessionStorage.getItem("vb-wizard-step") || "0");
-      if (saved > 0 && saved < 6) setStep(saved);
+      if (saved > 0 && saved < 4) setStep(saved);
     } catch {}
     return () => timeouts.current.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -310,12 +303,10 @@ export default function WelcomePage() {
   // labels each step owns on the receipt — wiped before re-printing so
   // going back and changing an answer never leaves a stale line
   const STEP_LABELS_OWNED: string[][] = [
-    ["HOUSE BLEND", "ROLE", "PARTY OF"],
-    ["BLEND", "HOUSE", "BREWING TODAY"],
-    ["POUR DIRECTION", "THE ORDER", "FOR", "CAMPAIGNS", "INSPECTOR'S STAMP"],
-    ["ROAST", "PARTY SIZE", "FIRST BATCH DUE"],
-    ["YOUR BARISTA", "SERVING HOURS"],
-    ["BEANS KEPT AT", "FIRST POUR"],
+    ["ROLE", "INDUSTRY"],
+    ["BREWING", "DIRECTION", "VOLUME", "DLT PAPERS"],
+    ["LANGUAGES", "VOICE", "CALL HOURS"],
+    ["FIRST POUR"],
   ];
   const wipeStepLines = (s: number) =>
     setLines((prev) => prev.filter((l) => !STEP_LABELS_OWNED[s]?.includes(l.label)));
@@ -328,51 +319,36 @@ export default function WelcomePage() {
   const advance = (skip: boolean) => {
     wipeStepLines(step);
     if (step === 0) {
-      if (skip || (!brand && !role && !team)) print("HOUSE BLEND", "LEFT ROOM FOR MILK", "milk");
+      if (skip || (!brand && !role && !vertical)) print("HOUSE BLEND", "LEFT ROOM FOR MILK", "milk");
       else {
         if (role) print("ROLE", role.toUpperCase());
-        if (team) print("PARTY OF", team.toUpperCase());
+        if (vertical) print("INDUSTRY", vertical.toUpperCase());
       }
-      setProfile({ brand, role, teamSize: team, skipped: skip ? ["table"] : [] });
+      setProfile({ brand, role, vertical, skipped: skip ? ["house"] : [] });
       setStep(1);
     } else if (step === 1) {
-      if (skip || !useCase) print("BLEND", "LEFT ROOM FOR MILK", "milk");
-      else print("BLEND", `${useCase.toUpperCase()} (${PATH_OF[useCase] === "service" ? "SERVICE" : "PROMO"})`);
-      if (vertical) print("HOUSE", vertical.toUpperCase());
-      if (setup) print("BREWING TODAY", setup.toUpperCase());
-      setProfile({ useCase, vertical, currentSetup: setup, compliancePath: useCase ? PATH_OF[useCase] : undefined });
+      // THE ORDER — one unified list; compliance path derived, never re-asked
+      if (skip || brews.length === 0) print("BREWING", "LEFT ROOM FOR MILK", "milk");
+      else print("BREWING", brews.map((b) => b.toUpperCase()).join(" · "));
+      if (direction) print("DIRECTION", direction.toUpperCase());
+      if (volume) print("VOLUME", volume.toUpperCase());
+      const promo = brews.some((b) => PROMO_BREWS.has(b));
+      if (promo && dlt) print("DLT PAPERS", dlt.toUpperCase());
+      setProfile({
+        useCase: brews[0], campaignKinds: brews, goals: brews, callDirection: direction,
+        volume, dltStatus: dlt || undefined, compliancePath: promo ? "promo" : brews.length ? "service" : undefined,
+      });
       setStep(2);
     } else if (step === 2) {
-      // THE ORDER — direction + goals + campaign kinds (+ conditional DLT stamp)
-      if (direction) print("POUR DIRECTION", direction.toUpperCase());
-      if (skip || (goals.length === 0 && kinds.length === 0 && !direction)) print("THE ORDER", "LEFT ROOM FOR MILK", "milk");
-      else {
-        if (goals.length) print("FOR", goals.map((g) => g.toUpperCase()).join(" · "));
-        if (kinds.length) print("CAMPAIGNS", kinds.map((k) => k.toUpperCase()).join(" · "));
-      }
-      const promo = kinds.some((k) => PROMO_KINDS.has(k));
-      if (promo && dlt) print("INSPECTOR'S STAMP", dlt.toUpperCase());
-      setProfile({ goals, campaignKinds: kinds, callDirection: direction, dltStatus: dlt || undefined, compliancePath: promo ? "promo" : (useCase ? PATH_OF[useCase] : undefined) });
+      // THE VOICE — everything the tasting call needs, in one place
+      if (skip || langs.length === 0) print("LANGUAGES", "LEFT ROOM FOR MILK", "milk");
+      else print("LANGUAGES", langs.map((l) => l.toUpperCase()).join(" · "));
+      if (persona) print("VOICE", persona.split(" (")[0].toUpperCase());
+      if (window_) print("CALL HOURS", window_.toUpperCase());
+      setProfile({ languages: langs, baristaPersona: persona, callingWindow: window_ });
       setStep(3);
-    } else if (step === 3) {
-      if (skip || langs.length === 0) print("ROAST", "LEFT ROOM FOR MILK", "milk");
-      else print("ROAST", langs.map((l) => l.toUpperCase()).join(" · "));
-      if (volume) print("PARTY SIZE", volume.toUpperCase());
-      if (timeline) print("FIRST BATCH DUE", timeline.toUpperCase());
-      setProfile({ languages: langs, volume, launchTimeline: timeline });
-      setStep(4);
-    } else if (step === 4) {
-      // TRAIN YOUR BARISTA — persona + serving hours
-      if (skip || (!persona && !window_)) print("YOUR BARISTA", "LEFT ROOM FOR MILK", "milk");
-      else {
-        if (persona) print("YOUR BARISTA", persona.split(" (")[0].toUpperCase());
-        if (window_) print("SERVING HOURS", window_.toUpperCase());
-      }
-      setProfile({ baristaPersona: persona, callingWindow: window_ });
-      setStep(5);
     } else {
-      // step 6 done (verified+tasted, or pour later)
-      if (crm) { print("BEANS KEPT AT", crm.toUpperCase()); setProfile({ crmStack: crm }); }
+      // step 4 done (verified+tasted, or pour later)
       if (pourOnly) { router.push("/dashboard"); return; } // already granted
       if (!verified) print("FIRST POUR", "POUR LATER", "milk");
       startGrant();
@@ -389,87 +365,65 @@ export default function WelcomePage() {
   const finishTasting = () => {
     setCalling(false);
     setTasted(true);
-    print(`1 × TASTING CALL (${(langs[0] || "HINGLISH").toUpperCase()})`, "ON THE HOUSE — 0 SIPS", "free");
+    print(`1 × SAMPLE CALL (${(langs[0] || "HINGLISH").toUpperCase()})`, "ON THE HOUSE — FREE", "free");
   };
 
+  const eyebrow = (plain: string, garnish?: string) => (
+    <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>
+      {plain}{garnish && <span style={{ color: "#a3906e" }}> · {garnish}</span>}
+    </div>
+  );
+
   const stepBody = [
-    /* 1 — NAME ON THE TAB */
+    /* 1 — THE HOUSE: who you are */
     <div key="s1" className="space-y-5">
       <div>
-        <label className={`${mono} mb-1.5 block text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Company / brand</label>
+        <label className={`${mono} mb-1.5 block text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Company / brand name</label>
         <input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="e.g. Blostem Finance"
           className="h-11 w-full rounded-xl border bg-[#fdf8f0] px-3.5 text-[15px] outline-none focus:border-[#b8763d]"
           style={{ borderColor: "#d8bf9a", color: "#2a1a0f", caretColor: "#b8763d" }} />
       </div>
       <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Your role</div>
+        {eyebrow("Your industry")}
+        <div className="flex flex-wrap gap-2">{VERTICALS.map((v) => <Chip key={v} label={v} on={vertical === v} onTap={() => setVertical(vertical === v ? "" : v)} />)}</div>
+      </div>
+      <div>
+        {eyebrow("Your role")}
         <div className="flex flex-wrap gap-2">{ROLES.map((r) => <Chip key={r} label={r} on={role === r} onTap={() => setRole(role === r ? "" : r)} />)}</div>
       </div>
-      <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Team size <span style={{ color: "#c9a87c" }}>· optional</span></div>
-        <div className="flex flex-wrap gap-2">{TEAM.map((s) => <Chip key={s} label={s} on={team === s} onTap={() => setTeam(team === s ? "" : s)} />)}</div>
-      </div>
     </div>,
-    /* 2 — PICK YOUR BLEND (chalkboard) */
-    <div key="s2" className="space-y-5 rounded-2xl p-5" style={{ background: "#2a1a0f" }}>
+    /* 2 — THE ORDER: what you'll use it for (asked once) */
+    <div key="s2" className="space-y-5">
       <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#c9a87c" }}>What are we brewing for your guests?</div>
-        <div className="flex flex-wrap gap-2">{USE_CASES.map((u) => (
-          <button key={u} onClick={() => setUseCase(useCase === u ? "" : u)} aria-pressed={useCase === u}
-            className="rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors"
-            style={useCase === u ? { background: "#c9a87c", borderColor: "#c9a87c", color: "#2a1a0f" } : { background: "transparent", borderColor: "#6b4423", color: "#eadbc8" }}>{u}</button>
-        ))}</div>
+        {eyebrow("What kind of calls will you run?", "pick all that apply")}
+        <div className="flex flex-wrap gap-2">{BREWS.map((b) => <Chip key={b} label={b} on={brews.includes(b)} onTap={() => setBrews((xs) => xs.includes(b) ? xs.filter((x) => x !== b) : [...xs, b])} />)}</div>
+        {brews.some((b) => PROMO_BREWS.has(b)) && (
+          <p className={`${mono} mt-2 text-[10px] uppercase tracking-[0.1em]`} style={{ color: "#b8763d" }}>Promotional calls go out 10:00–19:00 IST only — TRAI rules, house rules.</p>
+        )}
       </div>
       <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#c9a87c" }}>Your house</div>
-        <div className="flex flex-wrap gap-2">{VERTICALS.map((v) => (
-          <button key={v} onClick={() => setVertical(vertical === v ? "" : v)} aria-pressed={vertical === v}
-            className="rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors"
-            style={vertical === v ? { background: "#c9a87c", borderColor: "#c9a87c", color: "#2a1a0f" } : { background: "transparent", borderColor: "#6b4423", color: "#eadbc8" }}>{v}</button>
-        ))}</div>
-      </div>
-      <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#c9a87c" }}>What&apos;s brewing today? <span style={{ color: "#8a6f4d" }}>· how do your calls happen right now</span></div>
-        <div className="flex flex-wrap gap-2">{SETUPS.map((s) => (
-          <button key={s} onClick={() => setSetup(setup === s ? "" : s)} aria-pressed={setup === s}
-            className="rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors"
-            style={setup === s ? { background: "#c9a87c", borderColor: "#c9a87c", color: "#2a1a0f" } : { background: "transparent", borderColor: "#6b4423", color: "#eadbc8" }}>{s}</button>
-        ))}</div>
-      </div>
-    </div>,
-    /* 3 — THE ORDER (direction + goals + campaign kinds + conditional DLT) */
-    <div key="s-order" className="space-y-5">
-      <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Which way does the coffee flow?</div>
+        {eyebrow("Which way do your calls flow?")}
         <div className="flex flex-wrap gap-2">{DIRECTIONS.map((d) => <Chip key={d} label={d} on={direction === d} onTap={() => setDirection(direction === d ? "" : d)} />)}</div>
       </div>
       <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>What will you use VoiceBrew for? <span style={{ color: "#a3906e" }}>· pick any</span></div>
-        <div className="flex flex-wrap gap-2">{GOALS.map((g) => <Chip key={g} label={g} on={goals.includes(g)} onTap={() => setGoals((xs) => xs.includes(g) ? xs.filter((x) => x !== g) : [...xs, g])} />)}</div>
+        {eyebrow("Calls per month", "optional")}
+        <div className="flex flex-wrap gap-2">{VOLUMES.map((v) => <Chip key={v} label={v} on={volume === v} onTap={() => setVolume(volume === v ? "" : v)} />)}</div>
       </div>
-      <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>What kind of campaigns will you run?</div>
-        <div className="flex flex-wrap gap-2">{CAMPAIGN_KINDS.map((k) => <Chip key={k} label={k} on={kinds.includes(k)} onTap={() => setKinds((xs) => xs.includes(k) ? xs.filter((x) => x !== k) : [...xs, k])} />)}</div>
-        {kinds.some((k) => PROMO_KINDS.has(k)) && (
-          <p className={`${mono} mt-2 text-[10px] uppercase tracking-[0.1em]`} style={{ color: "#b8763d" }}>Promotional campaigns pour 10:00–19:00 IST — the house keeps TRAI&apos;s hours.</p>
-        )}
-      </div>
-      {/* conditional: DLT readiness — only when a promo kind is picked (~80% never see it) */}
       <AnimatePresence>
-        {kinds.some((k) => PROMO_KINDS.has(k)) && (
+        {brews.some((b) => PROMO_BREWS.has(b)) && (
           <motion.div key="dlt" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.28, ease: EASE }} className="overflow-hidden">
             <div className="rounded-2xl border-[1.5px] p-4" style={{ borderColor: "#b8935e", background: "#fbf4e4" }}>
-              <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Health inspector&apos;s stamp <span style={{ color: "#a3906e" }}>· promo calls in India need DLT papers. Got yours?</span></div>
+              {eyebrow("Promotional calls in India need DLT registration — got yours?", "the health inspector's stamp")}
               <div className="flex flex-wrap gap-2">{DLT_STATUS.map((d) => <Chip key={d} label={d} on={dlt === d} onTap={() => setDlt(dlt === d ? "" : d)} />)}</div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>,
-    /* 4 — CHOOSE THE ROAST */
+    /* 3 — THE VOICE: everything the caller's voice needs */
     <div key="s3" className="space-y-5">
       <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Calling languages</div>
+        {eyebrow("Which languages should we call in?")}
         <div className="flex flex-wrap gap-2">{LANGS.map((l) => <Chip key={l} label={l} on={langs.includes(l)} onTap={() => setLangs((xs) => xs.includes(l) ? xs.filter((x) => x !== l) : [...xs, l])} />)}</div>
         <AnimatePresence mode="wait">
           {langs.length > 0 && (
@@ -481,42 +435,29 @@ export default function WelcomePage() {
         </AnimatePresence>
       </div>
       <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Monthly call volume <span style={{ color: "#c9a87c" }}>· optional</span></div>
-        <div className="flex flex-wrap gap-2">{VOLUMES.map((v) => <Chip key={v} label={v} on={volume === v} onTap={() => setVolume(volume === v ? "" : v)} />)}</div>
-      </div>
-      <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>When&apos;s the first batch due? <span style={{ color: "#a3906e" }}>· when do you need calls going out</span></div>
-        <div className="flex flex-wrap gap-2">{TIMELINES.map((t) => <Chip key={t} label={t} on={timeline === t} onTap={() => setTimeline(timeline === t ? "" : t)} />)}</div>
-      </div>
-    </div>,
-    /* 5 — TRAIN YOUR BARISTA (new) */
-    <div key="s-barista" className="space-y-5">
-      <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Pick your barista <span style={{ color: "#a3906e" }}>· how should your caller sound on the phone</span></div>
+        {eyebrow("How should the caller sound?", "your barista's manner")}
         <div className="flex flex-wrap gap-2">{PERSONAS.map((p) => <Chip key={p} label={p} on={persona === p} onTap={() => setPersona(persona === p ? "" : p)} />)}</div>
         <AnimatePresence>
           {persona && persona !== "Surprise me" && (
             <motion.p key={persona} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
               className={`${mono} mt-3 rounded-xl px-3 py-2 text-[12px]`} style={{ background: "#f4e9d8", color: "#3d2817" }}>
-              🎙 Your tasting call will sound {persona.split(" (")[0].toLowerCase()} — you&apos;ll hear it in the next step.
+              🎙 Your sample call will sound {persona.split(" (")[0].toLowerCase()} — you&apos;ll hear it in the next step.
             </motion.p>
           )}
         </AnimatePresence>
       </div>
       <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Serving hours <span style={{ color: "#a3906e" }}>· when should we pour</span></div>
+        {eyebrow("When may we call your customers?")}
         <div className="flex flex-wrap gap-2">{WINDOWS.map((w) => <Chip key={w} label={w} on={window_ === w} onTap={() => setWindow_(window_ === w ? "" : w)} />)}</div>
         <p className={`${mono} mt-2 text-[10px] uppercase tracking-[0.1em]`} style={{ color: "#b8763d" }}>We never call outside 9am–9pm. TRAI&apos;s rules — and ours.</p>
       </div>
     </div>,
-    /* 6 — THE FIRST POUR */
+    /* 4 — THE FIRST POUR: verify your number, hear a live sample call */
     <div key="s4" className="space-y-5">
-      <p className="font-serif text-lg italic" style={{ color: "#2a1a0f" }}>Where should we pour the first call?</p>
-      <p className={`${mono} -mt-3 text-[11px]`} style={{ color: "#6b4423" }}>Free sips pour only into your own verified cup — no paperwork, no waiting.</p>
-      <div>
-        <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>Where do you keep the beans? <span style={{ color: "#a3906e" }}>· where your contact lists live</span></div>
-        <div className="flex flex-wrap gap-2">{CRMS.map((c) => <Chip key={c} label={c} on={crm === c} onTap={() => setCrm(crm === c ? "" : c)} />)}</div>
-      </div>
+      <p className="text-[14px] leading-relaxed" style={{ color: "#3d2817" }}>
+        Verify your own mobile number and we&apos;ll place a <b>free sample call</b> to it — you&apos;ll hear
+        exactly what your customers will hear. <span style={{ color: "#6b4423" }}>The free call only goes to your own verified number.</span>
+      </p>
       <div className="flex items-center gap-2">
         <span className={`${mono} rounded-xl border px-3 py-2.5 text-[14px]`} style={{ borderColor: "#d8bf9a", background: "#f4e9d8", color: "#6b4423" }}>+91</span>
         <input value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} inputMode="numeric" placeholder="98••• •••10" disabled={verified}
@@ -525,7 +466,7 @@ export default function WelcomePage() {
       </div>
       {phone.length === 10 && !verified && (
         <div>
-          <div className={`${mono} mb-2 text-[11px] uppercase tracking-[0.14em]`} style={{ color: "#6b4423" }}>6-digit OTP <span style={{ color: "#c9a87c" }}>· any digits work in the demo</span></div>
+          {eyebrow("Enter the 6-digit OTP", "any digits work in the demo")}
           <div className="flex gap-2">
             {otp.map((d, i) => (
               <input key={i} ref={(el) => { otpRefs.current[i] = el; }} value={d} inputMode="numeric" maxLength={1}
@@ -540,17 +481,17 @@ export default function WelcomePage() {
             ))}
           </div>
           <button onClick={verify} disabled={!otpDone} className="mt-3 h-11 rounded-xl px-5 font-serif text-[15px] font-semibold transition-colors"
-            style={{ background: otpDone ? "#b8763d" : "#eadbc8", color: otpDone ? "#fffdf9" : "#c9a87c" }}>Verify my cup</button>
+            style={{ background: otpDone ? "#b8763d" : "#eadbc8", color: otpDone ? "#fffdf9" : "#c9a87c" }}>Verify my number</button>
         </div>
       )}
       {verified && !tasted && (
         <motion.button initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} onClick={() => setCalling(true)}
           className="flex h-12 w-full items-center justify-center gap-2 rounded-xl font-serif text-[17px] font-semibold" style={{ background: "#2a1a0f", color: "#fffdf9" }}>
-          <Phone className="size-4" /> Call me now
+          <Phone className="size-4" /> Call me now — free sample
         </motion.button>
       )}
       {verified && tasted && (
-        <p className={`${mono} flex items-center gap-1.5 text-[12px]`} style={{ color: "#4fb0a5" }}><Check className="size-4" /> Tasting poured — on the house.</p>
+        <p className={`${mono} flex items-center gap-1.5 text-[12px]`} style={{ color: "#4fb0a5" }}><Check className="size-4" /> Sample call poured — on the house.</p>
       )}
     </div>,
   ];
@@ -571,14 +512,14 @@ export default function WelcomePage() {
           <div className="flex items-center gap-3">
             <CupToken quarter={phase === "grant" ? 6 : step + (verified ? 1 : 0)} />
             <span className={`${mono} text-[10px] uppercase tracking-[0.12em] text-mocha`}>
-              {phase === "grant" ? "TAB OPENED" : `${step + 1} of 6 — ${STEP_LABELS[step]}`}
+              {phase === "grant" ? "TAB OPENED" : `Step ${step + 1} of 4 — ${STEP_LABELS[step]}`}
             </span>
           </div>
         </div>
         {/* progress rule */}
         <div className="h-[3px] w-full bg-foam">
           <motion.div className="h-full rounded-r-full bg-brand"
-            initial={false} animate={{ width: `${phase === "grant" ? 100 : ((step + 1) / 6) * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 24 }} />
+            initial={false} animate={{ width: `${phase === "grant" ? 100 : ((step + 1) / 4) * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 24 }} />
         </div>
       </div>
 
@@ -606,7 +547,7 @@ export default function WelcomePage() {
                     </button>
                   )}
                   <h1 className="mb-1 font-serif text-[28px] leading-tight" style={{ color: "#2a1a0f" }}>
-                    {["Whose café is this?", "Pick your blend — what are we brewing for your guests?", "The order — what's this tab really for?", "Choose the roast — what language should the cup speak?", "Train your barista — how should the caller sound?", "The first pour"][step]}
+                    {["Tell us about your company", "What will you use VoiceBrew for?", "How should your calls sound?", "Hear your first call — free"][step]}
                   </h1>
                   <div className="mb-6 mt-2 h-[3px] w-14 rounded-full" style={{ background: "linear-gradient(90deg,#b8763d,#4fb0a5)" }} />
                   {stepBody[step]}
@@ -625,11 +566,11 @@ export default function WelcomePage() {
                       )}
                       <motion.button whileHover={reduce ? undefined : { y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => advance(false)}
                         className="h-12 rounded-xl bg-brand px-7 font-serif text-[16px] font-semibold text-brand-foreground shadow-cta transition-colors hover:bg-brand-dark">
-                        {step === 5 ? (pourOnly ? "Done" : verified ? "Open the tab ☕" : "Continue") : "Continue →"}
+                        {step === 3 ? (pourOnly ? "Done" : verified ? "Finish — open my tab ☕" : "Finish setup") : "Continue →"}
                       </motion.button>
                     </div>
                     <button onClick={() => advance(true)} className={`${mono} text-[11px] uppercase tracking-[0.1em] underline-offset-4 hover:underline`} style={{ color: "#a3906e" }}>
-                      {step === 5 ? "Pour later" : "I'll decide at the counter"}
+                      {step === 3 ? "Skip — I'll verify later" : "Skip this step"}
                     </button>
                   </div>
                 </motion.div>
@@ -655,7 +596,7 @@ export default function WelcomePage() {
                     <span className={`${mono} text-[84px] font-semibold leading-none`} style={{ color: "#2a1a0f" }}>
                       <NumberFlow value={granted ? 50 : 0} transformTiming={{ duration: reduce ? 0 : 1600, easing: "cubic-bezier(0.22,1,0.36,1)" }} />
                     </span>
-                    <span className={`${mono} pb-2 text-[15px] font-semibold uppercase tracking-[0.14em]`} style={{ color: "#4fb0a5" }}>sips</span>
+                    <span className={`${mono} pb-2 text-[15px] font-semibold uppercase tracking-[0.14em]`} style={{ color: "#4fb0a5" }}>sips <span style={{ color: "#a3906e" }}>≈ 6 min of calls</span></span>
                   </div>
                   <AnimatePresence>
                     {granted && (

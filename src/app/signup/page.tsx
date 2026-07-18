@@ -55,8 +55,8 @@ export default function SignupPage() {
           {/* LEFT — cup + what's on the house */}
           <aside className="flex flex-col justify-between border-b border-foam bg-oat/40 p-7 lg:border-b-0 lg:border-r">
             <div>
-              <h2 className="font-serif text-xl font-semibold text-coffee">Open a tab.</h2>
-              <p className="mt-1 text-sm text-mocha">50 sips on the house — no card, no clock.</p>
+              <h2 className="font-serif text-xl font-semibold text-coffee">Start free — open a tab.</h2>
+              <p className="mt-1 text-sm text-mocha">50 free sips ≈ 6 minutes of AI calls. No card needed.</p>
             </div>
             <div className="mx-auto my-4 w-[240px] max-w-full">
               <ListeningCup ref={cupRef} focus={focus === "password" ? "password" : focus ? "email" : null}
@@ -66,7 +66,7 @@ export default function SignupPage() {
             <div className="rounded-xl border border-foam bg-card p-4 shadow-glass">
               <div className="font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.14em] text-mocha">On the house</div>
               <ul className="mt-2 space-y-1.5 text-[13px] text-coffee">
-                <li className="flex items-center gap-2"><span className="size-1.5 rounded-full bg-steam" /> 50 free sips · never expire</li>
+                <li className="flex items-center gap-2"><span className="size-1.5 rounded-full bg-steam" /> 50 free sips (≈ 6 call minutes) · never expire</li>
                 <li className="flex items-center gap-2"><span className="size-1.5 rounded-full bg-steam" /> Every language on the shelf</li>
                 <li className="flex items-center gap-2"><span className="size-1.5 rounded-full bg-steam" /> DND scrubbed, TRAI-safe hours</li>
               </ul>
@@ -77,8 +77,8 @@ export default function SignupPage() {
           <section className="p-7 lg:p-9">
             <motion.form variants={stack} initial="hidden" animate="show" onSubmit={submit} noValidate className="space-y-4">
               <motion.header variants={rows} className="mb-6">
-                <h1 className="font-serif text-[26px] font-semibold leading-tight text-coffee">Pull up a chair</h1>
-                <p className="mt-1 text-sm text-muted-foreground">Three details and the tab is yours.</p>
+                <h1 className="font-serif text-[26px] font-semibold leading-tight text-coffee">Create your account</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Three details and the tab is yours — pull up a chair.</p>
               </motion.header>
 
               <motion.div variants={rows}>
@@ -116,7 +116,7 @@ export default function SignupPage() {
                   )}
                 </AnimatePresence>
                 <button type="button" onClick={() => setMagic((v) => !v)} className="mt-2 block text-[13px] text-mocha underline-offset-4 hover:underline">
-                  {magic ? "I'll keep a key" : <>or skip it — take a magic bean <span className="text-steam">✳</span> link instead</>}
+                  {magic ? "I'll set a password instead" : <>or skip the password — we'll email you a sign-in link <span className="text-steam">✳</span></>}
                 </button>
               </motion.div>
 
@@ -141,14 +141,14 @@ export default function SignupPage() {
               <motion.div variants={rows} className="pt-1">
                 <motion.button type="submit" aria-disabled={!done} whileTap={done ? { scale: 0.98 } : undefined}
                   className="h-12 w-full rounded-xl bg-brand font-serif text-[16px] font-semibold text-brand-foreground shadow-cta transition-colors hover:bg-brand-dark aria-disabled:cursor-not-allowed aria-disabled:opacity-50">
-                  {opening ? "Opening…" : magic ? "Plant the bean ✳" : "Open my tab"}
+                  {opening ? "Creating your account…" : magic ? "Create account — email me a link ✳" : "Create free account"}
                 </motion.button>
               </motion.div>
 
               <motion.div variants={rows} className="border-t border-foam pt-4 text-center">
                 <span className="text-[13px] text-mocha">Already have a tab? </span>
                 <button type="button" onClick={() => router.push("/login")} className="text-[13px] font-semibold text-caramel underline-offset-4 hover:underline">
-                  Back to the counter →
+                  Sign in →
                 </button>
               </motion.div>
             </motion.form>
