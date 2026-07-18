@@ -10,7 +10,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { MicOff, ShieldCheck, Languages, Clock3, Sparkles } from "lucide-react";
+import { MicOff, ShieldCheck, Languages, Clock3, Sparkles, CheckCircle2, UserCheck, Flame, CalendarClock } from "lucide-react";
+import NumberFlow from "@number-flow/react";
+import { Beans } from "../Beans";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { useLiveCapacity } from "@/lib/use-live-capacity";
 import { CHANNELS, baselineActive } from "@/lib/channel-mock";
@@ -134,6 +136,67 @@ function ListenStrip({ email, mode }: { email: string; mode: "idle" | "listening
   );
 }
 
+/* ---------- ambient backdrop: color halos + steam ribbons + beans ---------- */
+function Backdrop() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {/* color halos */}
+      <div className="absolute -top-32 left-[8%] size-[420px] rounded-full opacity-25 blur-3xl" style={{ background: "radial-gradient(circle, var(--color-caramel), transparent 70%)" }} />
+      <div className="absolute right-[-6%] top-[18%] size-[460px] rounded-full opacity-20 blur-3xl" style={{ background: "radial-gradient(circle, var(--color-steam), transparent 70%)" }} />
+      <div className="absolute bottom-[-12%] left-[30%] size-[400px] rounded-full opacity-15 blur-3xl" style={{ background: "radial-gradient(circle, var(--color-mango), transparent 70%)" }} />
+      <div className="absolute bottom-[22%] left-[-6%] size-[300px] rounded-full opacity-15 blur-3xl" style={{ background: "radial-gradient(circle, var(--color-blueberry), transparent 70%)" }} />
+      {/* steam ribbons flowing across */}
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1440 900" preserveAspectRatio="none" fill="none">
+        <defs>
+          <linearGradient id="v2rib" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="var(--color-caramel)" />
+            <stop offset="0.55" stopColor="var(--color-mango)" />
+            <stop offset="1" stopColor="var(--color-steam)" />
+          </linearGradient>
+        </defs>
+        <path d="M-80 640 C 280 500, 540 780, 900 580 S 1380 430, 1540 500" stroke="url(#v2rib)" strokeWidth="70" strokeLinecap="round" opacity="0.06" />
+        <path d="M-80 660 C 300 520, 560 800, 920 600 S 1380 450, 1540 520" stroke="url(#v2rib)" strokeWidth="2.5" opacity="0.28" />
+        <path d="M-60 170 C 340 260, 700 90, 1080 200 S 1440 240, 1540 190" stroke="url(#v2rib)" strokeWidth="2" opacity="0.16" />
+      </svg>
+      <Beans />
+    </div>
+  );
+}
+
+/* ---------- floating outcome chips: the product, popping around the story ---------- */
+const CHIPS = [
+  { icon: CheckCircle2, tint: "var(--color-matcha)", title: "EMI reminder — paid", sub: "auto-logged to CRM", pos: "right-[2%] top-[16%]", delay: 1.1, bob: 5.6 },
+  { icon: Flame, tint: "var(--color-mango)", title: "Lead scored 82 · hot", sub: "handed to sales", pos: "left-[44%] top-[30%]", delay: 1.35, bob: 6.4 },
+  { icon: UserCheck, tint: "var(--color-steam)", title: "KYC verified", sub: "in 2 min on-call", pos: "left-[1%] top-[70%]", delay: 1.6, bob: 7 },
+  { icon: CalendarClock, tint: "var(--color-blueberry)", title: "Callback booked", sub: "tomorrow · 11:00", pos: "right-[30%] bottom-[7%]", delay: 1.85, bob: 6 },
+];
+function FloatChips() {
+  const reduce = useReducedMotion();
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-[2] hidden xl:block">
+      {CHIPS.map(({ icon: Icon, tint, title, sub, pos, delay, bob }) => (
+        <motion.div key={title} className={`absolute ${pos}`}
+          initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.7, y: 14 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: reduce ? 0 : delay, type: "spring", stiffness: 260, damping: 18 }}>
+          <motion.div animate={reduce ? {} : { y: [0, -9, 0] }} transition={{ duration: bob, repeat: Infinity, ease: "easeInOut", delay }}
+            className="flex items-center gap-2.5 rounded-2xl border border-foam bg-porcelain/95 py-2 pl-2.5 pr-4 shadow-card-lg backdrop-blur-sm"
+            style={{ boxShadow: `0 10px 28px -12px color-mix(in srgb, ${tint} 45%, transparent)` }}>
+            <span className="grid size-8 place-items-center rounded-xl"
+              style={{ background: `color-mix(in srgb, ${tint} 18%, #fffdf9)`, border: `1px solid color-mix(in srgb, ${tint} 35%, var(--color-foam))`, color: `color-mix(in srgb, ${tint} 75%, #2a1a0f)` }}>
+              <Icon className="size-4" />
+            </span>
+            <span className="leading-tight">
+              <span className="block text-[12.5px] font-semibold text-coffee">{title}</span>
+              <span className={`${mono} block text-[9.5px] uppercase tracking-[0.08em] text-latte`}>{sub}</span>
+            </span>
+          </motion.div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 export default function LoginV2Page() {
   const router = useRouter();
   const reduce = useReducedMotion();
@@ -143,7 +206,9 @@ export default function LoginV2Page() {
   const [focus, setFocus] = useState<"email" | "password" | null>(null);
   const [err, setErr] = useState<null | "email" | "auth">(null);
   const [busy, setBusy] = useState(false);
+  const [statsOn, setStatsOn] = useState(false);
   const wiped = useRef(false);
+  useEffect(() => { const t = setTimeout(() => setStatsOn(true), 700); return () => clearTimeout(t); }, []);
 
   const canSubmit = email.trim().length > 0 && password.length > 0;
   const mode: "idle" | "listening" | "muted" =
@@ -177,15 +242,10 @@ export default function LoginV2Page() {
   return (
     <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-cream"
       style={{ backgroundImage: "radial-gradient(1200px 620px at 78% -12%, #f9ead2 0%, transparent 58%), radial-gradient(900px 500px at 0% 104%, #f1e3d2 0%, transparent 60%), radial-gradient(560px 380px at 96% 88%, rgba(79,176,165,0.08) 0%, transparent 70%)" }}>
+      <Backdrop />
+      <FloatChips />
       {/* header */}
-      <header className="mx-auto flex w-full max-w-6xl shrink-0 items-center justify-between px-6 pt-6">
-        <span className="flex items-center gap-2.5">
-          <BrandMark className="size-9 shrink-0" />
-          <span className="leading-tight">
-            <span className="block font-serif text-lg font-semibold text-coffee">Voice<span className="text-caramel">Brew</span></span>
-            <span className={`${mono} block text-[9px] font-medium uppercase tracking-[0.16em] text-latte`}>by Blostem</span>
-          </span>
-        </span>
+      <header className="relative z-[1] mx-auto flex w-full max-w-6xl shrink-0 items-center justify-end px-6 pt-6">
         <div className="flex items-center gap-2.5">
           <span className={`${mono} flex items-center gap-2 rounded-full border border-foam bg-card px-3 py-1.5 text-[11px] font-medium text-mocha shadow-glass`}>
             <span className="relative flex size-2">
@@ -201,15 +261,34 @@ export default function LoginV2Page() {
         </div>
       </header>
 
-      <main className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-6 py-10 lg:grid-cols-[1.05fr_1fr]">
+      <main className="relative z-[1] mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-6 py-10 lg:grid-cols-[1.05fr_1fr]">
         {/* ===== LEFT — the story ===== */}
         <motion.section variants={stack} initial="hidden" animate="show" className="max-w-xl">
-          <motion.div variants={rows} className="w-40 sm:w-48">
-            <BrandMark animated className="w-full" />
+          <motion.div variants={rows} className="flex items-center gap-5 sm:gap-6">
+            <BrandMark animated className="w-32 shrink-0 sm:w-40" />
+            <div>
+              <motion.div initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: reduce ? 0 : 0.35, duration: 0.55, ease: EASE }}
+                className="font-serif text-[46px] font-semibold leading-none tracking-tight text-coffee sm:text-[56px]">
+                Voice<span className="text-caramel">Brew</span>
+              </motion.div>
+              <motion.div aria-hidden className="mt-3 h-[3px] rounded-full"
+                style={{ background: "linear-gradient(90deg, var(--color-caramel), var(--color-steam))", transformOrigin: "left" }}
+                initial={reduce ? { opacity: 0 } : { scaleX: 0 }} animate={{ opacity: 1, scaleX: 1 }}
+                transition={{ delay: reduce ? 0 : 0.6, duration: 0.6, ease: EASE }} />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: reduce ? 0 : 0.85, duration: 0.5 }}
+                className={`${mono} mt-2.5 text-[12px] font-medium uppercase tracking-[0.34em] text-latte`}>
+                by Blostem
+              </motion.div>
+            </div>
           </motion.div>
           <motion.h1 variants={rows} className="mt-6 font-serif text-[40px] font-semibold leading-[1.12] tracking-tight text-coffee sm:text-[46px]">
             Your best caller.
-            <br />On <span className="text-caramel">every</span> call.
+            <br />On{" "}
+            <span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(92deg, var(--color-caramel), var(--color-mango) 55%, var(--color-steam))" }}>
+              every
+            </span>{" "}
+            call.
           </motion.h1>
           <motion.p variants={rows} className="mt-4 text-[15.5px] leading-relaxed text-mocha">
             VoiceBrew&apos;s AI voice agents call your customers in Hindi, Hinglish, English and more —
@@ -218,6 +297,22 @@ export default function LoginV2Page() {
           </motion.p>
           <motion.div variants={rows} className="mt-6">
             <LiveCallCard />
+          </motion.div>
+          {/* count-up proof — big, colorful, unmissable */}
+          <motion.div variants={rows} className="mt-6 grid grid-cols-3 gap-3">
+            {[
+              { v: statsOn ? 2.4 : 0, suffix: "M+", label: "calls brewed", c: "var(--color-caramel)", digits: 1 },
+              { v: statsOn ? 89 : 0, suffix: "%", label: "connect rate", c: "var(--color-steam)", digits: 0 },
+              { v: statsOn ? 7 : 0, suffix: "", label: "languages", c: "var(--color-mango)", digits: 0 },
+            ].map((st) => (
+              <div key={st.label} className="rounded-2xl border border-foam bg-porcelain/80 px-4 py-3 shadow-glass backdrop-blur-sm"
+                style={{ borderTop: `3px solid color-mix(in srgb, ${st.c} 65%, transparent)` }}>
+                <div className="font-serif text-[26px] font-semibold leading-none tabular-nums" style={{ color: `color-mix(in srgb, ${st.c} 70%, #2a1a0f)` }}>
+                  <NumberFlow value={st.v} format={{ maximumFractionDigits: st.digits }} transformTiming={{ duration: 1400, easing: "cubic-bezier(0.22,1,0.36,1)" }} />{st.suffix}
+                </div>
+                <div className={`${mono} mt-1 text-[9.5px] uppercase tracking-[0.12em] text-mocha`}>{st.label}</div>
+              </div>
+            ))}
           </motion.div>
           {/* trust facts — plain, no decoding needed */}
           <motion.div variants={rows} className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
@@ -237,7 +332,10 @@ export default function LoginV2Page() {
         <motion.section initial={reduce ? { opacity: 0 } : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: EASE, delay: reduce ? 0 : 0.15 }}
           className="w-full max-w-md justify-self-center lg:justify-self-end">
-          <div className="rounded-3xl border border-foam bg-porcelain p-7 shadow-card-lg lg:p-8" style={{ minHeight: 560 }}>
+          <div className="relative">
+          <div aria-hidden className="absolute -inset-6 rounded-[36px] opacity-40 blur-2xl" style={{ background: "linear-gradient(140deg, color-mix(in srgb, var(--color-caramel) 30%, transparent), color-mix(in srgb, var(--color-steam) 22%, transparent) 60%, color-mix(in srgb, var(--color-mango) 20%, transparent))" }} />
+          <div className="relative overflow-hidden rounded-3xl border border-foam bg-porcelain p-7 shadow-card-lg lg:p-8" style={{ minHeight: 560 }}>
+            <span aria-hidden className="absolute inset-x-0 top-0 h-[3.5px]" style={{ background: "linear-gradient(90deg, var(--color-caramel), var(--color-mango) 50%, var(--color-steam))" }} />
             <h2 className="font-serif text-[24px] font-semibold text-coffee">Welcome back</h2>
             <p className="mt-1 text-sm text-muted-foreground">Sign in to your VoiceBrew workspace.</p>
 
@@ -324,6 +422,7 @@ export default function LoginV2Page() {
                 <p className={`${mono} mt-1.5 text-[10px] uppercase tracking-[0.1em] text-latte`}>50 free sips ≈ 6 minutes of AI calls · no card</p>
               </div>
             </form>
+          </div>
           </div>
         </motion.section>
       </main>
