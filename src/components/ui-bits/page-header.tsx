@@ -1,21 +1,31 @@
 import type { ReactNode } from "react";
+import { V7Banner } from "@/components/v7/kit";
+
+/* PageHeader is the app-wide header. It renders the same V7Banner used by
+   Calls/Leads/Campaigns/Reports, so every page shares one header language.
+   The original title/subtitle/actions API is unchanged; eyebrow + stats are
+   optional passthroughs for pages that want an overline or KPI chips. */
 
 export function PageHeader({
   title,
   subtitle,
   actions,
+  eyebrow,
+  stats,
 }: {
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   actions?: ReactNode;
+  eyebrow?: string;
+  stats?: { label: string; value: ReactNode; spark?: number[]; color?: string }[];
 }) {
   return (
-    <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 className="font-serif text-3xl font-semibold tracking-tight text-foreground">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
-      </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
-    </div>
+    <V7Banner
+      eyebrow={eyebrow}
+      title={title}
+      subtitle={subtitle}
+      stats={stats}
+      actions={actions}
+    />
   );
 }

@@ -16,9 +16,9 @@ export const monoLabel = "font-[family-name:var(--font-data)] text-[10px] upperc
 /* ---------- page banner: warm gradient, serif title, live stat chips ---------- */
 
 export function V7Banner({ eyebrow, title, subtitle, stats, actions }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
-  subtitle: React.ReactNode;
+  subtitle?: React.ReactNode;
   stats?: { label: string; value: React.ReactNode; spark?: number[]; color?: string }[];
   actions?: React.ReactNode;
 }) {
@@ -38,9 +38,9 @@ export function V7Banner({ eyebrow, title, subtitle, stats, actions }: {
 
       <div className="relative flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="min-w-[200px]">
-          <div className={monoLabel}>{eyebrow}</div>
+          {eyebrow && <div className={monoLabel}>{eyebrow}</div>}
           <h1 className="mt-0.5 font-serif text-[22px] font-semibold leading-tight tracking-tight text-coffee">{title}</h1>
-          <p className="mt-0.5 text-[13px] text-mocha">{subtitle}</p>
+          {subtitle && <p className="mt-0.5 text-[13px] text-mocha">{subtitle}</p>}
         </div>
 
         {stats && stats.length > 0 && (

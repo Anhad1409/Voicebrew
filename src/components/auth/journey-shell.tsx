@@ -21,7 +21,7 @@ export function JourneyShell({ children, wide = false }: { children: React.React
     >
       {/* header — sidebar lockup + topbar live pill */}
       <header className="mx-auto flex w-full max-w-6xl shrink-0 items-center justify-between px-6 pt-6">
-        <Link href="/login"><VoiceBrewLogo /></Link>
+        <Link href="/login"><VoiceBrewLogo animated /></Link>
         <span className="flex items-center gap-2 rounded-full border border-foam bg-card px-3 py-1.5 text-xs font-medium text-mocha shadow-glass">
           <span className="relative flex size-2">
             <span className="absolute inline-flex size-full animate-ping rounded-full bg-steam opacity-60" />
