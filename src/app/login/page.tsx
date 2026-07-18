@@ -160,7 +160,7 @@ export default function LoginPage() {
   return (
     <JourneyShell wide>
       <JourneyCard className="max-w-5xl overflow-hidden p-0">
-        <div className="grid lg:grid-cols-[1fr_1.1fr]">
+        <div className="grid lg:min-h-[620px] lg:grid-cols-[1fr_1.1fr]">
           {/* ===== LEFT — the cup, in an oat well (dashboard panel treatment) ===== */}
           <motion.aside
             className="relative flex flex-col justify-between border-b border-foam bg-oat/40 p-7 lg:border-b-0 lg:border-r"
@@ -237,13 +237,15 @@ export default function LoginPage() {
                           )}
                         </AnimatePresence>
                       </div>
-                      {emailFmtErr && <p className="mt-1.5 text-[12px] text-danger">That doesn&apos;t look like an email — one more look?</p>}
-                      {authErr && phase === "error" && <p role="alert" className="mt-1.5 text-[13px] text-danger">That blend didn&apos;t match — try again.</p>}
+                      <div className="mt-1 min-h-[20px]">
+                        {emailFmtErr && <p className="text-[12px] text-danger">That doesn&apos;t look like an email — one more look?</p>}
+                        {authErr && phase === "error" && <p role="alert" className="text-[13px] text-danger">That blend didn&apos;t match — try again.</p>}
+                      </div>
                     </motion.div>
 
                     {/* password */}
                     <motion.div variants={rows}>
-                      <div className="mb-1.5 flex items-center justify-between">
+                      <div className="mb-1.5 flex h-[22px] items-center justify-between">
                         <label htmlFor="vb-pass" className={`${labelCls} mb-0`}>Password</label>
                         <AnimatePresence>
                           {caps && focus === "password" && (
@@ -356,6 +358,10 @@ export default function LoginPage() {
           </motion.section>
         </div>
       </JourneyCard>
+      <button onClick={() => router.push("/login/v2")}
+        className="fixed bottom-4 right-4 z-[110] flex items-center gap-1.5 rounded-full border border-foam bg-porcelain px-3.5 py-2 font-[family-name:var(--font-data)] text-[10px] uppercase tracking-[0.12em] text-mocha shadow-glass transition-colors hover:border-caramel hover:text-coffee">
+        ✨ try the new counter — v2
+      </button>
     </JourneyShell>
   );
 }

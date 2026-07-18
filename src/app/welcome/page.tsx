@@ -108,8 +108,8 @@ function Receipt({ name, brand, lines, tableNo, stamped }: { name: string; brand
     <div className={`${mono} relative w-full max-w-[360px] px-5 pb-6 pt-5 text-[11px] leading-relaxed`}
       style={{ background: "#fffdf9", border: "1.5px solid #cbb086", clipPath: ZIGZAG, color: "#3d2817", boxShadow: "0 8px 30px -18px rgba(42,26,15,0.25)" }}>
       <div className="text-center uppercase tracking-[0.18em]" style={{ color: "#6b4423" }}>
-        Voicebrew estd. MMXXVI
-        <div className="mt-0.5 text-[9px] tracking-[0.12em]" style={{ color: "#c9a87c" }}>{today.toUpperCase()} · MUMBAI</div>
+        Voicebrew estd. MMXXV
+        <div className="mt-0.5 text-[9px] tracking-[0.12em]" style={{ color: "#c9a87c" }}>{today.toUpperCase()} · DELHI NCR</div>
       </div>
       <div className="my-2 border-b border-dashed" style={{ borderColor: "#d8bf9a" }} />
       <div className="uppercase">TAB — {name || "…"}</div>

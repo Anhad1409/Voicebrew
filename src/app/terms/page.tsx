@@ -89,11 +89,11 @@ export default function TermsPage() {
         </S>
 
         <S n="08" title="The boring-but-binding rest">
-          <p>These terms are governed by the laws of India with exclusive jurisdiction of the courts of Mumbai. We may update these terms with notice in-product; continued use is acceptance. If any clause is unenforceable, the rest survive. These terms plus your order form are the entire agreement.</p>
+          <p>These terms are governed by the laws of India with exclusive jurisdiction of the courts of Delhi. We may update these terms with notice in-product; continued use is acceptance. If any clause is unenforceable, the rest survive. These terms plus your order form are the entire agreement.</p>
         </S>
 
         <div className={`${mono} mt-10 border-t pt-4 text-[10px] uppercase tracking-[0.14em]`} style={{ borderColor: "#d8bf9a", color: "#a3906e" }}>
-          Questions? Ask the manager — legal@voicebrew.example · Blostem, Mumbai
+          Questions? Ask the manager — legal@voicebrew.example · Blostem, Delhi NCR
         </div>
 
         <div className="mt-6 flex gap-3">
