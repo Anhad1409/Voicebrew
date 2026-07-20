@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { MicOff, ShieldCheck, Languages, Clock3, Sparkles, CheckCircle2, UserCheck, Flame, CalendarClock } from "lucide-react";
+import { MicOff, ShieldCheck, Languages, Clock3, Sparkles, CheckCircle2, Flame, CalendarClock } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import { Backdrop, LiveCallCard } from "@/components/auth/v2-kit";
 import { BrandMark } from "@/components/layout/brand-mark";
@@ -66,7 +66,6 @@ function ListenStrip({ email, mode }: { email: string; mode: "idle" | "listening
 const CHIPS = [
   { icon: CheckCircle2, tint: "var(--color-matcha)", title: "EMI reminder — paid", sub: "auto-logged to CRM", pos: "-top-3 -right-2", delay: 1.1, bob: 5.6 },
   { icon: Flame, tint: "var(--color-mango)", title: "Lead scored 82 · hot", sub: "handed to sales", pos: "top-[34%] -right-16", delay: 1.35, bob: 6.4 },
-  { icon: UserCheck, tint: "var(--color-steam)", title: "KYC verified", sub: "in 2 min on-call", pos: "bottom-[21%] -left-12", delay: 1.6, bob: 7 },
   { icon: CalendarClock, tint: "var(--color-blueberry)", title: "Callback booked", sub: "tomorrow · 11:00", pos: "-bottom-9 right-[4%]", delay: 1.85, bob: 6 },
 ];
 function FloatChips() {
